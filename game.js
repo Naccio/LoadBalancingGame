@@ -1883,10 +1883,10 @@ function drawButtons() {
 			mouseY > button.y - (button.height + 4) / 2 &&
 			mouseY < button.y + (button.height + 2) / 2) {
 
-			button.draw(true);
+			button.draw(true, context);
 		}
 		else {
-			button.draw(false);
+			button.draw(false, context);
 		}
 	});
 }

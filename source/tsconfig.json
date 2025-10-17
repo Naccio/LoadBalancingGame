@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "sourceMap": false,
+        "outFile": "../script.js",
+        "removeComments": true,
+        "strict": true
+    },
+    "include": [
+        "*.ts"
+    ]
+}
