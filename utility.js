@@ -143,27 +143,3 @@ function getDistance(x1, y1, x2, y2) {
 function log(s) {
 	document.getElementById("log").innerHTML += s + "<br>";
 }
-
-
-// CLASSES
-
-function FpsCounter() {
-	var lastTimestamp = Date.now(),
-		fps;
-
-	this.update = function update() {
-		var currentTimestamp = Date.now(),
-			diff = (currentTimestamp - lastTimestamp) / 1000;
-		fps = Math.floor(1 / diff);
-		lastTimestamp = currentTimestamp;
-	};
-
-	this.logFps = function logFps() {
-		var l = document.getElementById("fps");
-		if (!l) {
-			document.getElementById("log").innerHTML = 'Fps: <span id="fps"></span><br />' + document.getElementById("log").innerHTML;
-			l = document.getElementById("fps");
-		}
-		l.innerHTML = fps;
-	};
-}

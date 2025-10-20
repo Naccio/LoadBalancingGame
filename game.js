@@ -60,7 +60,7 @@ var fader;
 var fpsCounter;
 var music;
 
-var logActive = false;
+var logActive = true;
 
 var volumeButton = new SpecialButton(WIDTH - 40, HEIGHT - 30, 20, 20, "rgba(0,0,0,0)", "rgba(0,0,0,0)", 0, function () {
 	if (music.paused) {
