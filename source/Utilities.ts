@@ -1,6 +1,4 @@
 class Utilities {
-    public static readonly defaultColor = 'black';
-
     // x, y = center
     public static drawRectBorder(
         x: number,
@@ -11,7 +9,7 @@ class Utilities {
         bw: number,
         context: CanvasRenderingContext2D) {
         if (!c) {
-            c = Utilities.defaultColor;
+            c = Defaults.defaultColor;
         }
         if (!bw) {
             bw = 1;
@@ -32,7 +30,7 @@ class Utilities {
         bw: number,
         context: CanvasRenderingContext2D) {
         if (!c) {
-            c = Utilities.defaultColor;
+            c = Defaults.defaultColor;
         }
         if (bc) {
             Utilities.drawRectBorder(x, y, w, h, bc, bw, context);

@@ -1,0 +1,60 @@
+/// <reference path='../Model/Message.ts' />
+/// <reference path='../Model/MessageTransmitter.ts' />
+
+class MessageOrchestrator {
+    public messages: Message[] = [];
+    public totalAcks = 0;
+    public avgResponseTime = 0;
+
+    createMessage(sender: MessageTransmitter, receiver: MessageTransmitter) {
+        const m = new Message(sender, receiver);
+        m.computeVelocity();
+        this.messages.push(m);
+    }
+
+    registerAck(message: Message) {
+        this.totalAcks += 1;
+        this.avgResponseTime = (message.life + (this.totalAcks - 1) * this.avgResponseTime) / this.totalAcks;
+    }
+
+    updateMessages() {
+        const clientSize = Defaults.clientSize;
+
+        for (let i = 0; i < this.messages.length; i += 1) {
+            var m = this.messages[i];
+
+            m.life += 1 / Defaults.frameRate;
+
+            //check if connection has been dropped while message was still traveling
+            if (m.status === "req") {
+                if (m.sender.connectedTo === undefined) {
+                    this.messages.splice(i--, 1);
+                    continue;
+                }
+            }
+
+            if (m.status === "ack" || m.status === "nack") {
+                if (m.receiver.connectedTo === undefined) {
+                    this.messages.splice(i--, 1);
+                    continue;
+                }
+            }
+
+            //check if message has ended its journey
+            if (m.status === "done") {
+                this.messages.splice(i--, 1);
+                continue;
+            }
+
+            //update message
+            if (m.status != "queued") {
+                var r = m.receiver;
+                if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
+                    m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
+                    r.receiveMessage(m);
+                else
+                    m.move();
+            }
+        }
+    }
+}

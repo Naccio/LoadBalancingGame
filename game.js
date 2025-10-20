@@ -30,7 +30,6 @@ var clientsSpeed = 2;	//messages per second
 var serversSpeed = 3.5;	//messages per second
 var serversCapacity = 80; //messages
 var gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
-var upgrades = [100, 200, 300, 500, 700, 1000, 1300, 1700, 2100, 2600, 3100, 3700, 4300, 5000];
 var startTime = new Date().getTime();
 var gameLength = 5; //minutes
 
@@ -38,20 +37,13 @@ var gameLength = 5; //minutes
 var servers = [];
 var clients = [];
 var attackers = [];
-var messages = [];
 var buttons = [];
-var messageQueue = [];
 var selectedClient = null;
 var currentGameMode;
 var clientsServed = 0;
 var droppedConnections = 0;
 var failedConnections = 0;
-var avgResponseTime = 0;
-var totalAcks = 0;
-var popularity = 0;
 var elapsedTime;
-var upgradesAvailable = 0;
-var nextUpgrade = 0;
 var selectedUpgrade = null;
 
 //helpers
@@ -59,6 +51,9 @@ var sched;
 var fader;
 var fpsCounter;
 var music;
+var orchestrator;
+var popularityTracker;
+var upgradesTracker;
 
 var logActive = true;
 
@@ -95,137 +90,6 @@ var volumeButton = new SpecialButton(WIDTH - 40, HEIGHT - 30, 20, 20, "rgba(0,0,
 
 
 //classes
-function Message(sender, receiver) {
-	this.x = sender.x;
-	this.y = sender.y;
-	this.sender = sender;
-	this.receiver = receiver;
-	this.status = "req";
-	this.life = 0;
-
-	this.computeVelocity = function computeVelocity() {
-		var xDiff = this.receiver.x - this.x,
-			yDiff = this.receiver.y - this.y,
-			angle = Math.atan2(yDiff, xDiff),
-			v = messageVelocity / frameRate;
-		this.dx = Math.cos(angle) * v;
-		this.dy = Math.sin(angle) * v;
-	};
-
-	this.computeVelocity();
-
-	this.move = function move() {
-		this.x += this.dx;
-		this.y += this.dy;
-	};
-
-	this.invertDirection = function invertDirection() {
-		var tmp = this.sender;
-		this.sender = this.receiver;
-		this.receiver = tmp;
-		this.computeVelocity();
-	};
-}
-
-function Server(x, y) {
-	this.x = x;
-	this.y = y;
-	this.queue = [];
-	this.lastMessageTime = 0;
-	this.capacity = serversCapacity;
-	this.speed = serversSpeed;
-
-	this.sendMessage = function sendMessage() {
-		if (this.queue.length > 0) {
-			//var index = Math.floor(Math.random() * this.queue.length);
-			//var msg = this.queue.splice(index, 1)[0];
-			var msg = this.queue.shift();
-			msg.status = "ack";
-			msg.invertDirection();
-			this.lastMessageTime = elapsedTime;
-		}
-	};
-
-	this.receiveMessage = function receiveMessage(msg) {
-		msg.x = this.x;
-		msg.y = this.y;
-
-		if (this.queue.length < this.capacity) {
-			this.queue.push(msg);
-			msg.status = "queued";
-		} else {
-			msg.status = "nack";
-			msg.invertDirection();
-		}
-	};
-}
-
-function Client(x, y, msgNr) {
-	this.x = x;
-	this.y = y;
-	this.life = 0;
-	this.connectedTo = null;
-	this.lastMessageTime = 0;
-	this.messagesToSend = msgNr;
-	this.acksToReceive = msgNr;
-	this.nacksToDie = Math.floor(msgNr / 3);
-	fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
-
-	this.sendMessage = function sendMessage() {
-		var m = new Message(this, this.connectedTo);
-		m.computeVelocity();
-		messages.push(m);
-		this.messagesToSend -= 1;
-		this.lastMessageTime = elapsedTime;
-	};
-
-	this.receiveMessage = function receiveMessage(msg) {
-		var n;
-		if (msg.status === "ack") {
-			this.acksToReceive -= 1;
-			totalAcks += 1;
-			n = 1;
-			if (this.acksToReceive === 0) {
-				n += 5;
-			}
-			updatePopularity(n, this.x, this.y);
-			avgResponseTime = (msg.life + (totalAcks - 1) * avgResponseTime) / totalAcks;
-		} else {
-			this.nacksToDie -= 1;
-			n = -1;
-			if (this.nacksToDie > 0) {
-				this.messagesToSend += 1;
-			} else {
-				n -= 5;
-			}
-			updatePopularity(n, this.x, this.y);
-		}
-
-		msg.status = "done";
-	};
-}
-
-function Attacker(x, y, msgNr, connectedTo) {
-	this.x = x;
-	this.y = y;
-	this.connectedTo = connectedTo;
-	this.lastMessageTime = 0;
-	this.messagesToSend = msgNr;
-	this.messagesToReceive = msgNr;
-
-	this.sendMessage = function sendMessage() {
-		var m = new Message(this, this.connectedTo);
-		m.computeVelocity();
-		messages.push(m);
-		this.messagesToSend -= 1;
-		this.lastMessageTime = elapsedTime;
-	};
-
-	this.receiveMessage = function receiveMessage(msg) {
-		msg.status = "done";
-		this.messagesToReceive -= 1;
-	};
-}
 
 function Scheduler() {
 	this.timeLastDDoS = 0;
@@ -238,6 +102,7 @@ function Scheduler() {
 	this.timeLastClient = 1 - this.spawnRate;
 
 	this.schedule = function schedule() {
+		const popularity = popularityTracker.popularity;
 		var remaining = gameLength * 60 - elapsedTime;
 
 		if (remaining > maxClientWaitTime) {
@@ -337,15 +202,16 @@ function Scheduler() {
 
 		//client messages
 		msgNr = Math.floor(Math.random() * (this.maxClientMessages - this.minClientMessages)) +
-			this.minClientMessages + Math.floor(popularity / 100);
+			this.minClientMessages + Math.floor(popularityTracker.popularity / 100);
 
-		clients.push(new Client(x, y, msgNr));
+		clients.push(new Client(orchestrator, popularityTracker, x, y, msgNr));
+		fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
 		this.timeLastClient = elapsedTime;
 	};
 
 	this.initiateDDoS = function initiateDDoS() {
 		var i, x, y, a,
-			mod = Math.floor(popularity / 400),
+			mod = Math.floor(popularityTracker.popularity / 400),
 			n = this.attackersNumber + mod;
 		for (i = 0; i < n; i += 1) {
 			x = Math.floor(Math.random() * (WIDTH - 2 * clientSize) + clientSize);
@@ -356,7 +222,7 @@ function Scheduler() {
 				y = Math.floor(Math.random() * (HEIGHT - 2 * clientSize) + clientSize);
 			}
 
-			a = new Attacker(x, y, this.attackersMessages + mod, findClosestServer(x, y));
+			a = new Attacker(orchestrator, x, y, this.attackersMessages + mod, findClosestServer(x, y));
 
 			attackers.push(a);
 		}
@@ -399,7 +265,7 @@ var Tutorial = {
 				"It wants to exchange data with your datacenter.",
 				"Your job will be to connect the clients to a datacenter."],
 			setup: function () {
-				clients.push(new Client(WIDTH * 3 / 4, HEIGHT / 2, 10000));
+				clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 2, 10000));
 				clients[0].life = -31;
 			},
 			run: function () { },
@@ -419,7 +285,7 @@ var Tutorial = {
 				buttons.push(Tutorial.homeButton);
 			},
 			run: function () {
-				if (clients[0].connectedTo !== null) {
+				if (clients[0].connectedTo !== undefined) {
 					Tutorial.advance();
 				}
 				if (clients[0].life >= maxClientWaitTime - 1) {
@@ -438,13 +304,13 @@ var Tutorial = {
 				"You can see the REQUESTS and RESPONSES traveling along the connection.",
 				"The POPULARITY measures how successful your service is being."],
 			setup: function () {
-				popularity = 0;
+				popularityTracker.popularity = 0;
 				elapsedTime = 0;
 				buttons.push(Tutorial.nextButton);
 			},
 			run: function () {
 				elapsedTime += 1 / frameRate;
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 			},
@@ -453,7 +319,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 				drawCircleBorder(70, HEIGHT - 95, 67, "fireBrick", 2);
 				drawCircleBorder(70, HEIGHT - 95, 68, "red", 3);
 
@@ -472,8 +338,8 @@ var Tutorial = {
 			setup: function () {
 				buttons = [];
 				buttons.push(Tutorial.homeButton);
-				clients.push(new Client(WIDTH / 4, HEIGHT / 4, 10000));
-				clients.push(new Client(WIDTH / 4, HEIGHT * 3 / 4, 10000));
+				clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
+				clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
 				clients[1].life = - 21;
 				clients[2].life = - 21;
 			},
@@ -486,12 +352,12 @@ var Tutorial = {
 					this.texts = ["Snap! You let too much time pass!",
 						"As you can see you lost 10 popularity each.",
 						"Connect the two clients to continue."];
-					clients.push(new Client(WIDTH / 4, HEIGHT / 4, 10000));
-					clients.push(new Client(WIDTH / 4, HEIGHT * 3 / 4, 10000));
+					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
+					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
 					clients[1].life = - 21;
 					clients[2].life = - 21;
 				}
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 			},
@@ -500,7 +366,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -519,7 +385,7 @@ var Tutorial = {
 			},
 			run: function () {
 				elapsedTime += 1 / frameRate;
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 			},
@@ -528,7 +394,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -554,7 +420,7 @@ var Tutorial = {
 			},
 			run: function () {
 				elapsedTime += 1 / frameRate;
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 			},
@@ -563,7 +429,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -687,7 +553,7 @@ var Tutorial = {
 				clients[1].acksToReceive = 6;
 				clients[2].messagesToSend = 10;
 				clients[2].acksToReceive = 10;
-				messages.forEach(function (message) {
+				orchestrator.messages.forEach(function (message) {
 					if (message.status === "ack") {
 						message.receiver.acksToReceive += 1;
 					}
@@ -701,7 +567,7 @@ var Tutorial = {
 					buttons.push(Tutorial.nextButton);
 				}
 				elapsedTime += 1 / frameRate;
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 			},
@@ -710,7 +576,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -733,13 +599,13 @@ var Tutorial = {
 				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
-				clients.push(new Client(WIDTH / 4, HEIGHT / 3, 10000));
-				clients.push(new Client(WIDTH * 3 / 4, HEIGHT / 3, 10000));
+				clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
+				clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
 				clients[0].life = - 21;
 				clients[1].life = - 21;
-				attackers.push(new Attacker(WIDTH / 2, HEIGHT * 3 / 4, 10000, servers[0]));
-				attackers.push(new Attacker(WIDTH / 3, HEIGHT * 2 / 3, 10000, servers[0]));
-				attackers.push(new Attacker(WIDTH * 2 / 3, HEIGHT * 2 / 3, 10000, servers[0]));
+				attackers.push(new Attacker(orchestrator, WIDTH / 2, HEIGHT * 3 / 4, 10000, servers[0]));
+				attackers.push(new Attacker(orchestrator, WIDTH / 3, HEIGHT * 2 / 3, 10000, servers[0]));
+				attackers.push(new Attacker(orchestrator, WIDTH * 2 / 3, HEIGHT * 2 / 3, 10000, servers[0]));
 
 				document.addEventListener("keypress", Tutorial.listener);
 			},
@@ -749,12 +615,12 @@ var Tutorial = {
 				}
 				elapsedTime += 1 / frameRate;
 				if (clients.length === 0) {
-					clients.push(new Client(WIDTH / 4, HEIGHT / 3, 10000));
-					clients.push(new Client(WIDTH * 3 / 4, HEIGHT / 3, 10000));
+					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
+					clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
 					clients[0].life = - 21;
 					clients[1].life = - 21;
 				}
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 				updateAttackers();
@@ -764,7 +630,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -889,15 +755,15 @@ var Tutorial = {
 			run: function () {
 				elapsedTime += 1 / frameRate;
 				if (clients.length === 0) {
-					clients.push(new Client(WIDTH / 4, HEIGHT / 3, 10000));
-					clients.push(new Client(WIDTH * 3 / 4, HEIGHT / 3, 10000));
+					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
+					clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
 					clients[0].life = - 21;
 					clients[1].life = - 21;
 				}
-				if (clients[0].connectedTo !== null && clients[1].connectedTo !== null) {
+				if (clients[0].connectedTo !== undefined && clients[1].connectedTo !== undefined) {
 					Tutorial.advance();
 				}
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 				updateAttackers();
@@ -907,7 +773,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -930,7 +796,7 @@ var Tutorial = {
 			},
 			run: function () {
 				elapsedTime += 1 / frameRate;
-				updateMessages();
+				orchestrator.updateMessages();
 				updateClients();
 				updateServers();
 				updateAttackers();
@@ -940,7 +806,7 @@ var Tutorial = {
 					align = "start",
 					baseline = "middle",
 					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularity, font, align, baseline, color);
+				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 				font = "10px sans-serif";
 				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
@@ -958,7 +824,10 @@ var Tutorial = {
 	initialize: function () {
 		servers = [];
 		clients = [];
-		messages = [];
+		fader = new TextFader(context);
+		orchestrator = new MessageOrchestrator();
+		upgradesTracker = new UpgradesTracker();
+		popularityTracker = new PopularityTracker(fader, upgradesTracker);
 		buttons = [];
 		attackers = [];
 		fader.emptyQueues();
@@ -1012,6 +881,8 @@ function init() {
 	fader = new TextFader(context);
 	fpsCounter = new FpsCounter();
 	music = new Audio("assets/music.mp3");
+	orchestrator = new MessageOrchestrator();
+
 	music.loop = true;
 	//music.play();
 
@@ -1092,7 +963,7 @@ function gameLoop() {
 		return;
 	}
 
-	updateMessages();
+	orchestrator.updateMessages();
 	updateClients();
 	updateAttackers();
 	updateServers();
@@ -1152,7 +1023,7 @@ function pauseLoop() {
 
 		buttons.push(volumeButton);
 
-		if (upgradesAvailable > 0) {
+		if (upgradesTracker.upgradesAvailable > 0) {
 			var x1, y1, x2, y2, x3, y3;
 			x1 = 250;
 			y1 = y2 = y3 = HEIGHT / 2 + 150;
@@ -1229,6 +1100,11 @@ function pauseLoop() {
 }
 
 function upgradeLoop() {
+	function selectUpgrade() {
+		upgradesTracker.upgradesAvailable -= 1;
+		fader.removeFromPermanentQueue("upgrade");
+		switchMode(gameModes.PAUSE);
+	}
 	if (buttons.length === 0) {
 		buttons.push(new Button(WIDTH / 2, HEIGHT - 100, 120, 40, "Cancel", "#333333", function () {
 			switchMode(gameModes.PAUSE);
@@ -1240,9 +1116,7 @@ function upgradeLoop() {
 					buttons.push(new BorderButton(server.x, server.y, serverSize, serverSize,
 						"", "rgba(0,0,0,0)", "limeGreen", 2, function () {
 							server.speed += 2;
-							upgradesAvailable -= 1;
-							fader.removeFromPermanentQueue("upgrade");
-							switchMode(gameModes.PAUSE);
+							selectUpgrade();
 						}))
 				});
 				break;
@@ -1251,9 +1125,7 @@ function upgradeLoop() {
 					buttons.push(new BorderButton(server.x, server.y, serverSize, serverSize,
 						"", "rgba(0,0,0,0)", "limeGreen", 2, function () {
 							server.capacity += serversCapacity;
-							upgradesAvailable -= 1;
-							fader.removeFromPermanentQueue("upgrade");
-							switchMode(gameModes.PAUSE);
+							selectUpgrade();
 						}))
 				});
 				break;
@@ -1262,73 +1134,55 @@ function upgradeLoop() {
 					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("nw");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH / 2), Math.floor(HEIGHT / 6),
 					Math.floor(WIDTH / 3), Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("n");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH * 5 / 6) + 1, Math.floor(HEIGHT / 6),
 					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("ne");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH / 6), Math.floor(HEIGHT / 2),
 					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("w");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH / 2), Math.floor(HEIGHT / 2),
 					Math.floor(WIDTH / 3), Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("c");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH * 5 / 6) + 1, Math.floor(HEIGHT / 2),
 					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("e");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH / 6), Math.floor(HEIGHT * 5 / 6),
 					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("sw");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH / 2), Math.floor(HEIGHT * 5 / 6),
 					Math.floor(WIDTH / 3), Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("s");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				buttons.push(new BorderButton(Math.floor(WIDTH * 5 / 6) + 1, Math.floor(HEIGHT * 5 / 6),
 					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
 					"", "#CCCCCC", "limeGreen", 1, function () {
 						sched.createServer("se");
-						upgradesAvailable -= 1;
-						fader.removeFromPermanentQueue("upgrade");
-						switchMode(gameModes.PAUSE);
+						selectUpgrade();
 					}));
 				break;
 		}
@@ -1398,10 +1252,10 @@ function drawGameOver() {
 	drawText(x, HEIGHT / 2 - 80, clientsServed, font, align, baseline, color);
 	drawText(x, HEIGHT / 2 - 55, droppedConnections, font, align, baseline, color);
 	drawText(x, HEIGHT / 2 - 30, failedConnections, font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 5, Math.round(avgResponseTime * 100) / 100, font, align, baseline, color);
+	drawText(x, HEIGHT / 2 - 5, Math.round(orchestrator.avgResponseTime * 100) / 100, font, align, baseline, color);
 
 	font = "30px monospace";
-	drawText(WIDTH / 2 + 75, HEIGHT / 2 + 50, popularity, font, align, baseline, color);
+	drawText(WIDTH / 2 + 75, HEIGHT / 2 + 50, popularityTracker.popularity, font, align, baseline, color);
 	align = "end";
 	drawText(WIDTH / 2 + 68, HEIGHT / 2 + 50, "Popularity:", font, align, baseline, color);
 
@@ -1454,7 +1308,7 @@ function drawPause() {
 	drawRect(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "#0360AE");
 	$clouds.draw(context);
 
-	if (upgradesAvailable > 0) {
+	if (upgradesTracker.upgradesAvailable > 0) {
 		color = "black";
 		drawText(x, HEIGHT / 2 + 60, "Choose an upgrade:", font, align, baseline, color);
 	} else {
@@ -1488,49 +1342,10 @@ function drawUpgrade() {
 	drawText(WIDTH / 2, 60, "~ Select " + text + " ~", "30px monospace", "center", "middle", "red");
 }
 
-function updatePopularity(amount, x, y) {
-	var text,
-		fontSize = 12,
-		color = { r: 0, g: 150, b: 0 },
-		borderColor = { r: 150, g: 250, b: 150 },
-		borderWidth = 1;
-
-	if (text > 0) {
-		text = "+" + text;
-	}
-
-	if (amount < 0) {
-		color = { r: 150, g: 0, b: 0 };
-		borderColor = { r: 250, g: 150, b: 150 };
-	}
-
-	if (Math.abs(amount) >= 5) {
-		fontSize = 16;
-		borderWidth = 2;
-	}
-
-	text = {
-		text: amount,
-		color: color,
-		fontSize: fontSize,
-		fontWeight: "bold",
-		border: true,
-		borderColor: borderColor,
-		borderWidth: borderWidth
-	}
-
-	fader.addText(text, x.toString() + y.toString());
-	popularity += amount;
-	if (popularity >= upgrades[nextUpgrade] && nextUpgrade < upgrades.length) {
-		nextUpgrade += 1;
-		upgradesAvailable += 1;
-	}
-}
-
 function updateServers() {
 	servers.forEach(function (s) {
 		if ((elapsedTime - s.lastMessageTime) > 1 / s.speed) {
-			s.sendMessage();
+			s.sendMessage(elapsedTime);
 		}
 	});
 }
@@ -1556,13 +1371,13 @@ function updateClients() {
 
 		//Check if client received too many nacks
 		if (c.nacksToDie === 0) {
-			c.connectedTo = null;
+			c.connectedTo = undefined;
 			clients.splice(i--, 1);
 			droppedConnections += 1;
 			continue;
 		}
 
-		if (c.connectedTo === null) {
+		if (c.connectedTo === undefined) {
 			c.life += 1 / frameRate;
 
 			//Check if client waited too much
@@ -1572,11 +1387,11 @@ function updateClients() {
 					selectedClient = null;
 				}
 				failedConnections += 1;
-				updatePopularity(-10, c.x, c.y);
+				popularityTracker.updatePopularity(-10, c.x, c.y);
 			}
 		} else {
 			if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / clientsSpeed) {
-				c.sendMessage();
+				c.sendMessage(elapsedTime);
 			}
 		}
 	}
@@ -1590,55 +1405,14 @@ function updateAttackers() {
 		a.life += 1 / frameRate;
 
 		//check if all attacker messages have reached the server
-		var d = getDistance(a.x, a.y, a.connectedTo.x, a.connectedTo.y);
 		if (a.messagesToReceive === 0) {
-			a.connectedTo = null;
+			a.connectedTo = undefined;
 			attackers.splice(i--, 1);
 			continue;
 		}
 
 		if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / clientsSpeed) {
-			a.sendMessage();
-		}
-	}
-}
-
-function updateMessages() {
-	var i;
-	for (i = 0; i < messages.length; i += 1) {
-		var m = messages[i];
-
-		m.life += 1 / frameRate;
-
-		//check if connection has been dropped while message was still travelling
-		if (m.status === "req") {
-			if (m.sender.connectedTo === null) {
-				messages.splice(i--, 1);
-				continue;
-			}
-		}
-
-		if (m.status === "ack" || m.status === "nack") {
-			if (m.receiver.connectedTo === null) {
-				messages.splice(i--, 1);
-				continue;
-			}
-		}
-
-		//check if message has ended its journey
-		if (m.status === "done") {
-			messages.splice(i--, 1);
-			continue;
-		}
-
-		//update message
-		if (m.status != "queued") {
-			var r = m.receiver;
-			if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
-				m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
-				r.receiveMessage(m);
-			else
-				m.move();
+			a.sendMessage(elapsedTime);
 		}
 	}
 }
@@ -1664,7 +1438,7 @@ function mouseDownHandler(event) {
 		clients.forEach(function (client) {
 			if (x > client.x - clientSize / 2 - 5 && x < client.x + clientSize / 2 + 5 &&
 				y > client.y - serverSize / 2 - 5 && y < client.y + serverSize / 2 + 5) {
-				if (client.connectedTo === null) {
+				if (client.connectedTo === undefined) {
 					selectedClient = client;
 					mouseX = client.x;
 					mouseY = client.y;
@@ -1806,10 +1580,10 @@ function drawClients() {
 		var x = client.x,
 			y = client.y;
 
-		if (client.connectedTo === null) {
-			if (client.connectedTo === null && client.life > maxClientWaitTime - 2) {
+		if (client.connectedTo === undefined) {
+			if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
 				drawCircle(x, y, clientSize / 2, "red", "fireBrick", 2);
-			} else if (client.connectedTo === null && client.life > maxClientWaitTime - 3.5) {
+			} else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
 				drawCircle(x, y, clientSize / 2, "tomato", "indianRed", 2);
 			} else {
 				drawCircle(x, y, clientSize / 2, "gray", "dimGray", 2);
@@ -1840,7 +1614,7 @@ function drawConnections() {
 		var x = client.x,
 			y = client.y;
 
-		if (client.connectedTo !== null) {
+		if (client.connectedTo !== undefined) {
 			drawLine(x, y, client.connectedTo.x, client.connectedTo.y, "darkGray", 1);
 		}
 	});
@@ -1849,14 +1623,14 @@ function drawConnections() {
 		var x = attacker.x,
 			y = attacker.y;
 
-		if (attacker.connectedTo !== null) {
+		if (attacker.connectedTo !== undefined) {
 			drawLine(x, y, attacker.connectedTo.x, attacker.connectedTo.y, "dimGray", 1);
 		}
 	});
 }
 
 function drawMessages() {
-	messages.forEach(function (m) {
+	orchestrator.messages.forEach(function (m) {
 		var fill, border;
 
 		if (m.status != "queued" && m.status != "done") {
@@ -1900,14 +1674,14 @@ function drawUI() {
 	fader.draw();
 
 	//bottom left
-	drawText(10, HEIGHT - 14, "Popularity: " + popularity, font, align, baseline, color);
+	drawText(10, HEIGHT - 14, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
 
 	//bottom center
 	align = "center";
 	color = "darkGray";
 	drawText(WIDTH / 2, HEIGHT - 14, "Press space to pause", font, align, baseline, color);
 
-	if (upgradesAvailable > 0) {
+	if (upgradesTracker.upgradesAvailable > 0) {
 		var text = {
 			x: WIDTH / 2,
 			y: HEIGHT - 35,
@@ -1981,18 +1755,16 @@ function findClosestServer(x, y) {
 function resetGame() {
 	clients = [];
 	servers = [];
-	messages = [];
+	orchestrator = new MessageOrchestrator();
 	attackers = [];
 	clientsServed = 0;
 	droppedConnections = 0;
 	failedConnections = 0;
-	avgResponseTime = 0;
 	sched = new Scheduler();
+	upgradesTracker = new UpgradesTracker();
 	sched.createServer("c");
-	popularity = 0;
+	popularityTracker = new PopularityTracker(fader, upgradesTracker);
 	elapsedTime = 0;
-	nextUpgrade = 0;
-	upgradesAvailable = 0;
 	fader.emptyQueues();
 	switchMode(gameModes.GAME);
 }
