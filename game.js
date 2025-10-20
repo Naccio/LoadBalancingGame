@@ -1009,7 +1009,7 @@ function init() {
 	HEIGHT = canvas.height;
 
 	sched = new Scheduler();
-	fader = new TextFader();
+	fader = new TextFader(context);
 	fpsCounter = new FpsCounter();
 	music = new Audio("assets/music.mp3");
 	music.loop = true;
