@@ -59,6 +59,13 @@ class Utilities {
         context.fillText(text, x, y);
     }
 
+    public static getDistance(x1: number, y1: number, x2: number, y2: number) {
+        var xs = x2 - x1,
+            ys = y2 - y1;
+
+        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
+    }
+
     //must be string containing hex value ("#xxxxxx")
     public static invertColor(color: string) {
         color = color.substring(1);

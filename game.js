@@ -1,16 +1,3 @@
-/*
-
-LOAD BALANCING: THE GAME
-Author: Naccio
-
-This game was first created with Treestle (www.treestle.com) to showcase the difficulties of traffic management and load balancing.
-I further developed it during a project for my Master's degree and I keep on adding stuff whenever I have ideas and time.
-This is the first JavaScript project I made that went beyond plain DOM manipulation and my very first time using canvas.
-The code might thus look a bit wonky, with different styles mixed together and whatnot, but I was learning and experimenting.
-And I haven't had time to do a complete refactoring yet.
-
-*/
-
 //construction stuff
 var WIDTH;
 var HEIGHT;
@@ -24,19 +11,14 @@ var serverSize = 40;	//pixels (side)
 var clientSize = 30;	//pixels (diameter)
 var messageSize = 6;	//pixels (diameter)
 var frameRate = 60;		//frames per second
-var messageVelocity = 200;	//pixels per second
 var maxClientWaitTime = 9;	//seconds
 var clientsSpeed = 2;	//messages per second
 var serversSpeed = 3.5;	//messages per second
 var serversCapacity = 80; //messages
 var gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
-var startTime = new Date().getTime();
 var gameLength = 5; //minutes
 
 //variables
-var servers = [];
-var clients = [];
-var attackers = [];
 var buttons = [];
 var selectedClient = null;
 var currentGameMode;
@@ -88,149 +70,6 @@ var volumeButton = new SpecialButton(WIDTH - 40, HEIGHT - 30, 20, 20, "rgba(0,0,
 	}
 });
 
-
-//classes
-
-function Scheduler() {
-	this.timeLastDDoS = 0;
-	this.minClientMessages = 25;
-	this.maxClientMessages = 35;
-	this.attackersMessages = 30;
-	this.attackersNumber = 1;
-	this.spawnRate = 6;
-	this.attackRate = 80;
-	this.timeLastClient = 1 - this.spawnRate;
-
-	this.schedule = function schedule() {
-		const popularity = popularityTracker.popularity;
-		var remaining = gameLength * 60 - elapsedTime;
-
-		if (remaining > maxClientWaitTime) {
-			if (elapsedTime - this.timeLastClient > Math.max(this.spawnRate - Math.cbrt(popularity / 40), 1.6) && Math.random() > 0.3) {
-				this.createClient();
-			}
-		}
-
-		if (remaining > 30) {
-			if (elapsedTime - this.timeLastDDoS > Math.max(this.attackRate - popularity / 100, 60) && Math.random() > 0.3) {
-				this.initiateDDoS();
-			}
-		}
-	};
-
-	this.createServer = function createServer(zone) {
-		var x, y, minX, minY, maxX, maxY;
-
-		switch (zone) {
-			case "nw":
-				minX = serverSize;
-				minY = serverSize;
-				maxX = WIDTH / 3;
-				maxY = HEIGHT / 3;
-				break;
-			case "n":
-				minX = WIDTH / 3;
-				minY = serverSize;
-				maxX = WIDTH * 2 / 3;
-				maxY = HEIGHT / 3;
-				break;
-			case "ne":
-				minX = WIDTH * 2 / 3;
-				minY = serverSize;
-				maxX = WIDTH - serverSize;
-				maxY = HEIGHT / 3;
-				break;
-			case "w":
-				minX = serverSize;
-				minY = HEIGHT / 3;
-				maxX = WIDTH / 3;
-				maxY = HEIGHT * 2 / 3;
-				break;
-			case "c":
-				minX = WIDTH / 3;
-				minY = HEIGHT / 3;
-				maxX = WIDTH * 2 / 3;
-				maxY = HEIGHT * 2 / 3;
-				break;
-			case "e":
-				minX = WIDTH * 2 / 3;
-				minY = HEIGHT / 3;
-				maxX = WIDTH - serverSize;
-				maxY = HEIGHT * 2 / 3;
-				break;
-			case "sw":
-				minX = serverSize;
-				minY = HEIGHT * 2 / 3;
-				maxX = WIDTH / 3;
-				maxY = HEIGHT - serverSize;
-				break;
-			case "s":
-				minX = WIDTH / 3;
-				minY = HEIGHT * 2 / 3;
-				maxX = WIDTH * 2 / 3;
-				maxY = HEIGHT - serverSize;
-				break;
-			case "se":
-				minX = WIDTH * 2 / 3;
-				minY = HEIGHT * 2 / 3;
-				maxX = WIDTH - serverSize;
-				maxY = HEIGHT - serverSize;
-				break;
-		}
-
-		x = Math.floor(Math.random() * (maxX - minX) + minX);
-		y = Math.floor(Math.random() * (maxY - minY) + minY);
-
-		while (checkCollisions(x, y)) {
-			x = Math.floor(Math.random() * (maxX - minX) + minX);
-			y = Math.floor(Math.random() * (maxY - minY) + minY);
-		}
-
-		servers.push(new Server(x, y));
-	};
-
-	this.createClient = function createClient() {
-		var x, y, msgNr;
-		//client position
-		x = Math.floor(Math.random() * (WIDTH - 2 * clientSize) + clientSize);
-		y = Math.floor(Math.random() * (HEIGHT - 2 * clientSize) + clientSize);
-
-		while (checkCollisions(x, y)) {
-			x = Math.floor(Math.random() * (WIDTH - 2 * clientSize) + clientSize);
-			y = Math.floor(Math.random() * (HEIGHT - 2 * clientSize) + clientSize);
-		}
-
-		//client messages
-		msgNr = Math.floor(Math.random() * (this.maxClientMessages - this.minClientMessages)) +
-			this.minClientMessages + Math.floor(popularityTracker.popularity / 100);
-
-		clients.push(new Client(orchestrator, popularityTracker, x, y, msgNr));
-		fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
-		this.timeLastClient = elapsedTime;
-	};
-
-	this.initiateDDoS = function initiateDDoS() {
-		var i, x, y, a,
-			mod = Math.floor(popularityTracker.popularity / 400),
-			n = this.attackersNumber + mod;
-		for (i = 0; i < n; i += 1) {
-			x = Math.floor(Math.random() * (WIDTH - 2 * clientSize) + clientSize);
-			y = Math.floor(Math.random() * (HEIGHT - 2 * clientSize) + clientSize);
-
-			while (checkCollisions(x, y)) {
-				x = Math.floor(Math.random() * (WIDTH - 2 * clientSize) + clientSize);
-				y = Math.floor(Math.random() * (HEIGHT - 2 * clientSize) + clientSize);
-			}
-
-			a = new Attacker(orchestrator, x, y, this.attackersMessages + mod, findClosestServer(x, y));
-
-			attackers.push(a);
-		}
-
-		this.timeLastDDoS = elapsedTime;
-	};
-}
-
 var Tutorial = {
 	steps: [
 		{
@@ -241,8 +80,8 @@ var Tutorial = {
 			setup: function () {
 				buttons.push(Tutorial.nextButton);
 				buttons.push(Tutorial.homeButton);
-				servers.push(new Server(WIDTH / 2, HEIGHT / 2));
-				servers[0].capacity = 20;
+				sched.servers.push(new Server(WIDTH / 2, HEIGHT / 2));
+				sched.servers[0].capacity = 20;
 			},
 			run: function () { },
 			draw: function () { }
@@ -265,8 +104,8 @@ var Tutorial = {
 				"It wants to exchange data with your datacenter.",
 				"Your job will be to connect the clients to a datacenter."],
 			setup: function () {
-				clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 2, 10000));
-				clients[0].life = -31;
+				sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 2, 10000));
+				sched.clients[0].life = -31;
 			},
 			run: function () { },
 			draw: function () {
@@ -285,14 +124,14 @@ var Tutorial = {
 				buttons.push(Tutorial.homeButton);
 			},
 			run: function () {
-				if (clients[0].connectedTo !== undefined) {
+				if (sched.clients[0].connectedTo !== undefined) {
 					Tutorial.advance();
 				}
-				if (clients[0].life >= maxClientWaitTime - 1) {
+				if (sched.clients[0].life >= maxClientWaitTime - 1) {
 					this.texts = ["Snap! You let too much time pass!",
 						"Normally this would be bad for you, but this time you'll get a little help.",
 						"Create a CONNECTION to continue."];
-					clients[0].life = -31;
+					sched.clients[0].life = -31;
 				}
 				updateClients();
 			},
@@ -338,24 +177,24 @@ var Tutorial = {
 			setup: function () {
 				buttons = [];
 				buttons.push(Tutorial.homeButton);
-				clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
-				clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
-				clients[1].life = - 21;
-				clients[2].life = - 21;
+				sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
+				sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
+				sched.clients[1].life = - 21;
+				sched.clients[2].life = - 21;
 			},
 			run: function () {
-				if (servers[0].queue.length > servers[0].capacity / 2) {
+				if (sched.servers[0].queue.length > sched.servers[0].capacity / 2) {
 					Tutorial.advance();
 				}
 				elapsedTime += 1 / frameRate;
-				if (clients.length === 1) {
+				if (sched.clients.length === 1) {
 					this.texts = ["Snap! You let too much time pass!",
 						"As you can see you lost 10 popularity each.",
 						"Connect the two clients to continue."];
-					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
-					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
-					clients[1].life = - 21;
-					clients[2].life = - 21;
+					sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
+					sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
+					sched.clients[1].life = - 21;
+					sched.clients[2].life = - 21;
 				}
 				orchestrator.updateMessages();
 				updateClients();
@@ -510,7 +349,7 @@ var Tutorial = {
 
 				x3 = WIDTH - 250;
 				buttons.push(new SpecialButton(x3, y3, 100, 100, "#333333", "white", 2, function () {
-					servers[0].speed += serversSpeed;
+					sched.servers[0].speed += serversSpeed;
 					Tutorial.advance();
 				}, function (hovered) {
 					var queueX = x3 + serverSize / 2 - 7,
@@ -547,12 +386,12 @@ var Tutorial = {
 				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
-				clients[0].messagesToSend = 2;
-				clients[0].acksToReceive = 2;
-				clients[1].messagesToSend = 6;
-				clients[1].acksToReceive = 6;
-				clients[2].messagesToSend = 10;
-				clients[2].acksToReceive = 10;
+				sched.clients[0].messagesToSend = 2;
+				sched.clients[0].acksToReceive = 2;
+				sched.clients[1].messagesToSend = 6;
+				sched.clients[1].acksToReceive = 6;
+				sched.clients[2].messagesToSend = 10;
+				sched.clients[2].acksToReceive = 10;
 				orchestrator.messages.forEach(function (message) {
 					if (message.status === "ack") {
 						message.receiver.acksToReceive += 1;
@@ -563,7 +402,7 @@ var Tutorial = {
 				});
 			},
 			run: function () {
-				if (clients.length === 0 && buttons.length === 1) {
+				if (sched.clients.length === 0 && buttons.length === 1) {
 					buttons.push(Tutorial.nextButton);
 				}
 				elapsedTime += 1 / frameRate;
@@ -599,13 +438,13 @@ var Tutorial = {
 				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
-				clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
-				clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
-				clients[0].life = - 21;
-				clients[1].life = - 21;
-				attackers.push(new Attacker(orchestrator, WIDTH / 2, HEIGHT * 3 / 4, 10000, servers[0]));
-				attackers.push(new Attacker(orchestrator, WIDTH / 3, HEIGHT * 2 / 3, 10000, servers[0]));
-				attackers.push(new Attacker(orchestrator, WIDTH * 2 / 3, HEIGHT * 2 / 3, 10000, servers[0]));
+				sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
+				sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
+				sched.clients[0].life = - 21;
+				sched.clients[1].life = - 21;
+				sched.attackers.push(new Attacker(orchestrator, WIDTH / 2, HEIGHT * 3 / 4, 10000, sched.servers[0]));
+				sched.attackers.push(new Attacker(orchestrator, WIDTH / 3, HEIGHT * 2 / 3, 10000, sched.servers[0]));
+				sched.attackers.push(new Attacker(orchestrator, WIDTH * 2 / 3, HEIGHT * 2 / 3, 10000, sched.servers[0]));
 
 				document.addEventListener("keypress", Tutorial.listener);
 			},
@@ -614,11 +453,11 @@ var Tutorial = {
 					selectedClient = null;
 				}
 				elapsedTime += 1 / frameRate;
-				if (clients.length === 0) {
-					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
-					clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
-					clients[0].life = - 21;
-					clients[1].life = - 21;
+				if (sched.clients.length === 0) {
+					sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
+					sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
+					sched.clients[0].life = - 21;
+					sched.clients[1].life = - 21;
 				}
 				orchestrator.updateMessages();
 				updateClients();
@@ -672,13 +511,11 @@ var Tutorial = {
 				x1 = 250;
 				y1 = y2 = y3 = HEIGHT / 2 + 150;
 				buttons.push(new SpecialButton(x1, y1, 100, 100, "#333333", "white", 2, function () {
-					servers.push(new Server(WIDTH / 2, HEIGHT / 4));
-					servers[0].capacity = 20;
+					sched.servers.push(new Server(WIDTH / 2, HEIGHT / 4));
+					sched.servers[0].capacity = 20;
 					Tutorial.advance();
 				}, function (hovered) {
-					var x = 250,
-						y = HEIGHT / 2 + 150,
-						font = "45px monospace",
+					var font = "45px monospace",
 						align = "center",
 						baseline = "middle",
 						color = "red";
@@ -749,18 +586,18 @@ var Tutorial = {
 				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
-				clients[0].life = - 21;
-				clients[1].life = - 21;
+				sched.clients[0].life = - 21;
+				sched.clients[1].life = - 21;
 			},
 			run: function () {
 				elapsedTime += 1 / frameRate;
-				if (clients.length === 0) {
-					clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
-					clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
-					clients[0].life = - 21;
-					clients[1].life = - 21;
+				if (sched.clients.length === 0) {
+					sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
+					sched.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
+					sched.clients[0].life = - 21;
+					sched.clients[1].life = - 21;
 				}
-				if (clients[0].connectedTo !== undefined && clients[1].connectedTo !== undefined) {
+				if (sched.clients[0].connectedTo !== undefined && sched.clients[1].connectedTo !== undefined) {
 					Tutorial.advance();
 				}
 				orchestrator.updateMessages();
@@ -822,14 +659,12 @@ var Tutorial = {
 	nextButton: null,
 	homeButton: null,
 	initialize: function () {
-		servers = [];
-		clients = [];
 		fader = new TextFader(context);
 		orchestrator = new MessageOrchestrator();
 		upgradesTracker = new UpgradesTracker();
 		popularityTracker = new PopularityTracker(fader, upgradesTracker);
+		sched = new Scheduler(popularityTracker, fader, orchestrator, canvas);
 		buttons = [];
-		attackers = [];
 		fader.emptyQueues();
 		this.nextButton = new Button(WIDTH / 3, HEIGHT - 40, 120, 40, "Next", "#FFFFFF", function () {
 			Tutorial.advance();
@@ -877,11 +712,13 @@ function init() {
 	WIDTH = canvas.width;
 	HEIGHT = canvas.height;
 
-	sched = new Scheduler();
 	fader = new TextFader(context);
 	fpsCounter = new FpsCounter();
 	music = new Audio("assets/music.mp3");
 	orchestrator = new MessageOrchestrator();
+	upgradesTracker = new UpgradesTracker();
+	popularityTracker = new PopularityTracker(fader, upgradesTracker);
+	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas);
 
 	music.loop = true;
 	//music.play();
@@ -958,7 +795,7 @@ function gameLoop() {
 	elapsedTime += 1 / frameRate;
 	var m = Math.floor(elapsedTime / 60);
 
-	if (m === gameLength && clients.length === 0) {
+	if (m === gameLength && sched.clients.length === 0) {
 		switchMode(gameModes.GAMEOVER);
 		return;
 	}
@@ -969,7 +806,7 @@ function gameLoop() {
 	updateServers();
 	fader.update(1 / frameRate);
 
-	sched.schedule();
+	sched.schedule(elapsedTime);
 
 	drawGame();
 }
@@ -1112,7 +949,7 @@ function upgradeLoop() {
 
 		switch (selectedUpgrade) {
 			case "speed":
-				servers.forEach(function (server) {
+				sched.servers.forEach(function (server) {
 					buttons.push(new BorderButton(server.x, server.y, serverSize, serverSize,
 						"", "rgba(0,0,0,0)", "limeGreen", 2, function () {
 							server.speed += 2;
@@ -1121,7 +958,7 @@ function upgradeLoop() {
 				});
 				break;
 			case "capacity":
-				servers.forEach(function (server) {
+				sched.servers.forEach(function (server) {
 					buttons.push(new BorderButton(server.x, server.y, serverSize, serverSize,
 						"", "rgba(0,0,0,0)", "limeGreen", 2, function () {
 							server.capacity += serversCapacity;
@@ -1343,7 +1180,7 @@ function drawUpgrade() {
 }
 
 function updateServers() {
-	servers.forEach(function (s) {
+	sched.servers.forEach(function (s) {
 		if ((elapsedTime - s.lastMessageTime) > 1 / s.speed) {
 			s.sendMessage(elapsedTime);
 		}
@@ -1354,8 +1191,8 @@ function updateClients() {
 	var remaining = gameLength * 60 - elapsedTime,
 		i;
 
-	for (i = 0; i < clients.length; i++) {
-		var c = clients[i];
+	for (i = 0; i < sched.clients.length; i++) {
+		var c = sched.clients[i];
 
 		if (remaining <= 0 && c.messagesToSend > 0) {
 			c.acksToReceive -= c.messagesToSend;
@@ -1364,7 +1201,7 @@ function updateClients() {
 
 		//Check if client is done sending messages
 		if (c.messagesToSend === 0 && c.acksToReceive === 0) {
-			clients.splice(i--, 1);
+			sched.clients.splice(i--, 1);
 			clientsServed += 1;
 			continue;
 		}
@@ -1372,7 +1209,7 @@ function updateClients() {
 		//Check if client received too many nacks
 		if (c.nacksToDie === 0) {
 			c.connectedTo = undefined;
-			clients.splice(i--, 1);
+			sched.clients.splice(i--, 1);
 			droppedConnections += 1;
 			continue;
 		}
@@ -1382,7 +1219,7 @@ function updateClients() {
 
 			//Check if client waited too much
 			if (remaining <= 0 || c.life > maxClientWaitTime) {
-				clients.splice(i--, 1);
+				sched.clients.splice(i--, 1);
 				if (c === selectedClient) {
 					selectedClient = null;
 				}
@@ -1399,15 +1236,15 @@ function updateClients() {
 
 function updateAttackers() {
 	var i;
-	for (i = 0; i < attackers.length; i += 1) {
-		var a = attackers[i];
+	for (i = 0; i < sched.attackers.length; i += 1) {
+		var a = sched.attackers[i];
 
 		a.life += 1 / frameRate;
 
 		//check if all attacker messages have reached the server
 		if (a.messagesToReceive === 0) {
 			a.connectedTo = undefined;
-			attackers.splice(i--, 1);
+			sched.attackers.splice(i--, 1);
 			continue;
 		}
 
@@ -1424,7 +1261,7 @@ function mouseDownHandler(event) {
 
 		//check if a server has been clicked
 		if (selectedClient !== null) {
-			servers.forEach(function (server) {
+			sched.servers.forEach(function (server) {
 				if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
 					y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
 					selectedClient.connectedTo = server;
@@ -1435,7 +1272,7 @@ function mouseDownHandler(event) {
 		selectedClient = null;
 
 		//check if a client has been clicked
-		clients.forEach(function (client) {
+		sched.clients.forEach(function (client) {
 			if (x > client.x - clientSize / 2 - 5 && x < client.x + clientSize / 2 + 5 &&
 				y > client.y - serverSize / 2 - 5 && y < client.y + serverSize / 2 + 5) {
 				if (client.connectedTo === undefined) {
@@ -1455,7 +1292,7 @@ function mouseUpHandler(event) {
 
 		//check if a server has been clicked
 		if (selectedClient !== null) {
-			servers.forEach(function (server) {
+			sched.servers.forEach(function (server) {
 				if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
 					y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
 					selectedClient.connectedTo = server;
@@ -1508,7 +1345,7 @@ function touchHandler(event) {
 	}
 	else if (event.type == "touchend") {
 		if (selectedClient !== null) {
-			servers.forEach(function (server) {
+			sched.servers.forEach(function (server) {
 				if (mouseX > server.x - serverSize / 2 - 5 && mouseX < server.x + serverSize / 2 + 5
 					&& mouseY > server.y - serverSize / 2 - 5 && mouseY < server.y + serverSize / 2 + 5) {
 					selectedClient.connectedTo = server;
@@ -1536,7 +1373,7 @@ function keyboardHandler(event) {
 }
 
 function drawServers() {
-	servers.forEach(function (server) {
+	sched.servers.forEach(function (server) {
 		var i = server.capacity / serversCapacity - 1;
 
 		if (i < 0) {
@@ -1576,7 +1413,7 @@ function drawServers() {
 }
 
 function drawClients() {
-	clients.forEach(function (client) {
+	sched.clients.forEach(function (client) {
 		var x = client.x,
 			y = client.y;
 
@@ -1598,7 +1435,7 @@ function drawClients() {
 }
 
 function drawAttackers() {
-	attackers.forEach(function (attacker) {
+	sched.attackers.forEach(function (attacker) {
 		var x = attacker.x,
 			y = attacker.y;
 
@@ -1609,7 +1446,7 @@ function drawAttackers() {
 }
 
 function drawConnections() {
-	clients.forEach(function (client) {
+	sched.clients.forEach(function (client) {
 
 		var x = client.x,
 			y = client.y;
@@ -1619,7 +1456,7 @@ function drawConnections() {
 		}
 	});
 
-	attackers.forEach(function (attacker) {
+	sched.attackers.forEach(function (attacker) {
 		var x = attacker.x,
 			y = attacker.y;
 
@@ -1716,54 +1553,15 @@ function drawUI() {
 	drawText(WIDTH - 10, HEIGHT - 14, text, font, align, baseline, color);
 }
 
-function checkCollisions(x, y) {
-	for (var i = 0; i < servers.length; i += 1) {
-		s = servers[i];
-		if (Math.abs(x - s.x) < serverSize && Math.abs(y - s.y) < 2 * serverSize) {
-			return true;
-		}
-	}
-	for (var i = 0; i < clients.length; i += 1) {
-		c = clients[i];
-		if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
-			return true;
-		}
-	}
-	for (var i = 0; i < attackers.length; i += 1) {
-		c = attackers[i];
-		if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
-			return true;
-		}
-	}
-}
-
-function findClosestServer(x, y) {
-	var closest,
-		currentDistance = WIDTH;
-
-	servers.forEach(function (server) {
-		var newDistance = getDistance(x, y, server.x, server.y);
-		if (newDistance < currentDistance) {
-			currentDistance = newDistance;
-			closest = server;
-		}
-	});
-
-	return closest;
-}
-
 function resetGame() {
-	clients = [];
-	servers = [];
 	orchestrator = new MessageOrchestrator();
-	attackers = [];
 	clientsServed = 0;
 	droppedConnections = 0;
 	failedConnections = 0;
-	sched = new Scheduler();
 	upgradesTracker = new UpgradesTracker();
-	sched.createServer("c");
 	popularityTracker = new PopularityTracker(fader, upgradesTracker);
+	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas);
+	sched.createServer("c");
 	elapsedTime = 0;
 	fader.emptyQueues();
 	switchMode(gameModes.GAME);

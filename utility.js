@@ -133,13 +133,6 @@ function clear() {
 	context.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
-function getDistance(x1, y1, x2, y2) {
-	var xs = x2 - x1,
-		ys = y2 - y1;
-
-	return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
-}
-
 function log(s) {
 	document.getElementById("log").innerHTML += s + "<br>";
 }
