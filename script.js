@@ -716,6 +716,119 @@ class Button {
     }
     ;
 }
+class GameUI {
+    buttons = [];
+    click(x, y) {
+        this.buttons.some((button) => {
+            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
+                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
+                button.onClick();
+                return true;
+            }
+        });
+    }
+}
+class CursorTracker {
+    game;
+    canvas;
+    ui;
+    mouseX = 0;
+    mouseY = 0;
+    constructor(game, canvas, ui) {
+        this.game = game;
+        this.canvas = canvas;
+        this.ui = ui;
+    }
+    bind() {
+        this.canvas.onmousedown = (e) => this.mouseDownHandler(e);
+        this.canvas.onmouseup = (e) => this.mouseUpHandler(e);
+        this.canvas.onclick = (e) => this.clickHandler(e);
+        this.canvas.onmousemove = (e) => {
+            this.mouseX = e.clientX - this.canvas.offsetLeft;
+            this.mouseY = e.clientY - this.canvas.offsetTop;
+        };
+        this.canvas.ontouchstart = (e) => this.touchHandler(e);
+        this.canvas.ontouchmove = (e) => this.touchHandler(e);
+        this.canvas.ontouchend = (e) => this.touchHandler(e);
+        this.canvas.ontouchcancel = (e) => this.touchHandler(e);
+    }
+    clickHandler(event) {
+        const canvas = this.canvas, x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
+        this.ui.click(x, y);
+    }
+    cursorPositionHandler(x, y) {
+        const game = this.game, gameModes = Defaults.gameModes, clientSize = Defaults.clientSize, serverSize = Defaults.serverSize;
+        if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
+            if (game.selectedClient !== undefined) {
+                game.servers.forEach(function (server) {
+                    if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
+                        y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
+                        game.selectedClient.connectedTo = server;
+                    }
+                });
+            }
+            game.selectedClient = undefined;
+            game.clients.forEach((client) => {
+                if (x > client.x - clientSize / 2 - 5 && x < client.x + clientSize / 2 + 5 &&
+                    y > client.y - serverSize / 2 - 5 && y < client.y + serverSize / 2 + 5) {
+                    if (client.connectedTo === undefined) {
+                        game.selectedClient = client;
+                        this.mouseX = client.x;
+                        this.mouseY = client.y;
+                    }
+                }
+            });
+        }
+    }
+    mouseDownHandler(event) {
+        const canvas = this.canvas, x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
+        this.cursorPositionHandler(x, y);
+    }
+    mouseUpHandler(event) {
+        const game = this.game, canvas = this.canvas, gameModes = Defaults.gameModes, serverSize = Defaults.serverSize;
+        if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
+            const x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
+            if (game.selectedClient !== undefined) {
+                game.servers.forEach(function (server) {
+                    if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
+                        y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
+                        game.selectedClient.connectedTo = server;
+                        game.selectedClient = undefined;
+                    }
+                });
+            }
+        }
+    }
+    touchHandler(event) {
+        const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], x = touch.pageX - canvas.offsetLeft, y = touch.pageY - canvas.offsetTop;
+        event.preventDefault();
+        if (event.type == "touchstart") {
+            this.mouseX = x;
+            this.mouseY = y;
+            this.ui.click(x, y);
+            this.cursorPositionHandler(x, y);
+        }
+        else if (event.type == "touchmove") {
+            this.mouseX = x;
+            this.mouseY = y;
+        }
+        else if (event.type == "touchend") {
+            if (game.selectedClient !== undefined) {
+                const mouseX = this.mouseX, mouseY = this.mouseY, serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
+                game.servers.forEach(function (server) {
+                    if (mouseX > server.x - serverSize / 2 - 5 && mouseX < server.x + serverSize / 2 + 5
+                        && mouseY > server.y - serverSize / 2 - 5 && mouseY < server.y + serverSize / 2 + 5) {
+                        game.selectedClient.connectedTo = server;
+                    }
+                });
+                if (mouseX < game.selectedClient.x - clientSize / 2 - 5 || mouseX > game.selectedClient.x + clientSize / 2 + 5
+                    || mouseY < game.selectedClient.y - clientSize / 2 - 5 || mouseY > game.selectedClient.y + clientSize / 2 + 5) {
+                    game.selectedClient = undefined;
+                }
+            }
+        }
+    }
+}
 class FpsCounter {
     lastTimestamp = Date.now();
     fps = 0;
@@ -779,6 +892,7 @@ class Defaults {
     static serversCapacity = 80;
     static serverSize = 40;
     static serversSpeed = 3.5;
+    static gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
 }
 class Utilities {
     static drawRectBorder(x, y, w, h, c, bw, context) {

@@ -6,7 +6,7 @@ class Button {
         public height: number,
         public text: string,
         public color: string,
-        public onClick: () => {}) { }
+        public onClick: () => void) { }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
         let color;

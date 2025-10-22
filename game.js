@@ -3,8 +3,6 @@ var WIDTH;
 var HEIGHT;
 var context;
 var canvas;
-var mouseX;
-var mouseY;
 
 //constants
 var serverSize = 40;	//pixels (side)
@@ -29,6 +27,8 @@ var music;
 var orchestrator;
 var popularityTracker;
 var upgradesTracker;
+var cursor;
+var ui;
 
 var logActive = true;
 
@@ -84,7 +84,10 @@ var Tutorial = {
 			texts: ["This is a DATACENTER.",
 				"Its role is to send data to your clients.",
 				"Click 'Next' to continue."],
-			setup: function () { },
+			setup: function () {
+				buttons.push(Tutorial.nextButton);
+				buttons.push(Tutorial.homeButton);
+			},
 			run: function () { },
 			draw: function () {
 				drawCircleBorder(WIDTH / 2, HEIGHT / 2, serverSize + 9, "fireBrick", 2);
@@ -97,6 +100,8 @@ var Tutorial = {
 				"It wants to exchange data with your datacenter.",
 				"Your job will be to connect the clients to a datacenter."],
 			setup: function () {
+				buttons.push(Tutorial.nextButton);
+				buttons.push(Tutorial.homeButton);
 				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 2, 10000));
 				game.clients[0].life = -31;
 			},
@@ -113,7 +118,6 @@ var Tutorial = {
 				"Be quick though! Clients don't like waiting!",
 				"Create a CONNECTION to continue."],
 			setup: function () {
-				buttons = [];
 				buttons.push(Tutorial.homeButton);
 			},
 			run: function () {
@@ -138,6 +142,7 @@ var Tutorial = {
 			setup: function () {
 				popularityTracker.popularity = 0;
 				buttons.push(Tutorial.nextButton);
+				buttons.push(Tutorial.homeButton);
 			},
 			run: function () {
 				orchestrator.updateMessages();
@@ -165,7 +170,6 @@ var Tutorial = {
 				"Connect them as well to start gaining some more popularity.",
 				"Remember, if you wait too much, you will lose popularity!"],
 			setup: function () {
-				buttons = [];
 				buttons.push(Tutorial.homeButton);
 				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
 				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
@@ -209,6 +213,7 @@ var Tutorial = {
 				"You can see how busy a datacenter is by looking at its status bar."],
 			setup: function () {
 				buttons.push(Tutorial.nextButton);
+				buttons.push(Tutorial.homeButton);
 			},
 			run: function () {
 				orchestrator.updateMessages();
@@ -239,7 +244,6 @@ var Tutorial = {
 				"As your popularity grows, you will be able to upgrade it even more.",
 				"Press SPACE to pause the game and select an upgrade."],
 			setup: function () {
-				buttons = [];
 				buttons.push(Tutorial.homeButton);
 				document.addEventListener("keypress", Tutorial.listener);
 			},
@@ -288,7 +292,6 @@ var Tutorial = {
 			setup: function () {
 				document.removeEventListener("keypress", Tutorial.listener);
 				fader.removeFromPermanentQueue("upgradeTut");
-				buttons = [];
 
 				var x1, y1, x2, y2, x3, y3;
 				x1 = 250;
@@ -367,7 +370,6 @@ var Tutorial = {
 				"Now the clients can finish their data exchange without any more problems.",
 				"When a client is served successfully you will gain some more popularity."],
 			setup: function () {
-				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
 				game.clients[0].messagesToSend = 2;
@@ -417,7 +419,6 @@ var Tutorial = {
 				"This is likely to happen as you get more and more popular.",
 				"You'd better upgrade once again to cope with this situation."],
 			setup: function () {
-				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
 				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
@@ -484,7 +485,6 @@ var Tutorial = {
 			setup: function () {
 				document.removeEventListener("keypress", Tutorial.listener);
 				fader.removeFromPermanentQueue("upgradeTut");
-				buttons = [];
 
 				var x1, y1, x2, y2, x3, y3;
 				x1 = 250;
@@ -562,7 +562,6 @@ var Tutorial = {
 				"This is when a good load balancing strategy will start to matter.",
 				"Indeed you would be wiser to connect the clients to the new datacenter."],
 			setup: function () {
-				buttons = [];
 				buttons.push(Tutorial.homeButton);
 
 				game.clients[0].life = - 21;
@@ -603,7 +602,6 @@ var Tutorial = {
 				"This tutorial is finished.",
 				"You can start a new game or go back to the main menu."],
 			setup: function () {
-				buttons = [];
 				buttons.push(new Button(WIDTH / 3, HEIGHT - 40, 120, 40, "New game", "#FFFFFF", resetGame));
 				buttons.push(Tutorial.homeButton);
 			},
@@ -632,12 +630,16 @@ var Tutorial = {
 	nextButton: null,
 	homeButton: null,
 	initialize: function () {
+		buttons = [];
 		fader = new TextFader(context);
 		orchestrator = new MessageOrchestrator();
 		upgradesTracker = new UpgradesTracker();
 		popularityTracker = new PopularityTracker(fader, upgradesTracker);
 		game = new GameTracker(popularityTracker);
 		sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+		ui = new GameUI();
+		cursor = new CursorTracker(game, canvas, ui);
+		cursor.bind();
 		switchMode(gameModes.TUTORIAL);
 		fader.emptyQueues();
 		this.nextButton = new Button(WIDTH / 3, HEIGHT - 40, 120, 40, "Next", "#FFFFFF", function () {
@@ -652,6 +654,7 @@ var Tutorial = {
 	run: function () {
 		this.currentStep.run();
 		fader.update(1 / frameRate);
+		ui.buttons = buttons; //TODO: remove after porting
 		this.draw();
 	},
 	draw: function () {
@@ -669,6 +672,7 @@ var Tutorial = {
 		drawButtons();
 	},
 	advance: function () {
+		buttons = [];
 		this.currentStep = this.steps[this.currentStep.id + 1];
 		this.currentStep.setup();
 	},
@@ -694,9 +698,13 @@ function init() {
 	popularityTracker = new PopularityTracker(fader, upgradesTracker);
 	game = new GameTracker(popularityTracker);
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+	ui = new GameUI();
+	cursor = new CursorTracker(game, canvas, ui);
 
 	music.loop = true;
 	//music.play();
+
+	cursor.bind();
 
 	sched.createServer("c");
 
@@ -707,22 +715,7 @@ function init() {
 	$clouds.createCloud(WIDTH * 3 / 4, HEIGHT / 4, 220);
 	$clouds.createCloud(0 - WIDTH * 3 / 4, HEIGHT / 2, 220);
 
-	//attach mouse listeners to the canvas
-	canvas.addEventListener('mousedown', mouseDownHandler);
-	canvas.addEventListener('mouseup', mouseUpHandler);
-	canvas.addEventListener('click', clickHandler);
-	canvas.addEventListener('mousemove', function (event) {
-		mouseX = event.clientX - canvas.offsetLeft;
-		mouseY = event.clientY - canvas.offsetTop;
-	});
-
 	document.addEventListener("keypress", keyboardHandler);
-
-
-	canvas.addEventListener("touchstart", touchHandler, false);
-	canvas.addEventListener("touchmove", touchHandler, false);
-	canvas.addEventListener("touchend", touchHandler, false);
-	canvas.addEventListener("touchcancel", touchHandler, false);
 
 	window.onblur = function () {
 		if (game.currentGameMode === gameModes.GAME) {
@@ -764,6 +757,8 @@ function mainLoop() {
 		fpsCounter.update();
 		fpsCounter.logFps();
 	}
+
+	ui.buttons = buttons;
 }
 
 function gameLoop() {
@@ -1005,7 +1000,7 @@ function drawGame() {
 
 	//draw a line connecting the selected client to the mouse pointer
 	if (sc !== undefined) {
-		drawLine(sc.x, sc.y, mouseX, mouseY, "lightBlue", 3);
+		drawLine(sc.x, sc.y, cursor.mouseX, cursor.mouseY, "lightBlue", 3);
 		drawCircle(sc.x, sc.y, clientSize / 2 + 3, "lightBlue");
 	}
 
@@ -1151,111 +1146,6 @@ function drawUpgrade() {
 	drawText(WIDTH / 2, 60, "~ Select " + text + " ~", "30px monospace", "center", "middle", "red");
 }
 
-function mouseDownHandler(event) {
-	if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
-		const x = event.pageX - canvas.offsetLeft,
-			y = event.pageY - canvas.offsetTop;
-
-		//check if a server has been clicked
-		if (game.selectedClient !== undefined) {
-			game.servers.forEach(function (server) {
-				if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
-					y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
-					game.selectedClient.connectedTo = server;
-				}
-			});
-		}
-
-		game.selectedClient = undefined;
-
-		//check if a client has been clicked
-		game.clients.forEach(function (client) {
-			if (x > client.x - clientSize / 2 - 5 && x < client.x + clientSize / 2 + 5 &&
-				y > client.y - serverSize / 2 - 5 && y < client.y + serverSize / 2 + 5) {
-				if (client.connectedTo === undefined) {
-					game.selectedClient = client;
-					mouseX = client.x;
-					mouseY = client.y;
-				}
-			}
-		});
-	}
-}
-
-function mouseUpHandler(event) {
-	if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
-		var x = event.pageX - canvas.offsetLeft;
-		var y = event.pageY - canvas.offsetTop;
-
-		//check if a server has been clicked
-		if (game.selectedClient !== undefined) {
-			game.servers.forEach(function (server) {
-				if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
-					y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
-					game.selectedClient.connectedTo = server;
-					game.selectedClient = undefined;
-				}
-			});
-		}
-	}
-}
-
-function clickHandler(event) {
-	var x = event.pageX - canvas.offsetLeft;
-	var y = event.pageY - canvas.offsetTop;
-
-	buttons.some(function (button) {
-		if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-			y > button.y - button.height / 2 && y < button.y + button.height / 2) {
-			button.onClick();
-			return true;
-		}
-	});
-}
-
-function touchHandler(event) {
-	event.preventDefault();
-
-	var touch = event.targetTouches[0];
-
-	if (event.type == "touchstart") {
-		var x = touch.pageX - canvas.offsetLeft;
-		var y = touch.pageY - canvas.offsetTop;
-
-		mouseX = x;
-		mouseY = y;
-		buttons.forEach(function (button) {
-			if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-				y > button.y - button.height / 2 && y < button.y + button.height / 2) {
-				button.onClick();
-			}
-		});
-
-		mouseDownHandler(touch);
-	}
-	else if (event.type == "touchmove") {
-		var x = touch.pageX - canvas.offsetLeft;
-		var y = touch.pageY - canvas.offsetTop;
-
-		mouseX = x;
-		mouseY = y;
-	}
-	else if (event.type == "touchend") {
-		if (game.selectedClient !== undefined) {
-			game.servers.forEach(function (server) {
-				if (mouseX > server.x - serverSize / 2 - 5 && mouseX < server.x + serverSize / 2 + 5
-					&& mouseY > server.y - serverSize / 2 - 5 && mouseY < server.y + serverSize / 2 + 5) {
-					game.selectedClient.connectedTo = server;
-				}
-			});
-			if (mouseX < game.selectedClient.x - clientSize / 2 - 5 || mouseX > game.selectedClient.x + clientSize / 2 + 5
-				|| mouseY < game.selectedClient.y - clientSize / 2 - 5 || mouseY > game.selectedClient.y + clientSize / 2 + 5) {
-				game.selectedClient = undefined;
-			}
-		}
-	}
-}
-
 function keyboardHandler(event) {
 	event.preventDefault();
 	switch (event.keyCode) {
@@ -1385,6 +1275,9 @@ function drawMessages() {
 }
 
 function drawButtons() {
+	const mouseX = cursor.mouseX,
+		mouseY = cursor.mouseY;
+
 	buttons.forEach(function (button) {
 		if (mouseX > button.x - (button.width + 2) / 2 &&
 			mouseX < button.x + (button.width + 2) / 2 &&
@@ -1455,6 +1348,9 @@ function resetGame() {
 	upgradesTracker = new UpgradesTracker();
 	popularityTracker = new PopularityTracker(fader, upgradesTracker);
 	game = new GameTracker(popularityTracker);
+	ui = new GameUI();
+	cursor = new CursorTracker(game, canvas, ui);
+	cursor.bind();
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
 	sched.createServer("c");
 	fader.emptyQueues();

@@ -1,4 +1,5 @@
 class Utilities {
+
     // x, y = center
     public static drawRectBorder(
         x: number,
