@@ -246,6 +246,7 @@ class UpgradesTracker {
     upgrades = [100, 200, 300, 500, 700, 1000, 1300, 1700, 2100, 2600, 3100, 3700, 4300, 5000];
     nextUpgradeIndex = 0;
     upgradesAvailable = 0;
+    selectedUpgrade;
     get nextUpgrade() {
         if (this.nextUpgradeIndex >= this.upgrades.length) {
             return Infinity;
@@ -397,11 +398,91 @@ class Server {
     }
     ;
 }
+class GameTracker {
+    popularityTracker;
+    selectedClient;
+    currentGameMode = 0;
+    clientsServed = 0;
+    droppedConnections = 0;
+    failedConnections = 0;
+    elapsedTime = 0;
+    servers = [];
+    clients = [];
+    attackers = [];
+    constructor(popularityTracker) {
+        this.popularityTracker = popularityTracker;
+    }
+    update() {
+        this.elapsedTime += 1 / Defaults.frameRate;
+        this.updateClients();
+        this.updateServers();
+        this.updateAttackers();
+    }
+    updateServers() {
+        const elapsedTime = this.elapsedTime;
+        this.servers.forEach(function (s) {
+            if ((elapsedTime - s.lastMessageTime) > 1 / s.speed) {
+                s.sendMessage(elapsedTime);
+            }
+        });
+    }
+    updateClients() {
+        const elapsedTime = this.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
+        for (let i = 0; i < this.clients.length; i++) {
+            var c = this.clients[i];
+            if (remaining <= 0 && c.messagesToSend > 0) {
+                c.acksToReceive -= c.messagesToSend;
+                c.messagesToSend = 0;
+            }
+            if (c.messagesToSend === 0 && c.acksToReceive === 0) {
+                this.clients.splice(i--, 1);
+                this.clientsServed += 1;
+                continue;
+            }
+            if (c.nacksToDie === 0) {
+                c.connectedTo = undefined;
+                this.clients.splice(i--, 1);
+                this.droppedConnections += 1;
+                continue;
+            }
+            if (c.connectedTo === undefined) {
+                c.life += 1 / Defaults.frameRate;
+                if (remaining <= 0 || c.life > Defaults.maxClientWaitTime) {
+                    this.clients.splice(i--, 1);
+                    if (c === this.selectedClient) {
+                        this.selectedClient = undefined;
+                    }
+                    this.failedConnections += 1;
+                    this.popularityTracker.updatePopularity(-10, c.x, c.y);
+                }
+            }
+            else {
+                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientsSpeed) {
+                    c.sendMessage(elapsedTime);
+                }
+            }
+        }
+    }
+    updateAttackers() {
+        const elapsedTime = this.elapsedTime;
+        for (let i = 0; i < this.attackers.length; i += 1) {
+            var a = this.attackers[i];
+            if (a.messagesToReceive === 0) {
+                this.attackers.splice(i--, 1);
+                continue;
+            }
+            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientsSpeed) {
+                a.sendMessage(elapsedTime);
+            }
+        }
+    }
+}
 class Scheduler {
     popularityTracker;
     fader;
     orchestrator;
     canvas;
+    game;
     timeLastDDoS = 0;
     minClientMessages = 25;
     maxClientMessages = 35;
@@ -410,26 +491,24 @@ class Scheduler {
     spawnRate = 6;
     attackRate = 80;
     timeLastClient = 1 - this.spawnRate;
-    servers = [];
-    clients = [];
-    attackers = [];
-    constructor(popularityTracker, fader, orchestrator, canvas) {
+    constructor(popularityTracker, fader, orchestrator, canvas, game) {
         this.popularityTracker = popularityTracker;
         this.fader = fader;
         this.orchestrator = orchestrator;
         this.canvas = canvas;
+        this.game = game;
     }
-    schedule(elapsedTime) {
-        const popularity = this.popularityTracker.popularity;
+    schedule() {
+        const popularity = this.popularityTracker.popularity, elapsedTime = this.game.elapsedTime;
         var remaining = Defaults.gameLength * 60 - elapsedTime;
         if (remaining > Defaults.maxClientWaitTime) {
             if (elapsedTime - this.timeLastClient > Math.max(this.spawnRate - Math.cbrt(popularity / 40), 1.6) && Math.random() > 0.3) {
-                this.createClient(elapsedTime);
+                this.createClient();
             }
         }
         if (remaining > 30) {
             if (elapsedTime - this.timeLastDDoS > Math.max(this.attackRate - popularity / 100, 60) && Math.random() > 0.3) {
-                this.initiateDDoS(elapsedTime);
+                this.initiateDDoS();
             }
         }
     }
@@ -501,11 +580,11 @@ class Scheduler {
             x = Math.floor(Math.random() * (maxX - minX) + minX);
             y = Math.floor(Math.random() * (maxY - minY) + minY);
         }
-        this.servers.push(new Server(x, y));
+        this.game.servers.push(new Server(x, y));
     }
     ;
-    createClient(elapsedTime) {
-        const width = this.canvas.width, height = this.canvas.height, clientSize = Defaults.clientSize;
+    createClient() {
+        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize;
         let x, y, msgNr;
         x = Math.floor(Math.random() * (width - 2 * clientSize) + clientSize);
         y = Math.floor(Math.random() * (height - 2 * clientSize) + clientSize);
@@ -515,13 +594,13 @@ class Scheduler {
         }
         msgNr = Math.floor(Math.random() * (this.maxClientMessages - this.minClientMessages)) +
             this.minClientMessages + Math.floor(this.popularityTracker.popularity / 100);
-        this.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, msgNr));
+        this.game.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, msgNr));
         this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
         this.timeLastClient = elapsedTime;
     }
     ;
-    initiateDDoS(elapsedTime) {
-        const width = this.canvas.width, height = this.canvas.height, clientSize = Defaults.clientSize;
+    initiateDDoS() {
+        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize;
         var i, x, y, a, mod = Math.floor(this.popularityTracker.popularity / 400), n = this.attackersNumber + mod;
         for (i = 0; i < n; i += 1) {
             x = Math.floor(Math.random() * (width - 2 * clientSize) + clientSize);
@@ -533,28 +612,28 @@ class Scheduler {
             const server = this.findClosestServer(x, y);
             if (server) {
                 a = new Attacker(this.orchestrator, x, y, this.attackersMessages + mod, server);
-                this.attackers.push(a);
+                this.game.attackers.push(a);
             }
         }
         this.timeLastDDoS = elapsedTime;
     }
     ;
     checkCollisions(x, y) {
-        const serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
-        for (let i = 0; i < this.servers.length; i += 1) {
-            const s = this.servers[i];
+        const serverSize = Defaults.serverSize, clientSize = Defaults.clientSize, servers = this.game.servers, clients = this.game.clients, attackers = this.game.attackers;
+        for (let i = 0; i < servers.length; i += 1) {
+            const s = servers[i];
             if (Math.abs(x - s.x) < serverSize && Math.abs(y - s.y) < 2 * serverSize) {
                 return true;
             }
         }
-        for (let i = 0; i < this.clients.length; i += 1) {
-            const c = this.clients[i];
+        for (let i = 0; i < clients.length; i += 1) {
+            const c = clients[i];
             if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
                 return true;
             }
         }
-        for (let i = 0; i < this.attackers.length; i += 1) {
-            const a = this.attackers[i];
+        for (let i = 0; i < attackers.length; i += 1) {
+            const a = attackers[i];
             if (Math.abs(x - a.x) < clientSize && Math.abs(y - a.y) < clientSize) {
                 return true;
             }
@@ -562,7 +641,7 @@ class Scheduler {
     }
     findClosestServer(x, y) {
         let closest, currentDistance = this.canvas.width;
-        this.servers.forEach(function (server) {
+        this.game.servers.forEach((server) => {
             const newDistance = Utilities.getDistance(x, y, server.x, server.y);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;
@@ -691,6 +770,7 @@ class SpecialButton {
 }
 class Defaults {
     static clientSize = 30;
+    static clientsSpeed = 2;
     static defaultColor = 'black';
     static frameRate = 60;
     static gameLength = 5;

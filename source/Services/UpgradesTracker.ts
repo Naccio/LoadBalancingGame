@@ -4,6 +4,7 @@ class UpgradesTracker {
     private nextUpgradeIndex = 0;
 
     public upgradesAvailable = 0;
+    public selectedUpgrade?: string;
 
     public get nextUpgrade() {
         if (this.nextUpgradeIndex >= this.upgrades.length) {

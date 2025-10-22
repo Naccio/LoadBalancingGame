@@ -2,6 +2,7 @@
 /// <reference path='../Model/Client.ts' />
 /// <reference path='../Model/Server.ts' />
 /// <reference path='../UI/TextFader.ts' />
+/// <reference path='GameTracker.ts' />
 /// <reference path='MessageOrchestrator.ts' />
 /// <reference path='PopularityTracker.ts' />
 
@@ -14,25 +15,30 @@ class Scheduler {
     public spawnRate = 6;
     public attackRate = 80;
     public timeLastClient = 1 - this.spawnRate;
-    public servers: Server[] = [];
-    public clients: Client[] = [];
-    public attackers: Attacker[] = [];
 
-    constructor(private popularityTracker: PopularityTracker, private fader: TextFader, private orchestrator: MessageOrchestrator, private canvas: HTMLCanvasElement) { }
+    constructor(
+        private popularityTracker: PopularityTracker,
+        private fader: TextFader,
+        private orchestrator: MessageOrchestrator,
+        private canvas: HTMLCanvasElement,
+        private game: GameTracker
+    ) { }
 
-    schedule(elapsedTime: number) {
-        const popularity = this.popularityTracker.popularity;
+    schedule() {
+        const popularity = this.popularityTracker.popularity,
+            elapsedTime = this.game.elapsedTime;
+
         var remaining = Defaults.gameLength * 60 - elapsedTime;
 
         if (remaining > Defaults.maxClientWaitTime) {
             if (elapsedTime - this.timeLastClient > Math.max(this.spawnRate - Math.cbrt(popularity / 40), 1.6) && Math.random() > 0.3) {
-                this.createClient(elapsedTime);
+                this.createClient();
             }
         }
 
         if (remaining > 30) {
             if (elapsedTime - this.timeLastDDoS > Math.max(this.attackRate - popularity / 100, 60) && Math.random() > 0.3) {
-                this.initiateDDoS(elapsedTime);
+                this.initiateDDoS();
             }
         }
     };
@@ -110,12 +116,13 @@ class Scheduler {
             y = Math.floor(Math.random() * (maxY - minY) + minY);
         }
 
-        this.servers.push(new Server(x, y));
+        this.game.servers.push(new Server(x, y));
     };
 
-    createClient(elapsedTime: number) {
+    createClient() {
         const width = this.canvas.width,
             height = this.canvas.height,
+            elapsedTime = this.game.elapsedTime,
             clientSize = Defaults.clientSize;
         let x, y, msgNr;
         //client position
@@ -131,14 +138,15 @@ class Scheduler {
         msgNr = Math.floor(Math.random() * (this.maxClientMessages - this.minClientMessages)) +
             this.minClientMessages + Math.floor(this.popularityTracker.popularity / 100);
 
-        this.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, msgNr));
+        this.game.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, msgNr));
         this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
         this.timeLastClient = elapsedTime;
     };
 
-    initiateDDoS(elapsedTime: number) {
+    initiateDDoS() {
         const width = this.canvas.width,
             height = this.canvas.height,
+            elapsedTime = this.game.elapsedTime,
             clientSize = Defaults.clientSize;
         var i, x, y, a,
             mod = Math.floor(this.popularityTracker.popularity / 400),
@@ -157,7 +165,7 @@ class Scheduler {
             if (server) {
                 a = new Attacker(this.orchestrator, x, y, this.attackersMessages + mod, server);
 
-                this.attackers.push(a);
+                this.game.attackers.push(a);
             }
         }
 
@@ -166,22 +174,25 @@ class Scheduler {
 
     private checkCollisions(x: number, y: number) {
         const serverSize = Defaults.serverSize,
-            clientSize = Defaults.clientSize;
+            clientSize = Defaults.clientSize,
+            servers = this.game.servers,
+            clients = this.game.clients,
+            attackers = this.game.attackers;
 
-        for (let i = 0; i < this.servers.length; i += 1) {
-            const s = this.servers[i];
+        for (let i = 0; i < servers.length; i += 1) {
+            const s = servers[i];
             if (Math.abs(x - s.x) < serverSize && Math.abs(y - s.y) < 2 * serverSize) {
                 return true;
             }
         }
-        for (let i = 0; i < this.clients.length; i += 1) {
-            const c = this.clients[i];
+        for (let i = 0; i < clients.length; i += 1) {
+            const c = clients[i];
             if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
                 return true;
             }
         }
-        for (let i = 0; i < this.attackers.length; i += 1) {
-            const a = this.attackers[i];
+        for (let i = 0; i < attackers.length; i += 1) {
+            const a = attackers[i];
             if (Math.abs(x - a.x) < clientSize && Math.abs(y - a.y) < clientSize) {
                 return true;
             }
@@ -192,7 +203,7 @@ class Scheduler {
         let closest,
             currentDistance = this.canvas.width;
 
-        this.servers.forEach(function (server) {
+        this.game.servers.forEach((server) => {
             const newDistance = Utilities.getDistance(x, y, server.x, server.y);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;

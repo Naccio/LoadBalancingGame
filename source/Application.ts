@@ -1,6 +1,7 @@
 /// <reference path='Model/Attacker.ts' />
 /// <reference path='Model/Client.ts' />
 /// <reference path='Model/Server.ts' />
+/// <reference path='Services/GameTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />
 /// <reference path='UI/BorderButton.ts' />
 /// <reference path='UI/Button.ts' />
