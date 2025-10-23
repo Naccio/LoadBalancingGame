@@ -8,15 +8,7 @@ function drawText(x, y, text, font, align, baseline, color) {
 }
 
 function drawLine(x1, y1, x2, y2, c, w) {
-	if (!w) {
-		w = 1;
-	}
-	context.strokeStyle = c;
-	context.lineWidth = w;
-	context.beginPath();
-	context.moveTo(x1, y1);
-	context.lineTo(x2, y2);
-	context.stroke();
+	Utilities.drawLine(x1, y1, x2, y2, c, w, context);
 }
 
 function invertColor(color) {

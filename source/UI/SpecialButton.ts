@@ -7,8 +7,8 @@ class SpecialButton {
         public color: string,
         public hoverColor: string,
         public borderWidth: number,
-        public onClick: () => {},
-        private specialDraw: (h: boolean) => {}) { }
+        public onClick: () => void,
+        private specialDraw: (h: boolean) => void) { }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
         Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, '', 0, context);

@@ -33,37 +33,6 @@ var credits;
 
 var logActive = true;
 
-var volumeButton = new SpecialButton(WIDTH - 40, HEIGHT - 30, 20, 20, "rgba(0,0,0,0)", "rgba(0,0,0,0)", 0, function () {
-	if (music.paused) {
-		music.play();
-	} else {
-		music.pause();
-	}
-}, function (hovered) {
-	var clr = "rgba(255,255,255,0.8)",
-		status = "On";
-	if (hovered) {
-		clr = "#FFFFFF";
-	}
-	drawRect(this.x - this.width / 4 + 1, this.y, this.width / 4 + 1, this.height / 2 - 1, clr);
-	var path = new Path2D();
-	path.moveTo(this.x - 1, this.y - this.height / 4);
-	path.lineTo(this.x + this.width / 4, this.y - this.height / 2 + 1);
-	path.lineTo(this.x + this.width / 4, this.y + this.height / 2 - 1);
-	path.lineTo(this.x - 1, this.y + this.height / 4);
-	path.closePath();
-	context.fillStyle = clr;
-	context.fill(path);
-
-	if (music.paused) {
-		drawLine(this.x - this.width / 2, this.y + this.height / 2, this.x + this.width / 2, this.y - this.height / 2, "red", 2);
-		status = "Off";
-	}
-	if (hovered) {
-		drawText(this.x, this.y + this.width / 2 + 2, "Music: " + status, "10px monospace", "center", "top", "#fff");
-	}
-});
-
 var Tutorial = {
 	steps: [
 		{
@@ -779,7 +748,7 @@ function menuLoop() {
 			switchMode(gameModes.CREDITS);
 		}));
 
-		buttons.push(volumeButton);
+		buttons.push(ui.volumeButton);
 	}
 	drawMenu();
 }
@@ -805,7 +774,7 @@ function pauseLoop() {
 			switchMode(gameModes.MENU);
 		}));
 
-		buttons.push(volumeButton);
+		buttons.push(ui.volumeButton);
 
 		if (upgradesTracker.upgradesAvailable > 0) {
 			var x1, y1, x2, y2, x3, y3;
@@ -1296,7 +1265,7 @@ function setupGame() {
 	orchestrator = new MessageOrchestrator();
 	upgradesTracker = new UpgradesTracker();
 	popularityTracker = new PopularityTracker(fader, upgradesTracker);
-	ui = new GameUI();
+	ui = new GameUI(music, canvas);
 	game = new GameTracker(popularityTracker, ui);
 	cursor = new CursorTracker(game, canvas, ui);
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);

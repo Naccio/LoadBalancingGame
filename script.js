@@ -431,6 +431,36 @@ class Button {
 }
 class GameUI {
     buttons = [];
+    volumeButton;
+    constructor(music, canvas) {
+        const context = canvas.getContext('2d'), WIDTH = canvas.width, HEIGHT = canvas.height, x = WIDTH - 40, y = HEIGHT - 40, w = 20, h = 20;
+        this.volumeButton = new SpecialButton(x, y, w, h, 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 0, () => {
+            if (music.paused) {
+                music.play();
+            }
+            else {
+                music.pause();
+            }
+        }, (hovered) => {
+            var clr = hovered ? 'white' : 'rgba(255,255,255,0.8)', status = music.paused ? 'Off' : 'On';
+            Utilities.drawRect(x - w / 4 + 1, y, w / 4 + 1, h / 2 - 1, clr, '', 0, context);
+            var path = new Path2D();
+            path.moveTo(x - 1, y - h / 4);
+            path.lineTo(x + w / 4, y - h / 2 + 1);
+            path.lineTo(x + w / 4, y + h / 2 - 1);
+            path.lineTo(x - 1, y + h / 4);
+            path.closePath();
+            context.fillStyle = clr;
+            context.fill(path);
+            if (music.paused) {
+                Utilities.drawLine(x - w / 2, y + h / 2, x + w / 2, y - h / 2, "red", 2, context);
+                status = "Off";
+            }
+            if (hovered) {
+                Utilities.drawText(x, y + w / 2 + 2, 'Music: ' + status, '10px monospace', 'center', 'top', '#fff', context);
+            }
+        });
+    }
     click(x, y) {
         this.buttons.some((button) => {
             if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
@@ -527,6 +557,17 @@ class GameTracker {
     }
 }
 class Utilities {
+    static drawLine(x1, y1, x2, y2, c, w, context) {
+        if (!w) {
+            w = 1;
+        }
+        context.strokeStyle = c;
+        context.lineWidth = w;
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+    }
     static drawRectBorder(x, y, w, h, c, bw, context) {
         if (!c) {
             c = Defaults.defaultColor;

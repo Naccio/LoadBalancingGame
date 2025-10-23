@@ -1,5 +1,17 @@
 class Utilities {
 
+    public static drawLine(x1: number, y1: number, x2: number, y2: number, c: string, w: number, context: CanvasRenderingContext2D) {
+        if (!w) {
+            w = 1;
+        }
+        context.strokeStyle = c;
+        context.lineWidth = w;
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+    }
+
     // x, y = center
     public static drawRectBorder(
         x: number,
