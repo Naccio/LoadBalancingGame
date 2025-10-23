@@ -1,6 +1,7 @@
 /// <reference path='../Model/Attacker.ts' />
 /// <reference path='../Model/Client.ts' />
 /// <reference path='../Model/Server.ts' />
+/// <reference path='../UI/GameUI.ts' />
 /// <reference path='PopularityTracker.ts' />
 
 class GameTracker {
@@ -14,7 +15,12 @@ class GameTracker {
     public clients: Client[] = [];
     public attackers: Attacker[] = [];
 
-    constructor(private popularityTracker: PopularityTracker) { }
+    constructor(private popularityTracker: PopularityTracker, private ui: GameUI) { }
+
+    switchMode(gameMode: number) {
+        this.ui.buttons = [];
+        this.currentGameMode = gameMode;
+    }
 
     update() {
         this.elapsedTime += 1 / Defaults.frameRate;

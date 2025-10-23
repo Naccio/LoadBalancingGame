@@ -398,8 +398,52 @@ class Server {
     }
     ;
 }
+class Button {
+    x;
+    y;
+    width;
+    height;
+    text;
+    color;
+    onClick;
+    constructor(x, y, width, height, text, color, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.text = text;
+        this.color = color;
+        this.onClick = onClick;
+    }
+    draw(hovered, context) {
+        let color;
+        if (hovered) {
+            Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, this.color, 2, context);
+            color = Utilities.invertColor(this.color);
+        }
+        else {
+            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.color, 2, context);
+            color = this.color;
+        }
+        Utilities.drawText(this.x, this.y, this.text, '15px monospace', 'center', 'middle', color, context);
+    }
+    ;
+}
+class GameUI {
+    buttons = [];
+    click(x, y) {
+        this.buttons.some((button) => {
+            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
+                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
+                button.onClick();
+                return true;
+            }
+        });
+    }
+}
 class GameTracker {
     popularityTracker;
+    ui;
     selectedClient;
     currentGameMode = 0;
     clientsServed = 0;
@@ -409,8 +453,13 @@ class GameTracker {
     servers = [];
     clients = [];
     attackers = [];
-    constructor(popularityTracker) {
+    constructor(popularityTracker, ui) {
         this.popularityTracker = popularityTracker;
+        this.ui = ui;
+    }
+    switchMode(gameMode) {
+        this.ui.buttons = [];
+        this.currentGameMode = gameMode;
     }
     update() {
         this.elapsedTime += 1 / Defaults.frameRate;
@@ -475,6 +524,100 @@ class GameTracker {
                 a.sendMessage(elapsedTime);
             }
         }
+    }
+}
+class Utilities {
+    static drawRectBorder(x, y, w, h, c, bw, context) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (!bw) {
+            bw = 1;
+        }
+        context.strokeStyle = c;
+        context.lineWidth = bw;
+        context.strokeRect(x - w / 2 - bw / 2, y - h / 2 - bw / 2, w + bw, h + bw);
+    }
+    static drawRect(x, y, w, h, c, bc, bw, context) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (bc) {
+            Utilities.drawRectBorder(x, y, w, h, bc, bw, context);
+        }
+        context.fillStyle = c;
+        context.beginPath();
+        context.rect(x - w / 2, y - h / 2, w, h);
+        context.closePath();
+        context.fill();
+    }
+    static drawText(x, y, text, font, align, baseline, color, context) {
+        context.font = font;
+        context.textAlign = align;
+        context.textBaseline = baseline;
+        context.fillStyle = color;
+        context.fillText(text, x, y);
+    }
+    static getDistance(x1, y1, x2, y2) {
+        var xs = x2 - x1, ys = y2 - y1;
+        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
+    }
+    static invertColor(color) {
+        color = color.substring(1);
+        let colorNumber = parseInt(color, 16);
+        colorNumber = 0xFFFFFF ^ colorNumber;
+        color = colorNumber.toString(16);
+        color = ('000000' + color).slice(-6);
+        color = '#' + color;
+        return color;
+    }
+}
+class Credits {
+    canvas;
+    $clouds;
+    buttons;
+    constructor(canvas, $clouds, game) {
+        this.canvas = canvas;
+        this.$clouds = $clouds;
+        const w = canvas.width, h = canvas.height;
+        this.buttons = [new Button(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
+                game.switchMode(Defaults.gameModes.MENU);
+            })];
+    }
+    getButtons() {
+        return this.buttons;
+    }
+    update() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        context.clearRect(0, 0, w, h);
+        Utilities.drawRect(w / 2, h / 2, w, h, '#0360AE', '', 0, context);
+        this.$clouds.draw(context);
+        this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
+        this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');
+        this.drawCredits(388, 'Music by:', 'Macspider', '(soundcloud.com/macspider)');
+    }
+    drawCredits(y, heading, text, subText) {
+        this.drawRect(y);
+        this.drawHeading(y - 28, heading);
+        this.drawMainText(y, text);
+        this.drawSubText(y + 28, subText);
+    }
+    drawRect(y) {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width;
+        Utilities.drawRect(w / 2, y, w, 100, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
+    }
+    drawHeading(y, text) {
+        this.drawText(y, text, 'bold 20px monospace', 'red');
+    }
+    drawMainText(y, text) {
+        this.drawText(y, text, '30px monospace', 'white');
+    }
+    drawSubText(y, text) {
+        this.drawText(y, text, '15px monospace', '#ddd');
+    }
+    drawText(y, text, font, color) {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = "center", baseline = "middle";
+        Utilities.drawText(w / 2, y, text, font, align, baseline, color, context);
     }
 }
 class Scheduler {
@@ -685,49 +828,6 @@ class BorderButton {
         Utilities.drawText(this.x, this.y, this.text, '15px monospace', 'center', 'middle', color, context);
     }
 }
-class Button {
-    x;
-    y;
-    width;
-    height;
-    text;
-    color;
-    onClick;
-    constructor(x, y, width, height, text, color, onClick) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.text = text;
-        this.color = color;
-        this.onClick = onClick;
-    }
-    draw(hovered, context) {
-        let color;
-        if (hovered) {
-            Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, this.color, 2, context);
-            color = Utilities.invertColor(this.color);
-        }
-        else {
-            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.color, 2, context);
-            color = this.color;
-        }
-        Utilities.drawText(this.x, this.y, this.text, '15px monospace', 'center', 'middle', color, context);
-    }
-    ;
-}
-class GameUI {
-    buttons = [];
-    click(x, y) {
-        this.buttons.some((button) => {
-            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
-                button.onClick();
-                return true;
-            }
-        });
-    }
-}
 class CursorTracker {
     game;
     canvas;
@@ -893,50 +993,4 @@ class Defaults {
     static serverSize = 40;
     static serversSpeed = 3.5;
     static gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
-}
-class Utilities {
-    static drawRectBorder(x, y, w, h, c, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.strokeRect(x - w / 2 - bw / 2, y - h / 2 - bw / 2, w + bw, h + bw);
-    }
-    static drawRect(x, y, w, h, c, bc, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawRectBorder(x, y, w, h, bc, bw, context);
-        }
-        context.fillStyle = c;
-        context.beginPath();
-        context.rect(x - w / 2, y - h / 2, w, h);
-        context.closePath();
-        context.fill();
-    }
-    static drawText(x, y, text, font, align, baseline, color, context) {
-        context.font = font;
-        context.textAlign = align;
-        context.textBaseline = baseline;
-        context.fillStyle = color;
-        context.fillText(text, x, y);
-    }
-    static getDistance(x1, y1, x2, y2) {
-        var xs = x2 - x1, ys = y2 - y1;
-        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
-    }
-    static invertColor(color) {
-        color = color.substring(1);
-        let colorNumber = parseInt(color, 16);
-        colorNumber = 0xFFFFFF ^ colorNumber;
-        color = colorNumber.toString(16);
-        color = ('000000' + color).slice(-6);
-        color = '#' + color;
-        return color;
-    }
 }

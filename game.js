@@ -29,6 +29,7 @@ var popularityTracker;
 var upgradesTracker;
 var cursor;
 var ui;
+var credits;
 
 var logActive = true;
 
@@ -630,18 +631,8 @@ var Tutorial = {
 	nextButton: null,
 	homeButton: null,
 	initialize: function () {
-		buttons = [];
-		fader = new TextFader(context);
-		orchestrator = new MessageOrchestrator();
-		upgradesTracker = new UpgradesTracker();
-		popularityTracker = new PopularityTracker(fader, upgradesTracker);
-		game = new GameTracker(popularityTracker);
-		sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
-		ui = new GameUI();
-		cursor = new CursorTracker(game, canvas, ui);
-		cursor.bind();
+		setupGame();
 		switchMode(gameModes.TUTORIAL);
-		fader.emptyQueues();
 		this.nextButton = new Button(WIDTH / 3, HEIGHT - 40, 120, 40, "Next", "#FFFFFF", function () {
 			Tutorial.advance();
 		});
@@ -693,20 +684,11 @@ function init() {
 	fader = new TextFader(context);
 	fpsCounter = new FpsCounter();
 	music = new Audio("assets/music.mp3");
-	orchestrator = new MessageOrchestrator();
-	upgradesTracker = new UpgradesTracker();
-	popularityTracker = new PopularityTracker(fader, upgradesTracker);
-	game = new GameTracker(popularityTracker);
-	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
-	ui = new GameUI();
-	cursor = new CursorTracker(game, canvas, ui);
+
+	setupGame();
 
 	music.loop = true;
 	//music.play();
-
-	cursor.bind();
-
-	sched.createServer("c");
 
 	$clouds.createCloud(WIDTH / 4, HEIGHT / 4, 220);
 	$clouds.createCloud(0 - WIDTH / 4, HEIGHT / 2, 220);
@@ -729,6 +711,10 @@ function init() {
 }
 
 function mainLoop() {
+	// TODO: Remove after porting
+	if (game.currentGameMode !== gameModes.TUTORIAL) {
+		buttons = [];
+	}
 	switch (game.currentGameMode) {
 		case gameModes.MENU:
 			menuLoop();
@@ -740,7 +726,10 @@ function mainLoop() {
 			gameOverLoop();
 			break;
 		case gameModes.CREDITS:
-			creditsLoop();
+			credits.update();
+			buttons = credits.getButtons();
+			ui.buttons = buttons;
+			drawButtons();
 			break;
 		case gameModes.PAUSE:
 			pauseLoop();
@@ -762,6 +751,9 @@ function mainLoop() {
 }
 
 function gameLoop() {
+	if (game.servers.length === 0) {
+		sched.createServer('c');
+	}
 	orchestrator.updateMessages();
 	game.update();
 	fader.update(1 / frameRate);
@@ -801,16 +793,6 @@ function gameOverLoop() {
 		buttons.push(homeButton);
 	}
 	drawGameOver();
-}
-
-function creditsLoop() {
-	if (buttons.length === 0) {
-		var homeButton = new Button(WIDTH / 2, HEIGHT - 60, 120, 40, "Back", "#FFFFFF", function () {
-			switchMode(gameModes.MENU);
-		});
-		buttons.push(homeButton);
-	}
-	drawCredits();
 }
 
 function pauseLoop() {
@@ -1068,39 +1050,6 @@ function drawGameOver() {
 	drawButtons();
 }
 
-function drawCredits() {
-	var x = WIDTH / 2,
-		font = "bold 20px monospace",
-		align = "center",
-		baseline = "middle",
-		color = "red";
-
-	clear();
-	drawRect(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "#0360AE");
-	$clouds.draw(context);
-	drawRect(WIDTH / 2, 128, WIDTH, 100, "rgba(0,0,0,0.1)", "rgba(200,200,200,0.5)");
-	drawRect(WIDTH / 2, 258, WIDTH, 100, "rgba(0,0,0,0.1)", "rgba(200,200,200,0.5)");
-	drawRect(WIDTH / 2, 388, WIDTH, 100, "rgba(0,0,0,0.1)", "rgba(200,200,200,0.5)");
-
-	drawText(x, 100, "An idea by:", font, align, baseline, color);
-	drawText(x, 230, "Designed and developed by:", font, align, baseline, color);
-	drawText(x, 360, "Music by:", font, align, baseline, color);
-
-	color = "white";
-	font = "30px monospace";
-	drawText(x, 125, "Treestle", font, align, baseline, color);
-	drawText(x, 255, "Naccio", font, align, baseline, color);
-	drawText(x, 385, "Macspider", font, align, baseline, color);
-
-	color = "#DDDDDD";
-	font = "15px monospace";
-	drawText(x, 156, "(treestle.com)", font, align, baseline, color);
-	drawText(x, 286, "(naccio.net)", font, align, baseline, color);
-	drawText(x, 416, "(soundcloud.com/macspider)", font, align, baseline, color);
-
-	drawButtons();
-}
-
 function drawPause() {
 	var x = WIDTH / 2,
 		font = "25px monospace",
@@ -1343,22 +1292,27 @@ function drawUI() {
 	drawText(WIDTH - 10, HEIGHT - 14, text, font, align, baseline, color);
 }
 
-function resetGame() {
+function setupGame() {
 	orchestrator = new MessageOrchestrator();
 	upgradesTracker = new UpgradesTracker();
 	popularityTracker = new PopularityTracker(fader, upgradesTracker);
-	game = new GameTracker(popularityTracker);
 	ui = new GameUI();
+	game = new GameTracker(popularityTracker, ui);
 	cursor = new CursorTracker(game, canvas, ui);
-	cursor.bind();
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
-	sched.createServer("c");
+	credits = new Credits(canvas, $clouds, game);
+
+	cursor.bind();
 	fader.emptyQueues();
+}
+
+function resetGame() {
+	setupGame();
 	switchMode(gameModes.GAME);
 }
 
 function switchMode(mode) {
-	game.currentGameMode = mode;
+	game.switchMode(mode);
 	buttons = [];
 }
 
