@@ -13,8 +13,14 @@ class UpgradesTracker {
         return this.upgrades[this.nextUpgradeIndex];
     };
 
-    public increaseUpgrades() {
+    increaseUpgrades() {
         this.upgradesAvailable += 1;
         this.nextUpgradeIndex += 1;
+    }
+
+    reset() {
+        this.nextUpgradeIndex = 0;
+        this.upgradesAvailable = 0;
+        this.selectedUpgrade = undefined;
     }
 }

@@ -55,6 +55,15 @@ class Utilities {
         context.fill();
     }
 
+    public static drawSky(canvas: HTMLCanvasElement, $clouds: any) {
+        const context = canvas.getContext('2d')!,
+            w = canvas.width,
+            h = canvas.height;
+
+        Utilities.drawRect(w / 2, h / 2, w, h, '#0360AE', '', 0, context);
+        $clouds.draw(context);
+    }
+
     public static drawText(
         x: number,
         y: number,

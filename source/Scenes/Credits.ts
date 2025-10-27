@@ -25,8 +25,7 @@ class Credits implements Scene {
             h = this.canvas.height;
 
         context.clearRect(0, 0, w, h);
-        Utilities.drawRect(w / 2, h / 2, w, h, '#0360AE', '', 0, context);
-        this.$clouds.draw(context);
+        Utilities.drawSky(this.canvas, this.$clouds);
 
         this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
         this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');

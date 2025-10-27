@@ -8,6 +8,10 @@ class PopularityTracker {
         this.popularity = 0;
     }
 
+    reset() {
+        this.popularity = 0;
+    }
+
     updatePopularity(amount: number, x: number, y: number) {
         let fontSize = 12,
             color = { r: 0, g: 150, b: 0 },

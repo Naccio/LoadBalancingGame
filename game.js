@@ -29,7 +29,9 @@ var popularityTracker;
 var upgradesTracker;
 var cursor;
 var ui;
+
 var credits;
+var menu;
 
 var logActive = true;
 
@@ -680,13 +682,19 @@ function init() {
 }
 
 function mainLoop() {
+	function update(scene) {
+		scene.update();
+		buttons = scene.getButtons();
+		ui.buttons = buttons;
+		drawButtons();
+	}
 	// TODO: Remove after porting
 	if (game.currentGameMode !== gameModes.TUTORIAL) {
 		buttons = [];
 	}
 	switch (game.currentGameMode) {
 		case gameModes.MENU:
-			menuLoop();
+			update(menu);
 			break;
 		case gameModes.GAME:
 			gameLoop();
@@ -695,10 +703,7 @@ function mainLoop() {
 			gameOverLoop();
 			break;
 		case gameModes.CREDITS:
-			credits.update();
-			buttons = credits.getButtons();
-			ui.buttons = buttons;
-			drawButtons();
+			update(credits);
 			break;
 		case gameModes.PAUSE:
 			pauseLoop();
@@ -736,21 +741,6 @@ function gameLoop() {
 	}
 
 	drawGame();
-}
-
-function menuLoop() {
-	if (buttons.length === 0) {
-		buttons.push(new Button(WIDTH / 2, HEIGHT / 2, 120, 40, "Tutorial", "#FFFFFF", function () {
-			Tutorial.initialize();
-		}));
-		buttons.push(new Button(WIDTH / 2, HEIGHT / 2 + 60, 120, 40, "New Game", "#FFFFFF", resetGame));
-		buttons.push(new Button(WIDTH / 2, HEIGHT / 2 + 120, 120, 40, "Credits", "#FFFFFF", function () {
-			switchMode(gameModes.CREDITS);
-		}));
-
-		buttons.push(ui.volumeButton);
-	}
-	drawMenu();
 }
 
 function gameOverLoop() {
@@ -961,25 +951,6 @@ function drawGame() {
 	drawAttackers();
 	drawServers();
 	drawUI();
-}
-
-function drawMenu() {
-	var font = "small-caps bold 110px monospace",
-		align = "center",
-		baseline = "middle",
-		color = "rgba(255,255,255,0.6)";
-
-	clear();
-	drawRect(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "#0360AE");
-	$clouds.draw(context);
-	drawRect(WIDTH / 2, 140, WIDTH, 180, "rgba(0,0,0,0.1)", "rgba(200,200,200,0.5)");
-	drawText(WIDTH / 2, 110, "Load Balancing", font, align, baseline, color, 1, "#fff");
-	font = "45px monospace";
-	drawText(WIDTH / 2, 185, "The Game", font, align, baseline, color, 1, "rgba(255,255,255,0.9)");
-
-	drawLine(120, 160, WIDTH - 118, 160, "red", 2);
-
-	drawButtons();
 }
 
 function drawGameOver() {
@@ -1269,7 +1240,11 @@ function setupGame() {
 	game = new GameTracker(popularityTracker, ui);
 	cursor = new CursorTracker(game, canvas, ui);
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+
+	const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched);
+
 	credits = new Credits(canvas, $clouds, game);
+	menu = new Menu(canvas, $clouds, game, ui, Tutorial, newGame);
 
 	cursor.bind();
 	fader.emptyQueues();

@@ -1,14 +1,16 @@
-class SpecialButton {
+class SpecialButton extends Button {
     constructor(
-        public x: number,
-        public y: number,
-        public width: number,
-        public height: number,
-        public color: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        color: string,
         public hoverColor: string,
         public borderWidth: number,
-        public onClick: () => void,
-        private specialDraw: (h: boolean) => void) { }
+        onClick: () => void,
+        private specialDraw: (h: boolean) => void) {
+        super(x, y, width, height, '', color, onClick)
+    }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
         Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, '', 0, context);

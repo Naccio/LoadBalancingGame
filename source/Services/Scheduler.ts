@@ -41,7 +41,12 @@ class Scheduler {
                 this.initiateDDoS();
             }
         }
-    };
+    }
+
+    reset() {
+        this.timeLastDDoS = 0;
+        this.timeLastClient = 1 - this.spawnRate;
+    }
 
     createServer(zone: string) {
         const width = this.canvas.width,

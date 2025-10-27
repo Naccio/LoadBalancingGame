@@ -17,6 +17,12 @@ class MessageOrchestrator {
         this.avgResponseTime = (message.life + (this.totalAcks - 1) * this.avgResponseTime) / this.totalAcks;
     }
 
+    reset() {
+        this.messages = [];
+        this.totalAcks = 0;
+        this.avgResponseTime = 0;
+    }
+
     updateMessages() {
         const clientSize = Defaults.clientSize;
 

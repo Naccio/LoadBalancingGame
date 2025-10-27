@@ -22,6 +22,18 @@ class GameTracker {
         this.currentGameMode = gameMode;
     }
 
+    reset() {
+        this.selectedClient = undefined;
+        this.clientsServed = 0;
+        this.droppedConnections = 0;
+        this.failedConnections = 0;
+        this.elapsedTime = 0;
+        this.servers = [];
+        this.clients = [];
+        this.attackers = [];
+        this.switchMode(Defaults.gameModes.GAME);
+    }
+
     update() {
         this.elapsedTime += 1 / Defaults.frameRate;
         this.updateClients();
