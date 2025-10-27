@@ -763,12 +763,14 @@ class NewGame {
     popularity;
     game;
     scheduler;
-    constructor(orchestrator, upgrades, popularity, game, scheduler) {
+    fader;
+    constructor(orchestrator, upgrades, popularity, game, scheduler, fader) {
         this.orchestrator = orchestrator;
         this.upgrades = upgrades;
         this.popularity = popularity;
         this.game = game;
         this.scheduler = scheduler;
+        this.fader = fader;
     }
     execute() {
         this.orchestrator.reset();
@@ -776,6 +778,7 @@ class NewGame {
         this.popularity.reset();
         this.game.reset();
         this.scheduler.reset();
+        this.fader.emptyQueues();
     }
 }
 class Utilities {
@@ -885,6 +888,70 @@ class Credits {
     drawText(y, text, font, color) {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, align = "center", baseline = "middle";
         Utilities.drawText(w / 2, y, text, font, align, baseline, color, context);
+    }
+}
+class Defaults {
+    static clientSize = 30;
+    static clientsSpeed = 2;
+    static defaultColor = 'black';
+    static frameRate = 60;
+    static gameLength = 5;
+    static maxClientWaitTime = 9;
+    static messageVelocity = 200;
+    static serversCapacity = 80;
+    static serverSize = 40;
+    static serversSpeed = 3.5;
+    static gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
+}
+class GameOver {
+    canvas;
+    $clouds;
+    game;
+    orchestrator;
+    popularity;
+    baseline = 'middle';
+    color = 'white';
+    buttons;
+    constructor(canvas, $clouds, game, orchestrator, popularity, newGame) {
+        this.canvas = canvas;
+        this.$clouds = $clouds;
+        this.game = game;
+        this.orchestrator = orchestrator;
+        this.popularity = popularity;
+        const w = canvas.width, h = canvas.height;
+        this.buttons = [
+            new Button(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
+            new Button(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
+        ];
+    }
+    getButtons() {
+        return this.buttons;
+    }
+    update() {
+        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        context.clearRect(0, 0, w, h);
+        Utilities.drawSky(this.canvas, this.$clouds);
+        Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
+        this.drawStat(h / 2 - 80, 'Succesful connections', this.game.clientsServed);
+        this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
+        this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
+        this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
+        const font = '30px monospace';
+        Utilities.drawText(w / 2 + 68, h / 2 + 50, 'Popularity:', font, 'end', this.baseline, this.color, context);
+        Utilities.drawText(w / 2 + 75, h / 2 + 50, this.popularity.popularity.toString(), font, 'start', this.baseline, this.color, context);
+        Utilities.drawLine(w / 2 - 130, h / 2 + 20, w / 2 + 130, h / 2 + 20, 'red', 1, context);
+    }
+    drawStat(y, text, value) {
+        this.drawStatTitle(y, text);
+        this.drawStatValue(y, value);
+    }
+    drawStatTitle(y, text) {
+        const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 80;
+        Utilities.drawText(x, y, text + ':', '15px monospace', 'end', this.baseline, this.color, context);
+    }
+    drawStatValue(y, value) {
+        const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 90;
+        Utilities.drawText(x, y, value.toString(), '15px monospace', 'start', this.baseline, this.color, context);
     }
 }
 class Menu {
@@ -1090,17 +1157,4 @@ class SpecialButton extends Button {
         this.specialDraw(hovered);
     }
     ;
-}
-class Defaults {
-    static clientSize = 30;
-    static clientsSpeed = 2;
-    static defaultColor = 'black';
-    static frameRate = 60;
-    static gameLength = 5;
-    static maxClientWaitTime = 9;
-    static messageVelocity = 200;
-    static serversCapacity = 80;
-    static serverSize = 40;
-    static serversSpeed = 3.5;
-    static gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
 }

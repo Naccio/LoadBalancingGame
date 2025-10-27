@@ -32,6 +32,7 @@ var ui;
 
 var credits;
 var menu;
+var gameOver;
 
 var logActive = true;
 
@@ -700,7 +701,7 @@ function mainLoop() {
 			gameLoop();
 			break;
 		case gameModes.GAMEOVER:
-			gameOverLoop();
+			update(gameOver);
 			break;
 		case gameModes.CREDITS:
 			update(credits);
@@ -741,17 +742,6 @@ function gameLoop() {
 	}
 
 	drawGame();
-}
-
-function gameOverLoop() {
-	if (buttons.length === 0) {
-		buttons.push(new Button(WIDTH / 2, HEIGHT - 110, 120, 40, "Restart", "#FFFFFF", resetGame));
-		var homeButton = new Button(WIDTH / 2, HEIGHT - 60, 120, 40, "Menu", "#FFFFFF", function () {
-			switchMode(gameModes.MENU);
-		});
-		buttons.push(homeButton);
-	}
-	drawGameOver();
 }
 
 function pauseLoop() {
@@ -951,43 +941,6 @@ function drawGame() {
 	drawAttackers();
 	drawServers();
 	drawUI();
-}
-
-function drawGameOver() {
-	var x = WIDTH / 2,
-		font = "small-caps 60px monospace",
-		align = "center",
-		baseline = "middle",
-		color = "red";
-
-	clear();
-	drawRect(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "#0360AE");
-	$clouds.draw(context);
-	drawText(WIDTH / 2, 100, "Game Over", font, align, baseline, color);
-
-	color = "white";
-	align = "end";
-	font = "15px monospace";
-	x += 80;
-	drawText(x, HEIGHT / 2 - 80, "Succesful connections:", font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 55, "Dropped connections:", font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 30, "Failed connections:", font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 5, "Average response time:", font, align, baseline, color);
-	align = "start";
-	x += 10;
-	drawText(x, HEIGHT / 2 - 80, game.clientsServed, font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 55, game.droppedConnections, font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 30, game.failedConnections, font, align, baseline, color);
-	drawText(x, HEIGHT / 2 - 5, Math.round(orchestrator.avgResponseTime * 100) / 100, font, align, baseline, color);
-
-	font = "30px monospace";
-	drawText(WIDTH / 2 + 75, HEIGHT / 2 + 50, popularityTracker.popularity, font, align, baseline, color);
-	align = "end";
-	drawText(WIDTH / 2 + 68, HEIGHT / 2 + 50, "Popularity:", font, align, baseline, color);
-
-	drawLine(WIDTH / 2 - 130, HEIGHT / 2 + 20, WIDTH / 2 + 130, HEIGHT / 2 + 20, "red", 1);
-
-	drawButtons();
 }
 
 function drawPause() {
@@ -1241,10 +1194,11 @@ function setupGame() {
 	cursor = new CursorTracker(game, canvas, ui);
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
 
-	const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched);
+	const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched, fader);
 
 	credits = new Credits(canvas, $clouds, game);
 	menu = new Menu(canvas, $clouds, game, ui, Tutorial, newGame);
+	gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
 
 	cursor.bind();
 	fader.emptyQueues();

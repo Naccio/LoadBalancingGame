@@ -3,6 +3,7 @@
 /// <reference path='../Services/PopularityTracker.ts' />
 /// <reference path='../Services/Scheduler.ts' />
 /// <reference path='../Services/UpgradesTracker.ts' />
+/// <reference path='../UI/TextFader.ts' />
 
 class NewGame {
     constructor(
@@ -10,7 +11,8 @@ class NewGame {
         private upgrades: UpgradesTracker,
         private popularity: PopularityTracker,
         private game: GameTracker,
-        private scheduler: Scheduler
+        private scheduler: Scheduler,
+        private fader: TextFader
     ) { }
 
     execute() {
@@ -19,5 +21,6 @@ class NewGame {
         this.popularity.reset();
         this.game.reset();
         this.scheduler.reset();
+        this.fader.emptyQueues();
     }
 }

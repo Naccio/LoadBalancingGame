@@ -3,6 +3,7 @@
 /// <reference path='Model/Client.ts' />
 /// <reference path='Model/Server.ts' />
 /// <reference path='Scenes/Credits.ts' />
+/// <reference path='Scenes/GameOver.ts' />
 /// <reference path='Scenes/Menu.ts' />
 /// <reference path='Services/GameTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />
