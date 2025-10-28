@@ -5,9 +5,9 @@ interface FadingText {
     color: Color;
     fontSize: number;
     fontWeight: string;
-    border: boolean;
-    borderColor: Color;
-    borderWidth: number;
+    border?: boolean;
+    borderColor?: Color;
+    borderWidth?: number;
     life?: number;
     fadeIn?: boolean;
     alpha: number;

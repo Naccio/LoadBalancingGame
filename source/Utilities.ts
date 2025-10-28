@@ -1,5 +1,34 @@
 class Utilities {
 
+    public static drawCircle(x: number, y: number, r: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (bc) {
+            Utilities.drawCircleBorder(x, y, r, bc, bw, context);
+        }
+        context.fillStyle = c;
+        context.beginPath();
+        context.arc(x, y, r, 0, Math.PI * 2, true);
+        context.closePath();
+        context.fill();
+    }
+
+    public static drawCircleBorder(x: number, y: number, r: number, c: string, bw: number, context: CanvasRenderingContext2D) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (!bw) {
+            bw = 1;
+        }
+        context.strokeStyle = c;
+        context.lineWidth = bw;
+        context.beginPath();
+        context.arc(x, y, r, 0, Math.PI * 2, true);
+        context.closePath();
+        context.stroke();
+    }
+
     public static drawLine(x1: number, y1: number, x2: number, y2: number, c: string, w: number, context: CanvasRenderingContext2D) {
         if (!w) {
             w = 1;
@@ -38,7 +67,7 @@ class Utilities {
         y: number,
         w: number,
         h: number,
-        c: string,
+        c: string | CanvasGradient,
         bc: string,
         bw: number,
         context: CanvasRenderingContext2D) {
@@ -110,6 +139,38 @@ class Utilities {
         context.textBaseline = baseline;
         context.fillStyle = color;
         context.fillText(text, x, y);
+    }
+
+    public static drawTriangle(x: number, y: number, b: number, h: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (bc) {
+            Utilities.drawTriangleBorder(x, y, b, h, bc, bw, context);
+        }
+        var path = new Path2D();
+        path.moveTo(x, y - h / 2);
+        path.lineTo(x + b / 2, y + h / 2);
+        path.lineTo(x - b / 2, y + h / 2);
+        context.fillStyle = c;
+        context.fill(path);
+    }
+
+    public static drawTriangleBorder(x: number, y: number, b: number, h: number, c: string, bw: number, context: CanvasRenderingContext2D) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (!bw) {
+            bw = 1;
+        }
+        var path = new Path2D();
+        path.moveTo(x, y - h / 2);
+        path.lineTo(x + b / 2, y + h / 2);
+        path.lineTo(x - b / 2, y + h / 2);
+        path.closePath();
+        context.strokeStyle = c;
+        context.lineWidth = bw;
+        context.stroke(path);
     }
 
     public static getDistance(x1: number, y1: number, x2: number, y2: number) {

@@ -1,14 +1,17 @@
-class BorderButton {
+class BorderButton extends Button {
     constructor(
-        public x: number,
-        public y: number,
-        public width: number,
-        public height: number,
-        public text: string,
-        public color: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        text: string,
+        color: string,
         public hoverColor: string,
         public borderWidth: number,
-        public onClick: () => {}) { }
+        onClick: () => void
+    ) {
+        super(x, y, width, height, text, color, onClick);
+    }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
         let color;

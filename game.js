@@ -11,7 +11,6 @@ var messageSize = 6;	//pixels (diameter)
 var frameRate = 60;		//frames per second
 var maxClientWaitTime = 9;	//seconds
 var serversSpeed = 3.5;	//messages per second
-var serversCapacity = 80; //messages
 var gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
 var gameLength = 5; //minutes
 
@@ -29,11 +28,15 @@ var popularityTracker;
 var upgradesTracker;
 var cursor;
 var ui;
+var gameArea;
 
+//scenes
 var credits;
 var menu;
 var gameOver;
 var pause;
+var upgrade;
+var gameScene;
 
 var logActive = true;
 
@@ -623,7 +626,7 @@ var Tutorial = {
 	},
 	draw: function () {
 		clear();
-		drawGame();
+		gameArea.drawGame();
 		fader.draw();
 		drawRect(WIDTH / 2, 40, WIDTH, 80, "#0360AE", "#02467F", 1);
 		var i, currentTexts = this.currentStep.texts;
@@ -699,7 +702,7 @@ function mainLoop() {
 			update(menu);
 			break;
 		case gameModes.GAME:
-			gameLoop();
+			update(gameScene);
 			break;
 		case gameModes.GAMEOVER:
 			update(gameOver);
@@ -711,7 +714,7 @@ function mainLoop() {
 			update(pause);
 			break;
 		case gameModes.UPGRADE:
-			upgradeLoop();
+			update(upgrade);
 			break;
 		case gameModes.TUTORIAL:
 			Tutorial.run();
@@ -726,155 +729,6 @@ function mainLoop() {
 	ui.buttons = buttons;
 }
 
-function gameLoop() {
-	if (game.servers.length === 0) {
-		sched.createServer('c');
-	}
-	orchestrator.updateMessages();
-	game.update();
-	fader.update(1 / frameRate);
-	sched.schedule();
-
-	var m = Math.floor(game.elapsedTime / 60);
-
-	if (m === gameLength && game.clients.length === 0) {
-		switchMode(gameModes.GAMEOVER);
-		return;
-	}
-
-	drawGame();
-}
-
-function upgradeLoop() {
-	function selectUpgrade() {
-		upgradesTracker.selectUpgrade = undefined;
-		upgradesTracker.upgradesAvailable -= 1;
-		fader.removeFromPermanentQueue("upgrade");
-		switchMode(gameModes.PAUSE);
-	}
-	if (buttons.length === 0) {
-		buttons.push(new Button(WIDTH / 2, HEIGHT - 100, 120, 40, "Cancel", "#333333", function () {
-			switchMode(gameModes.PAUSE);
-		}));
-
-		switch (upgradesTracker.selectedUpgrade) {
-			case "speed":
-				game.servers.forEach(function (server) {
-					buttons.push(new BorderButton(server.x, server.y, serverSize, serverSize,
-						"", "rgba(0,0,0,0)", "limeGreen", 2, function () {
-							server.speed += 2;
-							selectUpgrade();
-						}))
-				});
-				break;
-			case "capacity":
-				game.servers.forEach(function (server) {
-					buttons.push(new BorderButton(server.x, server.y, serverSize, serverSize,
-						"", "rgba(0,0,0,0)", "limeGreen", 2, function () {
-							server.capacity += serversCapacity;
-							selectUpgrade();
-						}))
-				});
-				break;
-			case "server":
-				buttons.push(new BorderButton(Math.floor(WIDTH / 6), Math.floor(HEIGHT / 6),
-					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("nw");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH / 2), Math.floor(HEIGHT / 6),
-					Math.floor(WIDTH / 3), Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("n");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH * 5 / 6) + 1, Math.floor(HEIGHT / 6),
-					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("ne");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH / 6), Math.floor(HEIGHT / 2),
-					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("w");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH / 2), Math.floor(HEIGHT / 2),
-					Math.floor(WIDTH / 3), Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("c");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH * 5 / 6) + 1, Math.floor(HEIGHT / 2),
-					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("e");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH / 6), Math.floor(HEIGHT * 5 / 6),
-					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("sw");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH / 2), Math.floor(HEIGHT * 5 / 6),
-					Math.floor(WIDTH / 3), Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("s");
-						selectUpgrade();
-					}));
-				buttons.push(new BorderButton(Math.floor(WIDTH * 5 / 6) + 1, Math.floor(HEIGHT * 5 / 6),
-					Math.floor(WIDTH / 3) - 2, Math.floor(HEIGHT / 3) - 2,
-					"", "#CCCCCC", "limeGreen", 1, function () {
-						sched.createServer("se");
-						selectUpgrade();
-					}));
-				break;
-		}
-	}
-
-	drawUpgrade();
-}
-
-function drawGame() {
-	const sc = game.selectedClient;
-	clear();
-
-	//draw a line connecting the selected client to the mouse pointer
-	if (sc !== undefined) {
-		drawLine(sc.x, sc.y, cursor.mouseX, cursor.mouseY, "lightBlue", 3);
-		drawCircle(sc.x, sc.y, clientSize / 2 + 3, "lightBlue");
-	}
-
-	drawConnections();
-	drawMessages();
-	drawClients();
-	drawAttackers();
-	drawServers();
-	drawUI();
-}
-
-function drawUpgrade() {
-	clear();
-
-	drawServers();
-	drawButtons();
-
-	var text;
-	switch (upgradesTracker.selectedUpgrade) {
-		case "speed":
-		case "capacity":
-			text = "location";
-			break;
-		case "server":
-			text = "zone";
-			break;
-	}
-	drawText(WIDTH / 2, 60, "~ Select " + text + " ~", "30px monospace", "center", "middle", "red");
-}
-
 function keyboardHandler(event) {
 	event.preventDefault();
 	switch (event.keyCode) {
@@ -886,121 +740,6 @@ function keyboardHandler(event) {
 				switchMode(gameModes.GAME);
 			}
 	}
-}
-
-function drawServers() {
-	game.servers.forEach(function (server) {
-		var i = server.capacity / serversCapacity - 1;
-
-		if (i < 0) {
-			i = 0;
-		}
-		for (; i > -1; i -= 1) {
-			var fill = "rgb(0," + (128 - 15 * i) + ",0)",
-				border = "rgb(0," + (100 - 15 * i) + ",0)";
-			drawRect(server.x + 3 * i, server.y - 3 * i, serverSize, serverSize, fill, border, 1);
-		}
-
-		//draw server's queue
-		var queueWidth = 5,
-			queueHeight = serverSize - 10,
-			queueX = server.x + serverSize / 2 - 7,
-			queueY = server.y + 1,
-			fillPercentage = (server.queue.length / server.capacity) * 100,
-			gradientWidth = 5,
-			gradientHeight = fillPercentage * queueHeight / 100,
-			gradientX = queueX,
-			gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
-
-		drawRectBorder(queueX, queueY, queueWidth, queueHeight, "#004500", 1);
-		var grd = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-		grd.addColorStop(0.5, 'limeGreen');
-		grd.addColorStop(1, 'red');
-		drawRect(gradientX, gradientY, gradientWidth, gradientHeight, grd);
-
-		//draw server's speed
-		var starX, starY;
-		for (i = server.speed; i > 0; i -= serversSpeed) {
-			starX = server.x - serverSize / 2 + 7;
-			starY = server.y + serverSize / 2 - 4 - 5 * (i / serversSpeed)
-			drawStar(starX, starY, 5, 4, 2, "limeGreen", "#004500", 2);
-		}
-	});
-}
-
-function drawClients() {
-	game.clients.forEach(function (client) {
-		var x = client.x,
-			y = client.y;
-
-		if (client.connectedTo === undefined) {
-			if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-				drawCircle(x, y, clientSize / 2, "red", "fireBrick", 2);
-			} else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-				drawCircle(x, y, clientSize / 2, "tomato", "indianRed", 2);
-			} else {
-				drawCircle(x, y, clientSize / 2, "gray", "dimGray", 2);
-			}
-
-			drawText(x, y, Math.round(maxClientWaitTime - client.life), "bold 15px Arial", "center", "middle", "white");
-		}
-		else {
-			drawCircle(x, y, clientSize / 2, "gray", "dimGray", 2);
-		}
-	});
-}
-
-function drawAttackers() {
-	game.attackers.forEach(function (attacker) {
-		var x = attacker.x,
-			y = attacker.y;
-
-		drawTriangle(x, y, clientSize * 2 / Math.sqrt(3), clientSize, "#333333", "black", 2);
-
-		drawText(x, y + 5, "DoS", "bold 10px Arial", "center", "middle", "white");
-	});
-}
-
-function drawConnections() {
-	game.clients.forEach(function (client) {
-
-		var x = client.x,
-			y = client.y;
-
-		if (client.connectedTo !== undefined) {
-			drawLine(x, y, client.connectedTo.x, client.connectedTo.y, "darkGray", 1);
-		}
-	});
-
-	game.attackers.forEach(function (attacker) {
-		var x = attacker.x,
-			y = attacker.y;
-
-		if (attacker.connectedTo !== undefined) {
-			drawLine(x, y, attacker.connectedTo.x, attacker.connectedTo.y, "dimGray", 1);
-		}
-	});
-}
-
-function drawMessages() {
-	orchestrator.messages.forEach(function (m) {
-		var fill, border;
-
-		if (m.status != "queued" && m.status != "done") {
-			if (m.status === "req") {
-				fill = "lightBlue";
-				border = "steelBlue";
-			} else if (m.status === "ack") {
-				fill = "lime";
-				border = "limeGreen"
-			} else if (m.status === "nack") {
-				fill = "tomato";
-				border = "indianRed";
-			}
-
-			drawCircle(m.x, m.y, messageSize / 2, fill, border, 1);
-		}
-	});
 }
 
 function drawButtons() {
@@ -1021,57 +760,6 @@ function drawButtons() {
 	});
 }
 
-function drawUI() {
-	var font = "18px sans-serif",
-		align = "start",
-		baseline = "alphabetic",
-		color = "black";
-
-	fader.draw();
-
-	//bottom left
-	drawText(10, HEIGHT - 14, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-	//bottom center
-	align = "center";
-	color = "darkGray";
-	drawText(WIDTH / 2, HEIGHT - 14, "Press space to pause", font, align, baseline, color);
-
-	if (upgradesTracker.upgradesAvailable > 0) {
-		var text = {
-			x: WIDTH / 2,
-			y: HEIGHT - 35,
-			font: "20px sans-serif",
-			color: { r: 255, g: 0, b: 0 },
-			id: "upgrade",
-			text: "- Upgrade available! -",
-			life: 400
-		}
-
-		fader.addPermanentText(text);
-	}
-
-	//bottom right
-	var remaining = Math.max(0, gameLength * 60 - game.elapsedTime);
-	var m = Math.floor(remaining / 60);
-	var s = Math.floor(remaining - m * 60);
-	var text = "";
-	if (m < 10) text += "0";
-	text += m + ":";
-	if (s < 10) text += "0";
-	text += s;
-
-	align = "end";
-	color = "black";
-	if (remaining <= 30) {
-		color = "tomato";
-	}
-	if (remaining <= 10) {
-		color = "red";
-	}
-	drawText(WIDTH - 10, HEIGHT - 14, text, font, align, baseline, color);
-}
-
 function setupGame() {
 	orchestrator = new MessageOrchestrator();
 	upgradesTracker = new UpgradesTracker();
@@ -1080,6 +768,7 @@ function setupGame() {
 	game = new GameTracker(popularityTracker, ui);
 	cursor = new CursorTracker(game, canvas, ui);
 	sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+	gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
 
 	const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched, fader);
 
@@ -1087,6 +776,8 @@ function setupGame() {
 	menu = new Menu(canvas, $clouds, game, ui, Tutorial, newGame);
 	gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
 	pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
+	upgrade = new Upgrade(canvas, game, upgradesTracker, sched, gameArea, fader);
+	gameScene = new Game(canvas, game, sched, orchestrator, gameArea, fader);
 
 	cursor.bind();
 	fader.emptyQueues();

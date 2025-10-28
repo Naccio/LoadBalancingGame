@@ -5,6 +5,7 @@ class Defaults {
     public static readonly frameRate = 60;		//frames per second
     public static readonly gameLength = 5; //minutes
     public static readonly maxClientWaitTime = 9;	//seconds
+    public static readonly messageSize = 6;	//pixels (diameter)
     public static readonly messageVelocity = 200;	//pixels per second
     public static readonly serversCapacity = 80; //messages
     public static readonly serverSize = 40;	//pixels (side)
