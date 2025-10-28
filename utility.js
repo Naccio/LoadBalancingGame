@@ -90,35 +90,7 @@ function drawTriangle(x, y, b, h, c, bc, bw) {
 }
 
 function drawStar(cx, cy, spikes, outerRadius, innerRadius, c, bc, bw) {
-	var rot = Math.PI / 2 * 3,
-		x = cx,
-		y = cy,
-		step = Math.PI / spikes,
-		i;
-
-	context.beginPath();
-	context.moveTo(cx, cy - outerRadius);
-	for (i = 0; i < spikes; i += 1) {
-		x = cx + Math.cos(rot) * outerRadius;
-		y = cy + Math.sin(rot) * outerRadius;
-		context.lineTo(x, y);
-		rot += step;
-
-		x = cx + Math.cos(rot) * innerRadius;
-		y = cy + Math.sin(rot) * innerRadius;
-		context.lineTo(x, y);
-		rot += step;
-	}
-
-	context.lineTo(cx, cy - outerRadius);
-	context.closePath();
-	if (bc && bw) {
-		context.lineWidth = bw;
-		context.strokeStyle = bc;
-		context.stroke();
-	}
-	context.fillStyle = c;
-	context.fill();
+	Utilities.drawStar(cx, cy, spikes, outerRadius, innerRadius, c, bc, bw, context);
 }
 
 function clear() {

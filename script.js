@@ -822,6 +822,30 @@ class Utilities {
         Utilities.drawRect(w / 2, h / 2, w, h, '#0360AE', '', 0, context);
         $clouds.draw(context);
     }
+    static drawStar(cx, cy, spikes, outerRadius, innerRadius, c, bc, bw, context) {
+        let rot = Math.PI / 2 * 3, x = cx, y = cy, step = Math.PI / spikes;
+        context.beginPath();
+        context.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i += 1) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            context.lineTo(x, y);
+            rot += step;
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            context.lineTo(x, y);
+            rot += step;
+        }
+        context.lineTo(cx, cy - outerRadius);
+        context.closePath();
+        if (bc && bw) {
+            context.lineWidth = bw;
+            context.strokeStyle = bc;
+            context.stroke();
+        }
+        context.fillStyle = c;
+        context.fill();
+    }
     static drawText(x, y, text, font, align, baseline, color, context) {
         context.font = font;
         context.textAlign = align;
@@ -982,6 +1006,105 @@ class Menu {
         Utilities.drawLine(120, 160, w - 118, 160, 'red', 2, context);
     }
 }
+class SpecialButton extends Button {
+    hoverColor;
+    borderWidth;
+    specialDraw;
+    constructor(x, y, width, height, color, hoverColor, borderWidth, onClick, specialDraw) {
+        super(x, y, width, height, '', color, onClick);
+        this.hoverColor = hoverColor;
+        this.borderWidth = borderWidth;
+        this.specialDraw = specialDraw;
+    }
+    draw(hovered, context) {
+        Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, '', 0, context);
+        if (hovered) {
+            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.hoverColor, this.borderWidth, context);
+        }
+        this.specialDraw(hovered);
+    }
+    ;
+}
+class Pause {
+    canvas;
+    $clouds;
+    game;
+    upgradesTracker;
+    buttons;
+    upgradeButtons;
+    constructor(canvas, $clouds, game, upgradesTracker, ui, newGame) {
+        this.canvas = canvas;
+        this.$clouds = $clouds;
+        this.game = game;
+        this.upgradesTracker = upgradesTracker;
+        const context = canvas.getContext('2d'), w = canvas.width, serverSize = Defaults.serverSize;
+        this.buttons = [
+            new Button(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
+            new Button(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
+            new Button(w / 2, 270, 120, 40, "Abandon", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU)),
+            ui.volumeButton
+        ];
+        this.upgradeButtons = [
+            this.createUpgradeButton(250, 'server', 'Buy new datacenter', (x, y) => {
+                Utilities.drawText(x - 25, y, "+", '45px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawRect(x + 15, y, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
+                Utilities.drawStar(x - serverSize / 2 + 22, y + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
+                Utilities.drawRect(x + serverSize / 2 + 8, y + 1, 6, serverSize - 10, "#BBBBBB", "#999999", 1, context);
+            }),
+            this.createUpgradeButton(w / 2, 'capacity', 'Scale off at one location', (x, y) => {
+                var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = 'red', lineWidth = 3;
+                Utilities.drawRect(x, y, serverSize, serverSize, "#DDDDDD", "#999999", 1, context);
+                Utilities.drawRect(queueX, queueY, 6, serverSize - 10, "salmon", "red", 1, context);
+                Utilities.drawStar(starX, starY, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
+                Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
+                Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
+                Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
+            }),
+            this.createUpgradeButton(w - 250, 'speed', 'Improve speed at one location', (x, y) => {
+                var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = "red", lineWidth = 3;
+                Utilities.drawRect(x, y, serverSize, serverSize, "#DDDDDD", "#999999", 1, context);
+                Utilities.drawRect(queueX, queueY, 6, serverSize - 10, "#BBBBBB", "#999999", 1, context);
+                Utilities.drawStar(starX, starY, 5, 4, 2, "salmon", "red", 2, context);
+                Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
+                Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
+                Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
+            })
+        ];
+    }
+    getButtons() {
+        return this.upgradesTracker.upgradesAvailable > 0
+            ? [...this.buttons, ...this.upgradeButtons]
+            : [...this.buttons];
+    }
+    update() {
+        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, font = "25px monospace", color;
+        context.clearRect(0, 0, w, h);
+        Utilities.drawSky(this.canvas, this.$clouds);
+        if (this.upgradesTracker.upgradesAvailable > 0) {
+            color = "black";
+            Utilities.drawText(x, h / 2 + 60, "Choose an upgrade:", font, 'center', 'middle', color, context);
+        }
+        else {
+            color = "#DDDDDD";
+            Utilities.drawText(x, h / 2 + 60, "No upgrades available", font, 'center', 'middle', color, context);
+        }
+        color = "red";
+        font = "50px monospace";
+        Utilities.drawText(x, 60, "~ Paused ~", font, 'center', 'middle', color, context);
+    }
+    createUpgradeButton(x, id, text, draw) {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, y = h / 2 + 150;
+        return new SpecialButton(x, y, 100, 100, '#333333', 'white', 2, () => {
+            this.upgradesTracker.selectedUpgrade = id;
+            this.game.switchMode(Defaults.gameModes.UPGRADE);
+        }, (hovered) => {
+            draw(x, y);
+            if (hovered) {
+                Utilities.drawText(w / 2, h - 50, text, '20px monospace', 'center', 'middle', 'red', context);
+            }
+        });
+    }
+}
 class BorderButton {
     x;
     y;
@@ -1136,25 +1259,6 @@ class FpsCounter {
             l = document.getElementById("fps");
         }
         l.innerHTML = this.fps.toString();
-    }
-    ;
-}
-class SpecialButton extends Button {
-    hoverColor;
-    borderWidth;
-    specialDraw;
-    constructor(x, y, width, height, color, hoverColor, borderWidth, onClick, specialDraw) {
-        super(x, y, width, height, '', color, onClick);
-        this.hoverColor = hoverColor;
-        this.borderWidth = borderWidth;
-        this.specialDraw = specialDraw;
-    }
-    draw(hovered, context) {
-        Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, '', 0, context);
-        if (hovered) {
-            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.hoverColor, this.borderWidth, context);
-        }
-        this.specialDraw(hovered);
     }
     ;
 }

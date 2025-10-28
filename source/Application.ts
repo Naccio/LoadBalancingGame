@@ -5,6 +5,7 @@
 /// <reference path='Scenes/Credits.ts' />
 /// <reference path='Scenes/GameOver.ts' />
 /// <reference path='Scenes/Menu.ts' />
+/// <reference path='Scenes/Pause.ts' />
 /// <reference path='Services/GameTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />
 /// <reference path='UI/BorderButton.ts' />

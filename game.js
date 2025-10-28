@@ -33,6 +33,7 @@ var ui;
 var credits;
 var menu;
 var gameOver;
+var pause;
 
 var logActive = true;
 
@@ -707,7 +708,7 @@ function mainLoop() {
 			update(credits);
 			break;
 		case gameModes.PAUSE:
-			pauseLoop();
+			update(pause);
 			break;
 		case gameModes.UPGRADE:
 			upgradeLoop();
@@ -742,94 +743,6 @@ function gameLoop() {
 	}
 
 	drawGame();
-}
-
-function pauseLoop() {
-	if (buttons.length === 0) {
-		buttons.push(new Button(WIDTH / 2, 150, 120, 40, "Continue", "#FFFFFF", function () {
-			switchMode(gameModes.GAME);
-		}));
-		buttons.push(new Button(WIDTH / 2, 210, 120, 40, "New game", "#FFFFFF", resetGame));
-		buttons.push(new Button(WIDTH / 2, 270, 120, 40, "Abandon", "#FFFFFF", function () {
-			switchMode(gameModes.MENU);
-		}));
-
-		buttons.push(ui.volumeButton);
-
-		if (upgradesTracker.upgradesAvailable > 0) {
-			var x1, y1, x2, y2, x3, y3;
-			x1 = 250;
-			y1 = y2 = y3 = HEIGHT / 2 + 150;
-			buttons.push(new SpecialButton(x1, y1, 100, 100, "#333333", "white", 2, function () {
-				upgradesTracker.selectedUpgrade = "server";
-				switchMode(gameModes.UPGRADE);
-			}, function (hovered) {
-				var x = 250,
-					y = HEIGHT / 2 + 150,
-					font = "45px monospace",
-					align = "center",
-					baseline = "middle",
-					color = "red";
-				drawText(x1 - 25, y1, "+", font, align, baseline, color);
-				drawRect(x1 + 15, y1, serverSize, serverSize, "#DDDDDD", "red", 1);
-				drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2);
-				drawRect(x1 + serverSize / 2 + 8, y1 + 1, 6, serverSize - 10, "#BBBBBB", "#999999", 1);
-
-				if (hovered) {
-					font = "20px monospace";
-					drawText(WIDTH / 2, HEIGHT - 50, "Buy new datacenter", font, align, baseline, color);
-				}
-			}));
-
-			x2 = WIDTH / 2;
-			buttons.push(new SpecialButton(x2, y2, 100, 100, "#333333", "white", 2, function () {
-				upgradesTracker.selectedUpgrade = "capacity";
-				switchMode(gameModes.UPGRADE);
-			}, function (hovered) {
-				var queueX = x2 + serverSize / 2 - 7,
-					queueY = y2 + 1,
-					starX = x2 - serverSize / 2 + 7,
-					starY = y2 + serverSize / 2 - 9,
-					color = "red",
-					lineWidth = 3;
-				drawRect(x2, y2, serverSize, serverSize, "#DDDDDD", "#999999", 1);
-				drawRect(queueX, queueY, 6, serverSize - 10, "salmon", "red", 1);
-				drawStar(starX, starY, 5, 4, 2, "#BBBBBB", "#999999", 2);
-				drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth);
-				drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth);
-				drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth);
-
-				if (hovered) {
-					drawText(WIDTH / 2, HEIGHT - 50, "Scale off at one location", "20px monospace", "center", "middle", "red");
-				}
-			}));
-
-			x3 = WIDTH - 250;
-			buttons.push(new SpecialButton(x3, y3, 100, 100, "#333333", "white", 2, function () {
-				upgradesTracker.selectedUpgrade = "speed";
-				switchMode(gameModes.UPGRADE);
-			}, function (hovered) {
-				var queueX = x3 + serverSize / 2 - 7,
-					queueY = y3 + 1,
-					starX = x3 - serverSize / 2 + 7,
-					starY = y3 + serverSize / 2 - 9,
-					color = "red",
-					lineWidth = 3;
-				drawRect(x3, y3, serverSize, serverSize, "#DDDDDD", "#999999", 1);
-				drawRect(queueX, queueY, 6, serverSize - 10, "#BBBBBB", "#999999", 1);
-				drawStar(starX, starY, 5, 4, 2, "salmon", "red", 2);
-				drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth);
-				drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth);
-				drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth);
-
-				if (hovered) {
-					drawText(WIDTH / 2, HEIGHT - 50, "Improve speed at one location", "20px monospace", "center", "middle", "red");
-				}
-			}));
-		}
-	}
-
-	drawPause();
 }
 
 function upgradeLoop() {
@@ -941,32 +854,6 @@ function drawGame() {
 	drawAttackers();
 	drawServers();
 	drawUI();
-}
-
-function drawPause() {
-	var x = WIDTH / 2,
-		font = "25px monospace",
-		align = "center",
-		baseline = "middle",
-		color;
-
-	clear();
-	drawRect(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "#0360AE");
-	$clouds.draw(context);
-
-	if (upgradesTracker.upgradesAvailable > 0) {
-		color = "black";
-		drawText(x, HEIGHT / 2 + 60, "Choose an upgrade:", font, align, baseline, color);
-	} else {
-		color = "#DDDDDD";
-		drawText(x, HEIGHT / 2 + 60, "No upgrades available", font, align, baseline, color);
-	}
-
-	color = "red";
-	font = "50px monospace";
-	drawText(x, 60, "~ Paused ~", font, align, baseline, color);
-
-	drawButtons();
 }
 
 function drawUpgrade() {
@@ -1199,6 +1086,7 @@ function setupGame() {
 	credits = new Credits(canvas, $clouds, game);
 	menu = new Menu(canvas, $clouds, game, ui, Tutorial, newGame);
 	gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
+	pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
 
 	cursor.bind();
 	fader.emptyQueues();

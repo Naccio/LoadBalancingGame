@@ -64,6 +64,37 @@ class Utilities {
         $clouds.draw(context);
     }
 
+    public static drawStar(cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
+        let rot = Math.PI / 2 * 3,
+            x = cx,
+            y = cy,
+            step = Math.PI / spikes;
+
+        context.beginPath();
+        context.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i += 1) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            context.lineTo(x, y);
+            rot += step;
+
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            context.lineTo(x, y);
+            rot += step;
+        }
+
+        context.lineTo(cx, cy - outerRadius);
+        context.closePath();
+        if (bc && bw) {
+            context.lineWidth = bw;
+            context.strokeStyle = bc;
+            context.stroke();
+        }
+        context.fillStyle = c;
+        context.fill();
+    }
+
     public static drawText(
         x: number,
         y: number,
