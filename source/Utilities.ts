@@ -29,6 +29,11 @@ class Utilities {
         context.stroke();
     }
 
+    public static drawCircleHighlight(x: number, y: number, r: number, context: CanvasRenderingContext2D) {
+        Utilities.drawCircleBorder(x, y, r, "fireBrick", 2, context);
+        Utilities.drawCircleBorder(x, y, r + 1, "red", 3, context);
+    }
+
     public static drawLine(x1: number, y1: number, x2: number, y2: number, c: string, w: number, context: CanvasRenderingContext2D) {
         if (!w) {
             w = 1;

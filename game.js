@@ -225,38 +225,8 @@ function setupGame() {
 
 	Tutorial.steps = [
 		new TutorialStep1(canvas, game),
-		{
-			id: 1,
-			hasNext: true,
-			hasHome: true,
-			texts: ["This is a DATACENTER.",
-				"Its role is to send data to your clients.",
-				"Click 'Next' to continue."],
-			setup: function () { },
-			run: function () { },
-			draw: function () {
-				drawCircleBorder(WIDTH / 2, HEIGHT / 2, serverSize + 9, "fireBrick", 2);
-				drawCircleBorder(WIDTH / 2, HEIGHT / 2, serverSize + 10, "red", 3);
-			}
-		},
-		{
-			id: 2,
-			hasNext: true,
-			hasHome: true,
-			texts: ["This is a CLIENT.",
-				"It wants to exchange data with your datacenter.",
-				"Your job will be to connect the clients to a datacenter."],
-			setup: function () {
-				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 2, 10000));
-				game.clients[0].life = -31;
-			},
-			run: function () { },
-			draw: function () {
-				drawCircleBorder(WIDTH * 3 / 4, HEIGHT / 2, clientSize + 9, "fireBrick", 2);
-				drawCircleBorder(WIDTH * 3 / 4, HEIGHT / 2, clientSize + 10, "red", 3);
-				drawCircle(WIDTH * 3 / 4, HEIGHT / 2, clientSize / 2, "gray");
-			}
-		},
+		new TutorialStep2(canvas),
+		new TutorialStep3(canvas, game, orchestrator, popularityTracker),
 		{
 			id: 3,
 			hasHome: true,

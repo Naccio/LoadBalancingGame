@@ -1,3 +1,4 @@
+/// <reference path='../../Model/Server.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='TutorialStep.ts' />
 
@@ -15,9 +16,11 @@ class TutorialStep1 extends TutorialStep {
 
     setup() {
         const w = this.canvas.width,
-            h = this.canvas.height;
+            h = this.canvas.height,
+            server = new Server(w / 2, h / 2);
 
-        this.game.servers.push(new Server(w / 2, h / 2));
-        this.game.servers[0].capacity = 20;
+        server.capacity = 20;
+
+        this.game.servers.push(server);
     }
 }

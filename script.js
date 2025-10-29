@@ -809,6 +809,10 @@ class Utilities {
         context.closePath();
         context.stroke();
     }
+    static drawCircleHighlight(x, y, r, context) {
+        Utilities.drawCircleBorder(x, y, r, "fireBrick", 2, context);
+        Utilities.drawCircleBorder(x, y, r + 1, "red", 3, context);
+    }
     static drawLine(x1, y1, x2, y2, c, w, context) {
         if (!w) {
             w = 1;
@@ -1487,9 +1491,55 @@ class TutorialStep1 extends TutorialStep {
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height;
-        this.game.servers.push(new Server(w / 2, h / 2));
-        this.game.servers[0].capacity = 20;
+        const w = this.canvas.width, h = this.canvas.height, server = new Server(w / 2, h / 2);
+        server.capacity = 20;
+        this.game.servers.push(server);
+    }
+}
+class TutorialStep2 extends TutorialStep {
+    canvas;
+    constructor(canvas) {
+        super(1, [
+            'This is a DATACENTER.',
+            'Its role is to send data to your clients.',
+            'Click "Next" to continue.'
+        ]);
+        this.canvas = canvas;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, context);
+    }
+}
+class TutorialStep3 extends TutorialStep {
+    canvas;
+    game;
+    orchestrator;
+    popularityTracker;
+    constructor(canvas, game, orchestrator, popularityTracker) {
+        super(2, [
+            'This is a CLIENT.',
+            'It wants to exchange data with your datacenter.',
+            'Your job will be to connect the clients to a datacenter.'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.orchestrator = orchestrator;
+        this.popularityTracker = popularityTracker;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    setup() {
+        const w = this.canvas.width, h = this.canvas.height, client = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 2, 10000);
+        client.life = -31;
+        this.game.clients.push(client);
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
+        Utilities.drawCircle(w * 3 / 4, h / 2, Defaults.clientSize / 2, 'gray', '', 0, context);
     }
 }
 class BorderButton extends Button {
