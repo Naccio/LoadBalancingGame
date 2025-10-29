@@ -7,6 +7,7 @@
 /// <reference path='Scenes/GameOver.ts' />
 /// <reference path='Scenes/Menu.ts' />
 /// <reference path='Scenes/Pause.ts' />
+/// <reference path='Scenes/Tutorial/TutorialStep1.ts' />
 /// <reference path='Scenes/Upgrade.ts' />
 /// <reference path='Services/GameTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />

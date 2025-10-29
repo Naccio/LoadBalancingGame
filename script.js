@@ -1459,6 +1459,39 @@ class Pause {
         });
     }
 }
+class TutorialStep {
+    id;
+    texts;
+    hasNext = false;
+    hasHome = false;
+    constructor(id, texts) {
+        this.id = id;
+        this.texts = texts;
+    }
+    setup() { }
+    run() { }
+    draw() { }
+}
+class TutorialStep1 extends TutorialStep {
+    canvas;
+    game;
+    constructor(canvas, game) {
+        super(0, [
+            'Welcome to Load Balancing: The Game!',
+            'Here you will take the role of -you guessed it- a LOAD BALANCER.',
+            'Click "Next" to start the tutorial.'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    setup() {
+        const w = this.canvas.width, h = this.canvas.height;
+        this.game.servers.push(new Server(w / 2, h / 2));
+        this.game.servers[0].capacity = 20;
+    }
+}
 class BorderButton extends Button {
     hoverColor;
     borderWidth;
