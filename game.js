@@ -245,69 +245,7 @@ function setupGame() {
 		new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
 		new TutorialStep9(canvas, game, fader),
 		new TutorialStep10(canvas, game, orchestrator, popularityTracker),
-		{
-			id: 10,
-			hasHome: true,
-			texts: ["Snap! Your datacenter is under a DDOS ATTACK! And more clients need serving!",
-				"This is likely to happen as you get more and more popular.",
-				"You'd better upgrade once again to cope with this situation."],
-			setup: function () {
-				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
-				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
-				game.clients[0].life = - 21;
-				game.clients[1].life = - 21;
-				game.attackers.push(new Attacker(orchestrator, WIDTH / 2, HEIGHT * 3 / 4, 10000, game.servers[0]));
-				game.attackers.push(new Attacker(orchestrator, WIDTH / 3, HEIGHT * 2 / 3, 10000, game.servers[0]));
-				game.attackers.push(new Attacker(orchestrator, WIDTH * 2 / 3, HEIGHT * 2 / 3, 10000, game.servers[0]));
-
-				document.addEventListener("keypress", Tutorial.listener);
-			},
-			run: function () {
-				if (game.selectedClient) {
-					game.selectedClient = undefined;
-				}
-				if (game.clients.length === 0) {
-					game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
-					game.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
-					game.clients[0].life = - 21;
-					game.clients[1].life = - 21;
-				}
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ": Datacenter busy (-1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-				drawCircle(WIDTH - 120, 100 + 2 * (messageSize + 5), messageSize / 2, "tomato", "indianRed", 2);
-
-				font = "18px sans-serif";
-				align = "center";
-				color = "darkGray";
-				drawText(WIDTH / 2, HEIGHT - 95, "Press space to pause", font, align, baseline, color);
-
-				var text = {
-					x: WIDTH / 2,
-					y: HEIGHT - 116,
-					font: "20px sans-serif",
-					color: { r: 255, g: 0, b: 0 },
-					id: "upgradeTut",
-					text: "- Upgrade available! -",
-					life: 400
-				};
-
-				fader.addPermanentText(text);
-			}
-		},
+		new TutorialStep11(canvas, game, orchestrator, popularityTracker, fader),
 		{
 			id: 11,
 			texts: ["This time let's buy a new datacenter.",
