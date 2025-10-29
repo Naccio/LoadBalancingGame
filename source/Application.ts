@@ -20,6 +20,7 @@
 /// <reference path='Scenes/Tutorial/TutorialStep11.ts' />
 /// <reference path='Scenes/Tutorial/TutorialStep12.ts' />
 /// <reference path='Scenes/Tutorial/TutorialStep13.ts' />
+/// <reference path='Scenes/Tutorial/TutorialStep14.ts' />
 /// <reference path='Scenes/Upgrade.ts' />
 /// <reference path='Services/GameTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />

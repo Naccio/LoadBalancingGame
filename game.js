@@ -248,36 +248,7 @@ function setupGame() {
 		new TutorialStep11(canvas, game, orchestrator, popularityTracker, fader),
 		new TutorialStep12(canvas, game, fader),
 		new TutorialStep13(canvas, game, orchestrator, popularityTracker),
-		{
-			id: 13,
-			hasHome: true,
-			texts: ["Excellent! By now you should know all the basics.",
-				"This tutorial is finished.",
-				"You can start a new game or go back to the main menu."],
-			setup: function () {
-				buttons.push(new Button(WIDTH / 3, HEIGHT - 40, 120, 40, "New game", "#FFFFFF", resetGame));
-				buttons.push(Tutorial.homeButton);
-			},
-			run: function () {
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ": Datacenter busy (-1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-				drawCircle(WIDTH - 120, 100 + 2 * (messageSize + 5), messageSize / 2, "tomato", "indianRed", 2);
-			}
-		}
+		new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
 	];
 
 	cursor.bind();
