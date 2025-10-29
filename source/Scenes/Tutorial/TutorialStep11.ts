@@ -68,8 +68,7 @@ class TutorialStep11 extends TutorialStep {
             align: CanvasTextAlign = 'start',
             baseline: CanvasTextBaseline = 'middle',
             color = 'black',
-            messageSize = Defaults.messageSize,
-            serverSize = Defaults.serverSize;
+            messageSize = Defaults.messageSize;
 
         let font = '18px sans-serif';
         Utilities.drawText(10, h - 95, 'Popularity: ' + this.popularityTracker.popularity, font, align, baseline, color, context);

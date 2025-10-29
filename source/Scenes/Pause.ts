@@ -31,7 +31,7 @@ class Pause implements Scene {
             ui.volumeButton
         ];
 
-        //TODO: Unify upgrade buttons code with tutorial step 9
+        //TODO: Unify upgrade buttons code with tutorial step 9 and 12
         this.upgradeButtons = [
             this.createUpgradeButton(250, 'server', 'Buy new datacenter', (x: number, y: number) => {
                 Utilities.drawText(x - 25, y, "+", '45px monospace', 'center', 'middle', 'red', context);

@@ -5,19 +5,19 @@
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep9 extends TutorialStep {
+class TutorialStep12 extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
         private fader: TextFader
     ) {
-        super(8, [
-            'Let\'s improve your datacenter\'s speed.',
-            'This way it will process the clients\' requests faster.',
-            'Select the third upgrade (Improve speed at one location).']);
+        super(11, [
+            'This time let\'s buy a new datacenter.',
+            'This way you can connect the clients to it while your first one is under attack.',
+            'Select the first upgrade (Buy new datacenter).']);
 
-        //TODO: Unify upgrade buttons code with Pause scene and step 12
+        //TODO: Unify upgrade buttons code with Pause scene and step 9
         const context = canvas.getContext('2d')!,
             w = canvas.width,
             h = canvas.height,
@@ -26,7 +26,12 @@ class TutorialStep9 extends TutorialStep {
 
         const x1 = 250,
             y1 = h / 2 + 150;
-        buttons.push(new SpecialButton(x1, y1, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
+        buttons.push(new SpecialButton(x1, y1, 100, 100, '#333333', 'white', 2, () => {
+            const server = new Server(w / 2, h / 4);
+            server.capacity = 20;
+            this.game.servers.push(server);
+            this.advance = true;
+        }, (hovered) => {
             Utilities.drawText(x1 - 25, y1, '+', '45px monospace', 'center', 'middle', 'red', context);
             Utilities.drawRect(x1 + 15, y1, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
             Utilities.drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, '#BBBBBB', '#999999', 2, context);
@@ -60,10 +65,7 @@ class TutorialStep9 extends TutorialStep {
 
         const x3 = w - 250,
             y3 = y1;
-        buttons.push(new SpecialButton(x3, y3, 100, 100, '#333333', 'white', 2, () => {
-            this.game.servers[0].speed += Defaults.serversSpeed;
-            this.advance = true;
-        }, (hovered) => {
+        buttons.push(new SpecialButton(x3, y3, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
             const queueX = x3 + serverSize / 2 - 7,
                 queueY = y3 + 1,
                 starX = x3 - serverSize / 2 + 7,
