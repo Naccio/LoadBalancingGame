@@ -67,6 +67,10 @@ var Tutorial = {
 		}
 		ui.buttons = buttons; //TODO: remove after porting
 		this.draw();
+
+		if (this.currentStep.advance) {
+			this.advance();
+		}
 	},
 	draw: function () {
 		clear();
@@ -227,27 +231,7 @@ function setupGame() {
 		new TutorialStep1(canvas, game),
 		new TutorialStep2(canvas),
 		new TutorialStep3(canvas, game, orchestrator, popularityTracker),
-		{
-			id: 3,
-			hasHome: true,
-			texts: ["To create a connection, click on the client and then on the datacenter.",
-				"Be quick though! Clients don't like waiting!",
-				"Create a CONNECTION to continue."],
-			setup: function () { },
-			run: function () {
-				if (game.clients[0].connectedTo !== undefined) {
-					Tutorial.advance();
-				}
-				if (game.clients[0].life >= maxClientWaitTime - 1) {
-					this.texts = ["Snap! You let too much time pass!",
-						"Normally this would be bad for you, but this time you'll get a little help.",
-						"Create a CONNECTION to continue."];
-					game.clients[0].life = -31;
-				}
-				game.updateClients();
-			},
-			draw: function () { }
-		},
+		new TutorialStep4(game),
 		{
 			id: 4,
 			hasNext: true,

@@ -1468,6 +1468,7 @@ class TutorialStep {
     texts;
     hasNext = false;
     hasHome = false;
+    advance = false;
     constructor(id, texts) {
         this.id = id;
         this.texts = texts;
@@ -1540,6 +1541,33 @@ class TutorialStep3 extends TutorialStep {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
         Utilities.drawCircle(w * 3 / 4, h / 2, Defaults.clientSize / 2, 'gray', '', 0, context);
+    }
+}
+class TutorialStep4 extends TutorialStep {
+    game;
+    constructor(game) {
+        super(3, [
+            'To create a connection, click on the client and then on the datacenter.',
+            'Be quick though! Clients don\'t like waiting!',
+            'Create a CONNECTION to continue.'
+        ]);
+        this.game = game;
+        this.hasHome = true;
+    }
+    run() {
+        const client = this.game.clients[0];
+        if (client.connectedTo !== undefined) {
+            this.advance = true;
+        }
+        if (client.life >= Defaults.maxClientWaitTime - 1) {
+            this.texts = [
+                'Snap! You let too much time pass!',
+                'Normally this would be bad for you, but this time you\'ll get a little help.',
+                'Create a CONNECTION to continue.'
+            ];
+            client.life = -31;
+        }
+        this.game.updateClients();
     }
 }
 class BorderButton extends Button {

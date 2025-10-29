@@ -51,7 +51,7 @@ class GameTracker {
         });
     }
 
-    private updateClients() {
+    updateClients() {
         const elapsedTime = this.elapsedTime,
             remaining = Defaults.gameLength * 60 - elapsedTime;
 
