@@ -88,9 +88,15 @@ var Tutorial = {
 		drawButtons();
 	},
 	advance: function () {
+		if (this.currentStep.advanceOnSpace) {
+			document.removeEventListener('keypress', this.listener);
+		}
 		buttons = [];
 		this.currentStep = this.steps[this.currentStep.id + 1];
 		this.currentStep.setup();
+		if (this.currentStep.advanceOnSpace) {
+			document.addEventListener('keypress', this.listener);
+		}
 	},
 	listener: function (event) {
 		if (event.keyCode === 32) {
@@ -236,52 +242,7 @@ function setupGame() {
 		new TutorialStep5(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep6(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep7(canvas, game, orchestrator, popularityTracker),
-		{
-			id: 7,
-			hasHome: true,
-			texts: ["Thankfully, you are popular enough to afford to UPGRADE your datacenter.",
-				"As your popularity grows, you will be able to upgrade it even more.",
-				"Press SPACE to pause the game and select an upgrade."],
-			setup: function () {
-				document.addEventListener("keypress", Tutorial.listener);
-			},
-			run: function () {
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ": Datacenter busy (-1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-				drawCircle(WIDTH - 120, 100 + 2 * (messageSize + 5), messageSize / 2, "tomato", "indianRed", 2);
-
-				font = "18px sans-serif";
-				align = "center";
-				color = "darkGray";
-				drawText(WIDTH / 2, HEIGHT - 95, "Press space to pause", font, align, baseline, color);
-
-				var text = {
-					x: WIDTH / 2,
-					y: HEIGHT - 116,
-					font: "20px sans-serif",
-					color: { r: 255, g: 0, b: 0 },
-					id: "upgradeTut",
-					text: "- Upgrade available! -",
-					life: 1000
-				};
-
-				fader.addPermanentText(text);
-			}
-		},
+		new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
 		{
 			id: 8,
 			texts: ["Let's improve your datacenter's speed.",
