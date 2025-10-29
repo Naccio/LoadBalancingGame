@@ -235,37 +235,7 @@ function setupGame() {
 		new TutorialStep4(game),
 		new TutorialStep5(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep6(canvas, game, orchestrator, popularityTracker),
-		{
-			id: 6,
-			hasNext: true,
-			hasHome: true,
-			texts: ["Oh no! Looks like your datacenter can't handle all this traffic!",
-				"Clients will not be pleased if your datacenter is too busy to reply.",
-				"You can see how busy a datacenter is by looking at its status bar."],
-			setup: function () { },
-			run: function () {
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ": Datacenter busy (-1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-				drawCircle(WIDTH - 120, 100 + 2 * (messageSize + 5), messageSize / 2, "tomato", "indianRed", 2);
-
-				drawCircleBorder(WIDTH / 2 + serverSize / 2 - 7, HEIGHT / 2 + 1, serverSize / 2, "fireBrick", 2);
-				drawCircleBorder(WIDTH / 2 + serverSize / 2 - 7, HEIGHT / 2 + 1, serverSize / 2, "red", 3);
-			}
-		},
+		new TutorialStep7(canvas, game, orchestrator, popularityTracker),
 		{
 			id: 7,
 			hasHome: true,
