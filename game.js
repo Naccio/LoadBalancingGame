@@ -57,6 +57,7 @@ var Tutorial = {
 		this.currentStep.setup();
 	},
 	run: function () {
+		buttons = [];
 		this.currentStep.run();
 		fader.update(1 / frameRate);
 		if (this.currentStep.hasNext) {
@@ -232,36 +233,7 @@ function setupGame() {
 		new TutorialStep2(canvas),
 		new TutorialStep3(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep4(game),
-		{
-			id: 4,
-			hasNext: true,
-			hasHome: true,
-			texts: ["Good job! Now your very first client is being served.",
-				"You can see the REQUESTS and RESPONSES traveling along the connection.",
-				"The POPULARITY measures how successful your service is being."],
-			setup: function () {
-				popularityTracker.popularity = 0;
-			},
-			run: function () {
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-				drawCircleBorder(70, HEIGHT - 95, 67, "fireBrick", 2);
-				drawCircleBorder(70, HEIGHT - 95, 68, "red", 3);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-			}
-		},
+		new TutorialStep5(canvas, game, orchestrator, popularityTracker),
 		{
 			id: 5,
 			hasHome: true,

@@ -1570,6 +1570,43 @@ class TutorialStep4 extends TutorialStep {
         this.game.updateClients();
     }
 }
+class TutorialStep5 extends TutorialStep {
+    canvas;
+    game;
+    orchestrator;
+    popularityTracker;
+    constructor(canvas, game, orchestrator, popularityTracker) {
+        super(4, [
+            'Good job! Now your very first client is being served.',
+            'You can see the REQUESTS and RESPONSES traveling along the connection.',
+            'The POPULARITY measures how successful your service is being.'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.orchestrator = orchestrator;
+        this.popularityTracker = popularityTracker;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    setup() {
+        this.popularityTracker.popularity = 0;
+    }
+    run() {
+        this.orchestrator.updateMessages();
+        this.game.update();
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
+        let font = '18px sans-serif';
+        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        Utilities.drawCircleHighlight(70, h - 95, 67, context);
+        font = "10px sans-serif";
+        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
+        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
+        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
+        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
+    }
+}
 class BorderButton extends Button {
     hoverColor;
     borderWidth;
