@@ -1336,16 +1336,102 @@ class GameOver {
         Utilities.drawText(x, y, value.toString(), '15px monospace', 'start', this.baseline, this.color, context);
     }
 }
+class TutorialStep {
+    id;
+    texts;
+    hasNext = false;
+    hasHome = false;
+    advance = false;
+    advanceOnSpace = false;
+    extraButtons = [];
+    constructor(id, texts) {
+        this.id = id;
+        this.texts = texts;
+    }
+    setup() { }
+    run() { }
+    draw() { }
+}
+class Tutorial {
+    steps;
+    canvas;
+    gameArea;
+    fader;
+    game;
+    orchestrator;
+    nextButton;
+    homeButton;
+    currentStep;
+    constructor(steps, canvas, gameArea, fader, game, orchestrator) {
+        this.steps = steps;
+        this.canvas = canvas;
+        this.gameArea = gameArea;
+        this.fader = fader;
+        this.game = game;
+        this.orchestrator = orchestrator;
+        const w = canvas.width, h = canvas.height;
+        this.currentStep = steps[0];
+        this.nextButton = new Button(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
+        this.homeButton = new Button(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
+        this.currentStep.setup();
+        document.addEventListener('keypress', e => this.listener(e));
+    }
+    getButtons() {
+        const buttons = [...this.currentStep.extraButtons];
+        if (this.currentStep.hasNext) {
+            buttons.push(this.nextButton);
+        }
+        if (this.currentStep.hasHome) {
+            buttons.push(this.homeButton);
+        }
+        return buttons;
+    }
+    update() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts;
+        this.currentStep.run();
+        this.fader.update(1 / Defaults.frameRate);
+        if (this.currentStep.advance) {
+            this.advance();
+        }
+        context.clearRect(0, 0, w, h);
+        this.gameArea.draw();
+        this.fader.draw();
+        Utilities.drawRect(w / 2, 40, w, 80, '#0360AE', '#02467F', 1, context);
+        for (let i = 0; i < texts.length; i++) {
+            const text = texts[i];
+            Utilities.drawText(w / 2, 18 + 20 * i, text, 'bold 18px monospace', 'center', 'middle', 'white', context);
+        }
+        Utilities.drawRect(w / 2, h - 40, w, 80, '#0360AE', '#02467F', 1, context);
+        this.currentStep.draw();
+    }
+    reset() {
+        this.game.reset();
+        this.orchestrator.reset();
+        this.fader.emptyQueues();
+        this.currentStep = this.steps[0];
+        this.currentStep.setup();
+        this.game.switchMode(Defaults.gameModes.TUTORIAL);
+    }
+    advance() {
+        this.currentStep = this.steps[this.currentStep.id + 1];
+        this.currentStep.setup();
+    }
+    listener(event) {
+        if (event.key === ' ' && this.currentStep.advanceOnSpace) {
+            this.advance();
+        }
+    }
+}
 class Menu {
     canvas;
     $clouds;
     buttons;
-    constructor(canvas, $clouds, game, ui, Tutorial, newGame) {
+    constructor(canvas, $clouds, game, ui, tutorial, newGame) {
         this.canvas = canvas;
         this.$clouds = $clouds;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => Tutorial.initialize()),
+            new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
             new Button(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
             new Button(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
             ui.volumeButton
@@ -1462,22 +1548,6 @@ class Pause {
             }
         });
     }
-}
-class TutorialStep {
-    id;
-    texts;
-    hasNext = false;
-    hasHome = false;
-    advance = false;
-    advanceOnSpace = false;
-    extraButtons = [];
-    constructor(id, texts) {
-        this.id = id;
-        this.texts = texts;
-    }
-    setup() { }
-    run() { }
-    draw() { }
 }
 class TutorialStep1 extends TutorialStep {
     canvas;

@@ -4,6 +4,7 @@
 /// <reference path='../UI/GameUI.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
+/// <reference path='Tutorial/Tutorial.ts' />
 
 class Menu implements Scene {
     private buttons: Button[];
@@ -13,14 +14,14 @@ class Menu implements Scene {
         private $clouds: any,
         game: GameTracker,
         ui: GameUI,
-        Tutorial: any, //TODO: Fix after porting
+        tutorial: Tutorial,
         newGame: NewGame
     ) {
         const w = canvas.width,
             h = canvas.height;
 
         this.buttons = [
-            new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => Tutorial.initialize()),
+            new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
             new Button(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
             new Button(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
             ui.volumeButton
