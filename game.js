@@ -234,48 +234,7 @@ function setupGame() {
 		new TutorialStep3(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep4(game),
 		new TutorialStep5(canvas, game, orchestrator, popularityTracker),
-		{
-			id: 5,
-			hasHome: true,
-			texts: ["Cool! Two new clients want to use your service!",
-				"Connect them as well to start gaining some more popularity.",
-				"Remember, if you wait too much, you will lose popularity!"],
-			setup: function () {
-				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
-				game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
-				game.clients[1].life = - 21;
-				game.clients[2].life = - 21;
-			},
-			run: function () {
-				if (game.servers[0].queue.length > game.servers[0].capacity / 2) {
-					Tutorial.advance();
-				}
-				if (game.clients.length === 1) {
-					this.texts = ["Snap! You let too much time pass!",
-						"As you can see you lost 10 popularity each.",
-						"Connect the two clients to continue."];
-					game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 4, 10000));
-					game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT * 3 / 4, 10000));
-					game.clients[1].life = - 21;
-					game.clients[2].life = - 21;
-				}
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-			}
-		},
+		new TutorialStep6(canvas, game, orchestrator, popularityTracker),
 		{
 			id: 6,
 			hasNext: true,
