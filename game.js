@@ -57,7 +57,7 @@ var Tutorial = {
 		this.currentStep.setup();
 	},
 	run: function () {
-		buttons = [];
+		buttons = this.currentStep.extraButtons ?? [];
 		this.currentStep.run();
 		fader.update(1 / frameRate);
 		if (this.currentStep.hasNext) {
@@ -243,134 +243,8 @@ function setupGame() {
 		new TutorialStep6(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep7(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
-		{
-			id: 8,
-			texts: ["Let's improve your datacenter's speed.",
-				"This way it will process the clients' requests faster.",
-				"Select the third upgrade (Improve speed at one location)."],
-			setup: function () {
-				document.removeEventListener("keypress", Tutorial.listener);
-				fader.removeFromPermanentQueue("upgradeTut");
-
-				var x1, y1, x2, y2, x3, y3;
-				x1 = 250;
-				y1 = y2 = y3 = HEIGHT / 2 + 150;
-				buttons.push(new SpecialButton(x1, y1, 100, 100, "#333333", "white", 2, function () { }, function (hovered) {
-					var x = 250,
-						y = HEIGHT / 2 + 150,
-						font = "45px monospace",
-						align = "center",
-						baseline = "middle",
-						color = "red";
-					drawText(x1 - 25, y1, "+", font, align, baseline, color);
-					drawRect(x1 + 15, y1, serverSize, serverSize, "#DDDDDD", "red", 1);
-					drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2);
-					drawRect(x1 + serverSize / 2 + 8, y1 + 1, 6, serverSize - 10, "#BBBBBB", "#999999", 1);
-
-					if (hovered) {
-						font = "20px monospace";
-						drawText(WIDTH / 2, HEIGHT - 50, "Buy new datacenter", font, align, baseline, color);
-					}
-				}));
-
-				x2 = WIDTH / 2;
-				buttons.push(new SpecialButton(x2, y2, 100, 100, "#333333", "white", 2, function () { }, function (hovered) {
-					var queueX = x2 + serverSize / 2 - 7,
-						queueY = y2 + 1,
-						starX = x2 - serverSize / 2 + 7,
-						starY = y2 + serverSize / 2 - 9,
-						color = "red",
-						lineWidth = 3;
-					drawRect(x2, y2, serverSize, serverSize, "#DDDDDD", "#999999", 1);
-					drawRect(queueX, queueY, 6, serverSize - 10, "salmon", "red", 1);
-					drawStar(starX, starY, 5, 4, 2, "#BBBBBB", "#999999", 2);
-					drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth);
-					drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth);
-					drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth);
-
-					if (hovered) {
-						drawText(WIDTH / 2, HEIGHT - 50, "Scale off at one location", "20px monospace", "center", "middle", "red");
-					}
-				}));
-
-				x3 = WIDTH - 250;
-				buttons.push(new SpecialButton(x3, y3, 100, 100, "#333333", "white", 2, function () {
-					game.servers[0].speed += serversSpeed;
-					Tutorial.advance();
-				}, function (hovered) {
-					var queueX = x3 + serverSize / 2 - 7,
-						queueY = y3 + 1,
-						starX = x3 - serverSize / 2 + 7,
-						starY = y3 + serverSize / 2 - 9,
-						color = "red",
-						lineWidth = 3;
-					drawRect(x3, y3, serverSize, serverSize, "#DDDDDD", "#999999", 1);
-					drawRect(queueX, queueY, 6, serverSize - 10, "#BBBBBB", "#999999", 1);
-					drawStar(starX, starY, 5, 4, 2, "salmon", "red", 2);
-					drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth);
-					drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth);
-					drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth);
-
-					if (hovered) {
-						drawText(WIDTH / 2, HEIGHT - 50, "Improve speed at one location", "20px monospace", "center", "middle", "red");
-					}
-				}));
-			},
-			run: function () { },
-			draw: function () {
-				drawRect(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT - 160, "#0360AE");
-				drawText(WIDTH / 2, HEIGHT / 2 + 60, "Choose an upgrade:", "25px monospace", "center", "middle", "black");
-				drawText(WIDTH / 2, HEIGHT / 3, "~ Paused ~", "50px monospace", "center", "middle", "red");
-			}
-		},
-		{
-			id: 9,
-			hasHome: true,
-			texts: ["Nice! You can see your datacenter's speed in the bottom left of it.",
-				"Now the clients can finish their data exchange without any more problems.",
-				"When a client is served successfully you will gain some more popularity."],
-			setup: function () {
-				game.clients[0].messagesToSend = 2;
-				game.clients[0].acksToReceive = 2;
-				game.clients[1].messagesToSend = 6;
-				game.clients[1].acksToReceive = 6;
-				game.clients[2].messagesToSend = 10;
-				game.clients[2].acksToReceive = 10;
-				orchestrator.messages.forEach(function (message) {
-					if (message.status === "ack") {
-						message.receiver.acksToReceive += 1;
-					}
-					if (message.status === "queued" || message.status === "req") {
-						message.sender.acksToReceive += 1;
-					}
-				});
-			},
-			run: function () {
-				if (game.clients.length === 0) {
-					this.hasNext = true;
-				}
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ": Datacenter busy (-1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-				drawCircle(WIDTH - 120, 100 + 2 * (messageSize + 5), messageSize / 2, "tomato", "indianRed", 2);
-
-				drawCircleBorder(WIDTH / 2 - serverSize / 2 + 7, HEIGHT / 2 + serverSize / 4, 15, "fireBrick", 2);
-				drawCircleBorder(WIDTH / 2 - serverSize / 2 + 7, HEIGHT / 2 + serverSize / 4, 15, "red", 3);
-			}
-		},
+		new TutorialStep9(canvas, game, fader),
+		new TutorialStep10(canvas, game, orchestrator, popularityTracker),
 		{
 			id: 10,
 			hasHome: true,
