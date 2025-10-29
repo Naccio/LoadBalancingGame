@@ -247,45 +247,7 @@ function setupGame() {
 		new TutorialStep10(canvas, game, orchestrator, popularityTracker),
 		new TutorialStep11(canvas, game, orchestrator, popularityTracker, fader),
 		new TutorialStep12(canvas, game, fader),
-		{
-			id: 12,
-			hasHome: true,
-			texts: ["Perfect! Now you have a new datacenter at your disposal.",
-				"This is when a good load balancing strategy will start to matter.",
-				"Indeed you would be wiser to connect the clients to the new datacenter."],
-			setup: function () {
-				game.clients[0].life = - 21;
-				game.clients[1].life = - 21;
-			},
-			run: function () {
-				if (game.clients.length === 0) {
-					game.clients.push(new Client(orchestrator, popularityTracker, WIDTH / 4, HEIGHT / 3, 10000));
-					game.clients.push(new Client(orchestrator, popularityTracker, WIDTH * 3 / 4, HEIGHT / 3, 10000));
-					game.clients[0].life = - 21;
-					game.clients[1].life = - 21;
-				}
-				if (game.clients[0].connectedTo !== undefined && game.clients[1].connectedTo !== undefined) {
-					Tutorial.advance();
-				}
-				orchestrator.updateMessages();
-				game.update();
-			},
-			draw: function () {
-				var font = "18px sans-serif",
-					align = "start",
-					baseline = "middle",
-					color = "black";
-				drawText(10, HEIGHT - 95, "Popularity: " + popularityTracker.popularity, font, align, baseline, color);
-
-				font = "10px sans-serif";
-				drawText(WIDTH - 118 + messageSize / 2, 100, ": Request", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + messageSize + 5, ": Response (+1)", font, align, baseline, color);
-				drawText(WIDTH - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ": Datacenter busy (-1)", font, align, baseline, color);
-				drawCircle(WIDTH - 120, 100, messageSize / 2, "lightBlue", "skyBlue", 2);
-				drawCircle(WIDTH - 120, 100 + messageSize + 5, messageSize / 2, "lime", "limeGreen", 2);
-				drawCircle(WIDTH - 120, 100 + 2 * (messageSize + 5), messageSize / 2, "tomato", "indianRed", 2);
-			}
-		},
+		new TutorialStep13(canvas, game, orchestrator, popularityTracker),
 		{
 			id: 13,
 			hasHome: true,
