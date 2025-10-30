@@ -12,6 +12,8 @@ class Pause implements Scene {
     private buttons: Button[];
     private upgradeButtons: Button[];
 
+    public id = Defaults.gameModes.PAUSE;
+
     constructor(
         private canvas: HTMLCanvasElement,
         private $clouds: any,

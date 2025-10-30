@@ -14,6 +14,8 @@ class Tutorial implements Scene {
 
     private currentStep: TutorialStep;
 
+    public id = Defaults.gameModes.TUTORIAL;
+
     public constructor(
         private steps: TutorialStep[],
         private canvas: HTMLCanvasElement,

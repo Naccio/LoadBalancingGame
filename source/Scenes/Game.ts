@@ -7,6 +7,7 @@
 /// <reference path='Scene.ts' />
 
 class Game implements Scene {
+    public id = Defaults.gameModes.GAME;
 
     constructor(
         private canvas: HTMLCanvasElement,

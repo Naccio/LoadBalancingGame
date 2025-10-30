@@ -9,6 +9,8 @@
 class Menu implements Scene {
     private buttons: Button[];
 
+    public id = Defaults.gameModes.MENU;
+
     constructor(
         private canvas: HTMLCanvasElement,
         private $clouds: any,

@@ -6,6 +6,8 @@
 class Credits implements Scene {
     private buttons: Button[];
 
+    public id = Defaults.gameModes.CREDITS;
+
     public constructor(private canvas: HTMLCanvasElement, private $clouds: any, game: GameTracker) {
         const w = canvas.width,
             h = canvas.height;

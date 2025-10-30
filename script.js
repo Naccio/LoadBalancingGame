@@ -932,6 +932,7 @@ class Credits {
     canvas;
     $clouds;
     buttons;
+    id = Defaults.gameModes.CREDITS;
     constructor(canvas, $clouds, game) {
         this.canvas = canvas;
         this.$clouds = $clouds;
@@ -1256,6 +1257,7 @@ class Game {
     orchestrator;
     gameArea;
     fader;
+    id = Defaults.gameModes.GAME;
     constructor(canvas, game, scheduler, orchestrator, gameArea, fader) {
         this.canvas = canvas;
         this.game = game;
@@ -1294,6 +1296,7 @@ class GameOver {
     baseline = 'middle';
     color = 'white';
     buttons;
+    id = Defaults.gameModes.GAMEOVER;
     constructor(canvas, $clouds, game, orchestrator, popularity, newGame) {
         this.canvas = canvas;
         this.$clouds = $clouds;
@@ -1362,6 +1365,7 @@ class Tutorial {
     nextButton;
     homeButton;
     currentStep;
+    id = Defaults.gameModes.TUTORIAL;
     constructor(steps, canvas, gameArea, fader, game, orchestrator) {
         this.steps = steps;
         this.canvas = canvas;
@@ -1426,6 +1430,7 @@ class Menu {
     canvas;
     $clouds;
     buttons;
+    id = Defaults.gameModes.MENU;
     constructor(canvas, $clouds, game, ui, tutorial, newGame) {
         this.canvas = canvas;
         this.$clouds = $clouds;
@@ -1476,6 +1481,7 @@ class Pause {
     upgradesTracker;
     buttons;
     upgradeButtons;
+    id = Defaults.gameModes.PAUSE;
     constructor(canvas, $clouds, game, upgradesTracker, ui, newGame) {
         this.canvas = canvas;
         this.$clouds = $clouds;
@@ -2189,6 +2195,7 @@ class Upgrade {
     scheduler;
     gameArea;
     fader;
+    id = Defaults.gameModes.UPGRADE;
     constructor(canvas, game, upgradesTracker, scheduler, gameArea, fader) {
         this.canvas = canvas;
         this.game = game;
@@ -2284,3 +2291,129 @@ class FpsCounter {
     }
     ;
 }
+class Application {
+    scenes;
+    game;
+    ui;
+    cursor;
+    context;
+    fpsCounter;
+    activeScene;
+    logActive = false;
+    constructor(scenes, game, ui, cursor, context, fpsCounter) {
+        this.scenes = scenes;
+        this.game = game;
+        this.ui = ui;
+        this.cursor = cursor;
+        this.context = context;
+        this.fpsCounter = fpsCounter;
+        this.activeScene = scenes[0];
+        document.addEventListener("keypress", e => this.keyboardHandler(e));
+        window.addEventListener('blur', () => this.blurHandler());
+    }
+    static build() {
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+        const fader = new TextFader(context);
+        const fpsCounter = new FpsCounter();
+        const music = new Audio("assets/music.mp3");
+        const orchestrator = new MessageOrchestrator();
+        const upgradesTracker = new UpgradesTracker();
+        const popularityTracker = new PopularityTracker(fader, upgradesTracker);
+        const ui = new GameUI(music, canvas);
+        const game = new GameTracker(popularityTracker, ui);
+        const cursor = new CursorTracker(game, canvas, ui);
+        const sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+        const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
+        const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched, fader);
+        const credits = new Credits(canvas, $clouds, game);
+        const gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
+        const pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
+        const upgrade = new Upgrade(canvas, game, upgradesTracker, sched, gameArea, fader);
+        const gameScene = new Game(canvas, game, sched, orchestrator, gameArea, fader);
+        const tutorial = new Tutorial([
+            new TutorialStep1(canvas, game),
+            new TutorialStep2(canvas),
+            new TutorialStep3(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep4(game),
+            new TutorialStep5(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep6(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep7(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
+            new TutorialStep9(canvas, game, fader),
+            new TutorialStep10(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep11(canvas, game, orchestrator, popularityTracker, fader),
+            new TutorialStep12(canvas, game, fader),
+            new TutorialStep13(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
+        ], canvas, gameArea, fader, game, orchestrator);
+        const menu = new Menu(canvas, $clouds, game, ui, tutorial, newGame);
+        cursor.bind();
+        music.loop = true;
+        $clouds.createCloud(w / 4, h / 4, 220);
+        $clouds.createCloud(0 - w / 4, h / 2, 220);
+        $clouds.createCloud(w / 2, h / 2, 220, 40);
+        $clouds.createCloud(0 - w / 2, h * 3 / 4, 220);
+        $clouds.createCloud(w * 3 / 4, h / 4, 220);
+        $clouds.createCloud(0 - w * 3 / 4, h / 2, 220);
+        return new Application([
+            menu,
+            gameScene,
+            gameOver,
+            credits,
+            pause,
+            upgrade,
+            tutorial
+        ], game, ui, cursor, context, fpsCounter);
+    }
+    run() {
+        setInterval(() => this.mainLoop(), 1000 / Defaults.frameRate);
+    }
+    mainLoop() {
+        if (this.activeScene.id !== this.game.currentGameMode) {
+            this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode);
+        }
+        this.activeScene.update();
+        this.ui.buttons = this.activeScene.getButtons();
+        this.drawButtons();
+        if (this.logActive) {
+            this.fpsCounter.update();
+            this.fpsCounter.logFps();
+        }
+    }
+    drawButtons() {
+        const mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
+        this.ui.buttons.forEach((button) => {
+            const hovered = mouseX > button.x - (button.width + 2) / 2 &&
+                mouseX < button.x + (button.width + 2) / 2 &&
+                mouseY > button.y - (button.height + 4) / 2 &&
+                mouseY < button.y + (button.height + 2) / 2;
+            button.draw(hovered, this.context);
+        });
+    }
+    blurHandler() {
+        if (this.game.currentGameMode === Defaults.gameModes.GAME) {
+            this.game.switchMode(Defaults.gameModes.PAUSE);
+        }
+    }
+    keyboardHandler(event) {
+        event.preventDefault();
+        switch (event.key) {
+            case ' ':
+                const game = this.game;
+                if (game.currentGameMode === Defaults.gameModes.GAME) {
+                    game.switchMode(Defaults.gameModes.PAUSE);
+                }
+                else if (game.currentGameMode === Defaults.gameModes.PAUSE) {
+                    game.switchMode(Defaults.gameModes.GAME);
+                }
+        }
+    }
+}
+const canvas = document.getElementById('canvas');
+const context = canvas.getContext("2d");
+const app = Application.build();
+app.logActive = true;
+app.run();

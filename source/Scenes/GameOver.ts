@@ -12,6 +12,8 @@ class GameOver implements Scene {
     private readonly color = 'white';
     private buttons: Button[];
 
+    public id = Defaults.gameModes.GAMEOVER;
+
     constructor(
         private canvas: HTMLCanvasElement,
         private $clouds: any,

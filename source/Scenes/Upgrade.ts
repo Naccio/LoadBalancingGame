@@ -10,6 +10,7 @@
 /// <reference path='Scene.ts' />
 
 class Upgrade implements Scene {
+    public id = Defaults.gameModes.UPGRADE;
 
     constructor(
         private canvas: HTMLCanvasElement,
