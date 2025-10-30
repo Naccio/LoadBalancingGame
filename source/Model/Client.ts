@@ -7,17 +7,17 @@ class Client implements MessageTransmitter {
     public connectedTo?: Server;
     public lastMessageTime: number;
     public messagesToSend: number;
-    public acksToReceive: number;
-    public nacksToDie: number;
+    public ACKsToReceive: number;
+    public NACKsToDie: number;
 
-    constructor(private orchestrator: MessageOrchestrator, public popularity: PopularityTracker, public x: number, public y: number, public msgNr: number) {
+    constructor(private orchestrator: MessageOrchestrator, public popularity: PopularityTracker, public x: number, public y: number, public messages: number) {
         this.x = x;
         this.y = y;
         this.life = 0;
         this.lastMessageTime = 0;
-        this.messagesToSend = msgNr;
-        this.acksToReceive = msgNr;
-        this.nacksToDie = Math.floor(msgNr / 3);
+        this.messagesToSend = messages;
+        this.ACKsToReceive = messages;
+        this.NACKsToDie = Math.floor(messages / 3);
     }
 
     sendMessage(elapsedTime: number) {
@@ -33,17 +33,17 @@ class Client implements MessageTransmitter {
     receiveMessage(message: Message) {
         let n;
         if (message.status === "ack") {
-            this.acksToReceive -= 1;
+            this.ACKsToReceive -= 1;
             n = 1;
-            if (this.acksToReceive === 0) {
+            if (this.ACKsToReceive === 0) {
                 n += 5;
             }
             this.orchestrator.registerAck(message);
             this.popularity.updatePopularity(n, this.x, this.y);
         } else {
-            this.nacksToDie -= 1;
+            this.NACKsToDie -= 1;
             n = -1;
-            if (this.nacksToDie > 0) {
+            if (this.NACKsToDie > 0) {
                 this.messagesToSend += 1;
             } else {
                 n -= 5;

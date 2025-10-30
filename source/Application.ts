@@ -72,16 +72,16 @@ class Application {
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui);
         const cursor = new CursorTracker(game, canvas, ui);
-        const sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+        const scheduler = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
 
-        const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched, fader);
+        const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
 
         const credits = new Credits(canvas, $clouds, game);
         const gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
         const pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
-        const upgrade = new Upgrade(canvas, game, upgradesTracker, sched, gameArea, fader);
-        const gameScene = new Game(canvas, game, sched, orchestrator, gameArea, fader);
+        const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
+        const gameScene = new Game(canvas, game, scheduler, orchestrator, gameArea, fader);
         const tutorial = new Tutorial([
             new TutorialStep1(canvas, game),
             new TutorialStep2(canvas),

@@ -24,17 +24,17 @@ class TutorialStep10 extends TutorialStep {
 
     setup() {
         this.game.clients[0].messagesToSend = 2;
-        this.game.clients[0].acksToReceive = 2;
+        this.game.clients[0].ACKsToReceive = 2;
         this.game.clients[1].messagesToSend = 6;
-        this.game.clients[1].acksToReceive = 6;
+        this.game.clients[1].ACKsToReceive = 6;
         this.game.clients[2].messagesToSend = 10;
-        this.game.clients[2].acksToReceive = 10;
+        this.game.clients[2].ACKsToReceive = 10;
         this.orchestrator.messages.forEach(function (message) {
             if (message.status === 'ack') {
-                (<Client>message.receiver).acksToReceive += 1;
+                (<Client>message.receiver).ACKsToReceive += 1;
             }
             if (message.status === 'queued' || message.status === 'req') {
-                (<Client>message.sender).acksToReceive += 1;
+                (<Client>message.sender).ACKsToReceive += 1;
             }
         });
     }

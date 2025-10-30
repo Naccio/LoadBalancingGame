@@ -59,19 +59,19 @@ class GameTracker {
             var c = this.clients[i];
 
             if (remaining <= 0 && c.messagesToSend > 0) {
-                c.acksToReceive -= c.messagesToSend;
+                c.ACKsToReceive -= c.messagesToSend;
                 c.messagesToSend = 0;
             }
 
             //Check if client is done sending messages
-            if (c.messagesToSend === 0 && c.acksToReceive === 0) {
+            if (c.messagesToSend === 0 && c.ACKsToReceive === 0) {
                 this.clients.splice(i--, 1);
                 this.clientsServed += 1;
                 continue;
             }
 
-            //Check if client received too many nacks
-            if (c.nacksToDie === 0) {
+            //Check if client received too many NACKs
+            if (c.NACKsToDie === 0) {
                 c.connectedTo = undefined;
                 this.clients.splice(i--, 1);
                 this.droppedConnections += 1;

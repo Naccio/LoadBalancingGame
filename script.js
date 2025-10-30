@@ -42,7 +42,7 @@ class Message {
 }
 class MessageOrchestrator {
     messages = [];
-    totalAcks = 0;
+    totalACKs = 0;
     avgResponseTime = 0;
     createMessage(sender, receiver) {
         const m = new Message(sender, receiver);
@@ -50,12 +50,12 @@ class MessageOrchestrator {
         this.messages.push(m);
     }
     registerAck(message) {
-        this.totalAcks += 1;
-        this.avgResponseTime = (message.life + (this.totalAcks - 1) * this.avgResponseTime) / this.totalAcks;
+        this.totalACKs += 1;
+        this.avgResponseTime = (message.life + (this.totalACKs - 1) * this.avgResponseTime) / this.totalACKs;
     }
     reset() {
         this.messages = [];
-        this.totalAcks = 0;
+        this.totalACKs = 0;
         this.avgResponseTime = 0;
     }
     updateMessages() {
@@ -315,26 +315,26 @@ class Client {
     popularity;
     x;
     y;
-    msgNr;
+    messages;
     life;
     connectedTo;
     lastMessageTime;
     messagesToSend;
-    acksToReceive;
-    nacksToDie;
-    constructor(orchestrator, popularity, x, y, msgNr) {
+    ACKsToReceive;
+    NACKsToDie;
+    constructor(orchestrator, popularity, x, y, messages) {
         this.orchestrator = orchestrator;
         this.popularity = popularity;
         this.x = x;
         this.y = y;
-        this.msgNr = msgNr;
+        this.messages = messages;
         this.x = x;
         this.y = y;
         this.life = 0;
         this.lastMessageTime = 0;
-        this.messagesToSend = msgNr;
-        this.acksToReceive = msgNr;
-        this.nacksToDie = Math.floor(msgNr / 3);
+        this.messagesToSend = messages;
+        this.ACKsToReceive = messages;
+        this.NACKsToDie = Math.floor(messages / 3);
     }
     sendMessage(elapsedTime) {
         if (!this.connectedTo) {
@@ -348,18 +348,18 @@ class Client {
     receiveMessage(message) {
         let n;
         if (message.status === "ack") {
-            this.acksToReceive -= 1;
+            this.ACKsToReceive -= 1;
             n = 1;
-            if (this.acksToReceive === 0) {
+            if (this.ACKsToReceive === 0) {
                 n += 5;
             }
             this.orchestrator.registerAck(message);
             this.popularity.updatePopularity(n, this.x, this.y);
         }
         else {
-            this.nacksToDie -= 1;
+            this.NACKsToDie -= 1;
             n = -1;
-            if (this.nacksToDie > 0) {
+            if (this.NACKsToDie > 0) {
                 this.messagesToSend += 1;
             }
             else {
@@ -534,15 +534,15 @@ class GameTracker {
         for (let i = 0; i < this.clients.length; i++) {
             var c = this.clients[i];
             if (remaining <= 0 && c.messagesToSend > 0) {
-                c.acksToReceive -= c.messagesToSend;
+                c.ACKsToReceive -= c.messagesToSend;
                 c.messagesToSend = 0;
             }
-            if (c.messagesToSend === 0 && c.acksToReceive === 0) {
+            if (c.messagesToSend === 0 && c.ACKsToReceive === 0) {
                 this.clients.splice(i--, 1);
                 this.clientsServed += 1;
                 continue;
             }
-            if (c.nacksToDie === 0) {
+            if (c.NACKsToDie === 0) {
                 c.connectedTo = undefined;
                 this.clients.splice(i--, 1);
                 this.droppedConnections += 1;
@@ -988,7 +988,7 @@ class Defaults {
     static serversCapacity = 80;
     static serverSize = 40;
     static serversSpeed = 3.5;
-    static gameModes = { MENU: 0, GAME: 1, GAMEOVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
+    static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
 }
 class CursorTracker {
     game;
@@ -1279,7 +1279,7 @@ class Game {
         this.scheduler.schedule();
         var m = Math.floor(this.game.elapsedTime / 60);
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
-            this.game.switchMode(Defaults.gameModes.GAMEOVER);
+            this.game.switchMode(Defaults.gameModes.GAME_OVER);
             return;
         }
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
@@ -1296,7 +1296,7 @@ class GameOver {
     baseline = 'middle';
     color = 'white';
     buttons;
-    id = Defaults.gameModes.GAMEOVER;
+    id = Defaults.gameModes.GAME_OVER;
     constructor(canvas, $clouds, game, orchestrator, popularity, newGame) {
         this.canvas = canvas;
         this.$clouds = $clouds;
@@ -1317,7 +1317,7 @@ class GameOver {
         context.clearRect(0, 0, w, h);
         Utilities.drawSky(this.canvas, this.$clouds);
         Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
-        this.drawStat(h / 2 - 80, 'Succesful connections', this.game.clientsServed);
+        this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
@@ -1912,17 +1912,17 @@ class TutorialStep10 extends TutorialStep {
     }
     setup() {
         this.game.clients[0].messagesToSend = 2;
-        this.game.clients[0].acksToReceive = 2;
+        this.game.clients[0].ACKsToReceive = 2;
         this.game.clients[1].messagesToSend = 6;
-        this.game.clients[1].acksToReceive = 6;
+        this.game.clients[1].ACKsToReceive = 6;
         this.game.clients[2].messagesToSend = 10;
-        this.game.clients[2].acksToReceive = 10;
+        this.game.clients[2].ACKsToReceive = 10;
         this.orchestrator.messages.forEach(function (message) {
             if (message.status === 'ack') {
-                message.receiver.acksToReceive += 1;
+                message.receiver.ACKsToReceive += 1;
             }
             if (message.status === 'queued' || message.status === 'req') {
-                message.sender.acksToReceive += 1;
+                message.sender.ACKsToReceive += 1;
             }
         });
     }
@@ -2325,14 +2325,14 @@ class Application {
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui);
         const cursor = new CursorTracker(game, canvas, ui);
-        const sched = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+        const scheduler = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
-        const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, sched, fader);
+        const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
         const credits = new Credits(canvas, $clouds, game);
         const gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
         const pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
-        const upgrade = new Upgrade(canvas, game, upgradesTracker, sched, gameArea, fader);
-        const gameScene = new Game(canvas, game, sched, orchestrator, gameArea, fader);
+        const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
+        const gameScene = new Game(canvas, game, scheduler, orchestrator, gameArea, fader);
         const tutorial = new Tutorial([
             new TutorialStep1(canvas, game),
             new TutorialStep2(canvas),

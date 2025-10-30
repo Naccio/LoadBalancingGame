@@ -34,7 +34,7 @@ class Game implements Scene {
         var m = Math.floor(this.game.elapsedTime / 60);
 
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
-            this.game.switchMode(Defaults.gameModes.GAMEOVER);
+            this.game.switchMode(Defaults.gameModes.GAME_OVER);
             return;
         }
 

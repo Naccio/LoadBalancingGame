@@ -12,7 +12,7 @@ class GameOver implements Scene {
     private readonly color = 'white';
     private buttons: Button[];
 
-    public id = Defaults.gameModes.GAMEOVER;
+    public id = Defaults.gameModes.GAME_OVER;
 
     constructor(
         private canvas: HTMLCanvasElement,
@@ -44,7 +44,7 @@ class GameOver implements Scene {
         Utilities.drawSky(this.canvas, this.$clouds);
         Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
 
-        this.drawStat(h / 2 - 80, 'Succesful connections', this.game.clientsServed);
+        this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);

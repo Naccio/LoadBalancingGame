@@ -3,7 +3,7 @@
 
 class MessageOrchestrator {
     public messages: Message[] = [];
-    public totalAcks = 0;
+    public totalACKs = 0;
     public avgResponseTime = 0;
 
     createMessage(sender: MessageTransmitter, receiver: MessageTransmitter) {
@@ -13,13 +13,13 @@ class MessageOrchestrator {
     }
 
     registerAck(message: Message) {
-        this.totalAcks += 1;
-        this.avgResponseTime = (message.life + (this.totalAcks - 1) * this.avgResponseTime) / this.totalAcks;
+        this.totalACKs += 1;
+        this.avgResponseTime = (message.life + (this.totalACKs - 1) * this.avgResponseTime) / this.totalACKs;
     }
 
     reset() {
         this.messages = [];
-        this.totalAcks = 0;
+        this.totalACKs = 0;
         this.avgResponseTime = 0;
     }
 
