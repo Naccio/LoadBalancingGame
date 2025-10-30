@@ -2415,5 +2415,4 @@ class Application {
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext("2d");
 const app = Application.build();
-app.logActive = true;
 app.run();

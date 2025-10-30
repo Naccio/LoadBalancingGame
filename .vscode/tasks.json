@@ -2,16 +2,22 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "Build",
 			"type": "typescript",
 			"tsconfig": "source/tsconfig.json",
 			"problemMatcher": [
 				"$tsc"
-			],
+			]
+		},
+		{
+			"label": "Uglify",
+			"type": "shell",
+			"command": "uglifyjs script.js -c -m -o script.min.js",
+			"dependsOn": "Build",
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			},
-			"label": "tsc: build - source/tsconfig.json"
+			}
 		}
 	]
 }
