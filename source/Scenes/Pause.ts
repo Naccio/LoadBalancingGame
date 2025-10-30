@@ -16,7 +16,7 @@ class Pause implements Scene {
 
     constructor(
         private canvas: HTMLCanvasElement,
-        private $clouds: any,
+        private clouds: Clouds,
         private game: GameTracker,
         private upgradesTracker: UpgradesTracker,
         ui: GameUI,
@@ -86,8 +86,7 @@ class Pause implements Scene {
             font = "25px monospace",
             color;
 
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             color = "black";

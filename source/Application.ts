@@ -34,7 +34,11 @@
 /// <reference path='UI/SpecialButton.ts' />
 /// <reference path='UI/TextFader.ts' />
 
-declare const $clouds: any;
+declare class Clouds {
+    add(x: number, y: number, w: number, h: number, circles: number, color: { r: number, g: number, b: number, a: number }, speed: number): void;
+    draw(): void;
+    update(elapsed: number): void;
+}
 
 class Application {
     private activeScene: Scene;
@@ -46,26 +50,36 @@ class Application {
         private game: GameTracker,
         private ui: GameUI,
         private cursor: CursorTracker,
-        private context: CanvasRenderingContext2D,
-        private fpsCounter: FpsCounter
+        private canvas: HTMLCanvasElement,
+        private fpsCounter: FpsCounter,
+        private clouds: any
     ) {
+        const w = canvas.width,
+            h = canvas.height;
+
         this.activeScene = scenes[0];
+
+        clouds.setSkyColor('#0360AE');
+        this.createCloud(w / 4, h / 4);
+        this.createCloud(0 - w / 4, h / 3);
+        this.createCloud(w / 2, h / 2);
+        this.createCloud(0 - w / 2, h * 3 / 4);
+        this.createCloud(w * 3 / 4, h * 2 / 3);
+        this.createCloud(0 - w * 3 / 4, h / 2);
 
         document.addEventListener("keypress", e => this.keyboardHandler(e));
 
         window.addEventListener('blur', () => this.blurHandler());
     }
 
-    public static build() {
+    public static build(clouds: Clouds) {
         const canvas = <HTMLCanvasElement>document.getElementById('canvas');
         const context = canvas.getContext("2d")!;
-        const w = canvas.width;
-        const h = canvas.height;
+
+        const music = new Audio("assets/music.mp3");
 
         const fader = new TextFader(context);
         const fpsCounter = new FpsCounter();
-        const music = new Audio("assets/music.mp3");
-
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
         const popularityTracker = new PopularityTracker(fader, upgradesTracker);
@@ -77,9 +91,9 @@ class Application {
 
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
 
-        const credits = new Credits(canvas, $clouds, game);
-        const gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
-        const pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
+        const credits = new Credits(canvas, clouds, game);
+        const gameOver = new GameOver(canvas, clouds, game, orchestrator, popularityTracker, newGame);
+        const pause = new Pause(canvas, clouds, game, upgradesTracker, ui, newGame);
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
         const gameScene = new Game(canvas, game, scheduler, orchestrator, gameArea, fader);
         const tutorial = new Tutorial([
@@ -98,19 +112,12 @@ class Application {
             new TutorialStep13(canvas, game, orchestrator, popularityTracker),
             new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
-        const menu = new Menu(canvas, $clouds, game, ui, tutorial, newGame);
+        const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);
 
         cursor.bind();
 
         music.loop = true;
         //music.play();
-
-        $clouds.createCloud(w / 4, h / 4, 220);
-        $clouds.createCloud(0 - w / 4, h / 2, 220);
-        $clouds.createCloud(w / 2, h / 2, 220, 40);
-        $clouds.createCloud(0 - w / 2, h * 3 / 4, 220);
-        $clouds.createCloud(w * 3 / 4, h / 4, 220);
-        $clouds.createCloud(0 - w * 3 / 4, h / 2, 220);
 
         return new Application([
             menu,
@@ -120,7 +127,7 @@ class Application {
             pause,
             upgrade,
             tutorial
-        ], game, ui, cursor, context, fpsCounter);
+        ], game, ui, cursor, canvas, fpsCounter, clouds);
     }
 
     public run() {
@@ -132,6 +139,7 @@ class Application {
             this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode)!;
         }
 
+        this.clouds.update(1000 / Defaults.frameRate);
         this.activeScene.update();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();
@@ -142,8 +150,24 @@ class Application {
         }
     }
 
+    private createCloud(x: number, y: number) {
+        const w = this.getRandomInt(350, 500),
+            h = this.getRandomInt(w, 700),
+            circles = this.getRandomInt(15, 30),
+            n = this.getRandomInt(180, 255),
+            color = { r: n, g: n, b: n, a: .1 },
+            speed = this.getRandomInt(100, 200);
+
+        this.clouds.add(x, y, w, h, circles, color, speed);
+    }
+
+    private getRandomInt(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
     private drawButtons() {
-        const mouseX = this.cursor.mouseX,
+        const context = this.canvas.getContext('2d')!,
+            mouseX = this.cursor.mouseX,
             mouseY = this.cursor.mouseY;
 
         this.ui.buttons.forEach((button) => {
@@ -153,7 +177,7 @@ class Application {
                 mouseY > button.y - (button.height + 4) / 2 &&
                 mouseY < button.y + (button.height + 2) / 2;
 
-            button.draw(hovered, this.context);
+            button.draw(hovered, context);
         });
     }
 
@@ -176,11 +200,3 @@ class Application {
         }
     }
 }
-
-const canvas = <HTMLCanvasElement>document.getElementById('canvas');
-const context = canvas.getContext("2d")!; //TODO: Remove after upgrading Clouds.js
-const app = Application.build();
-
-//app.logActive = true;
-
-app.run();

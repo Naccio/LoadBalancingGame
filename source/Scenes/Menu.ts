@@ -13,7 +13,7 @@ class Menu implements Scene {
 
     constructor(
         private canvas: HTMLCanvasElement,
-        private $clouds: any,
+        private clouds: Clouds,
         game: GameTracker,
         ui: GameUI,
         tutorial: Tutorial,
@@ -37,13 +37,11 @@ class Menu implements Scene {
     update() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
-            h = this.canvas.height,
             align = "center",
             baseline = "middle",
             color = "rgba(255,255,255,0.6)";
 
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
 
         Utilities.drawRect(w / 2, 140, w, 180, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
         Utilities.drawText(w / 2, 110, 'Load Balancing', 'small-caps bold 110px monospace', align, baseline, color, context);

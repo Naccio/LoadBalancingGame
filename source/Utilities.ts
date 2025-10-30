@@ -89,15 +89,6 @@ class Utilities {
         context.fill();
     }
 
-    public static drawSky(canvas: HTMLCanvasElement, $clouds: any) {
-        const context = canvas.getContext('2d')!,
-            w = canvas.width,
-            h = canvas.height;
-
-        Utilities.drawRect(w / 2, h / 2, w, h, '#0360AE', '', 0, context);
-        $clouds.draw(context);
-    }
-
     public static drawStar(cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
         let rot = Math.PI / 2 * 3,
             x = cx,

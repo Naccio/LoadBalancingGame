@@ -8,7 +8,7 @@ class Credits implements Scene {
 
     public id = Defaults.gameModes.CREDITS;
 
-    public constructor(private canvas: HTMLCanvasElement, private $clouds: any, game: GameTracker) {
+    public constructor(private canvas: HTMLCanvasElement, private clouds: Clouds, game: GameTracker) {
         const w = canvas.width,
             h = canvas.height;
 
@@ -22,12 +22,7 @@ class Credits implements Scene {
     }
 
     update() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height;
-
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
 
         this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
         this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');

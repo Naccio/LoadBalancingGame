@@ -16,8 +16,19 @@
   </canvas>
   <div id="log"></div>
 
-  <script src="clouds.js"></script>
+  <script src="clouds.min.js" type="module"></script>
   <script src="script.min.js"></script>
+  <script type="module">
+    import Clouds from "./clouds.min.js";
+
+    const canvas = document.getElementById('canvas'),
+      clouds = new Clouds(canvas),
+      app = Application.build(clouds);
+
+    //app.logActive = true;
+
+    app.run();
+  </script>
 </body>
 
 </html>

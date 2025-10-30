@@ -16,7 +16,7 @@ class GameOver implements Scene {
 
     constructor(
         private canvas: HTMLCanvasElement,
-        private $clouds: any,
+        private clouds: Clouds,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
         private popularity: PopularityTracker,
@@ -40,8 +40,7 @@ class GameOver implements Scene {
             w = this.canvas.width,
             h = this.canvas.height;
 
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
         Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
 
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);

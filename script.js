@@ -848,11 +848,6 @@ class Utilities {
         context.closePath();
         context.fill();
     }
-    static drawSky(canvas, $clouds) {
-        const context = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-        Utilities.drawRect(w / 2, h / 2, w, h, '#0360AE', '', 0, context);
-        $clouds.draw(context);
-    }
     static drawStar(cx, cy, spikes, outerRadius, innerRadius, c, bc, bw, context) {
         let rot = Math.PI / 2 * 3, x = cx, y = cy, step = Math.PI / spikes;
         context.beginPath();
@@ -930,12 +925,12 @@ class Utilities {
 }
 class Credits {
     canvas;
-    $clouds;
+    clouds;
     buttons;
     id = Defaults.gameModes.CREDITS;
-    constructor(canvas, $clouds, game) {
+    constructor(canvas, clouds, game) {
         this.canvas = canvas;
-        this.$clouds = $clouds;
+        this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.buttons = [new Button(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
                 game.switchMode(Defaults.gameModes.MENU);
@@ -945,9 +940,7 @@ class Credits {
         return this.buttons;
     }
     update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
         this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
         this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');
         this.drawCredits(388, 'Music by:', 'Macspider', '(soundcloud.com/macspider)');
@@ -1289,7 +1282,7 @@ class Game {
 }
 class GameOver {
     canvas;
-    $clouds;
+    clouds;
     game;
     orchestrator;
     popularity;
@@ -1297,9 +1290,9 @@ class GameOver {
     color = 'white';
     buttons;
     id = Defaults.gameModes.GAME_OVER;
-    constructor(canvas, $clouds, game, orchestrator, popularity, newGame) {
+    constructor(canvas, clouds, game, orchestrator, popularity, newGame) {
         this.canvas = canvas;
-        this.$clouds = $clouds;
+        this.clouds = clouds;
         this.game = game;
         this.orchestrator = orchestrator;
         this.popularity = popularity;
@@ -1314,8 +1307,7 @@ class GameOver {
     }
     update() {
         var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
         Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
@@ -1428,12 +1420,12 @@ class Tutorial {
 }
 class Menu {
     canvas;
-    $clouds;
+    clouds;
     buttons;
     id = Defaults.gameModes.MENU;
-    constructor(canvas, $clouds, game, ui, tutorial, newGame) {
+    constructor(canvas, clouds, game, ui, tutorial, newGame) {
         this.canvas = canvas;
-        this.$clouds = $clouds;
+        this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
             new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
@@ -1446,9 +1438,8 @@ class Menu {
         return this.buttons;
     }
     update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = "center", baseline = "middle", color = "rgba(255,255,255,0.6)";
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = "center", baseline = "middle", color = "rgba(255,255,255,0.6)";
+        this.clouds.draw();
         Utilities.drawRect(w / 2, 140, w, 180, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
         Utilities.drawText(w / 2, 110, 'Load Balancing', 'small-caps bold 110px monospace', align, baseline, color, context);
         Utilities.drawText(w / 2, 185, 'The Game', '45px monospace', align, baseline, color, context);
@@ -1476,15 +1467,15 @@ class SpecialButton extends Button {
 }
 class Pause {
     canvas;
-    $clouds;
+    clouds;
     game;
     upgradesTracker;
     buttons;
     upgradeButtons;
     id = Defaults.gameModes.PAUSE;
-    constructor(canvas, $clouds, game, upgradesTracker, ui, newGame) {
+    constructor(canvas, clouds, game, upgradesTracker, ui, newGame) {
         this.canvas = canvas;
-        this.$clouds = $clouds;
+        this.clouds = clouds;
         this.game = game;
         this.upgradesTracker = upgradesTracker;
         const context = canvas.getContext('2d'), w = canvas.width, serverSize = Defaults.serverSize;
@@ -1528,8 +1519,7 @@ class Pause {
     }
     update() {
         var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, font = "25px monospace", color;
-        context.clearRect(0, 0, w, h);
-        Utilities.drawSky(this.canvas, this.$clouds);
+        this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
             color = "black";
             Utilities.drawText(x, h / 2 + 60, "Choose an upgrade:", font, 'center', 'middle', color, context);
@@ -2296,29 +2286,37 @@ class Application {
     game;
     ui;
     cursor;
-    context;
+    canvas;
     fpsCounter;
+    clouds;
     activeScene;
     logActive = false;
-    constructor(scenes, game, ui, cursor, context, fpsCounter) {
+    constructor(scenes, game, ui, cursor, canvas, fpsCounter, clouds) {
         this.scenes = scenes;
         this.game = game;
         this.ui = ui;
         this.cursor = cursor;
-        this.context = context;
+        this.canvas = canvas;
         this.fpsCounter = fpsCounter;
+        this.clouds = clouds;
+        const w = canvas.width, h = canvas.height;
         this.activeScene = scenes[0];
+        clouds.setSkyColor('#0360AE');
+        this.createCloud(w / 4, h / 4);
+        this.createCloud(0 - w / 4, h / 3);
+        this.createCloud(w / 2, h / 2);
+        this.createCloud(0 - w / 2, h * 3 / 4);
+        this.createCloud(w * 3 / 4, h * 2 / 3);
+        this.createCloud(0 - w * 3 / 4, h / 2);
         document.addEventListener("keypress", e => this.keyboardHandler(e));
         window.addEventListener('blur', () => this.blurHandler());
     }
-    static build() {
+    static build(clouds) {
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext("2d");
-        const w = canvas.width;
-        const h = canvas.height;
+        const music = new Audio("assets/music.mp3");
         const fader = new TextFader(context);
         const fpsCounter = new FpsCounter();
-        const music = new Audio("assets/music.mp3");
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
         const popularityTracker = new PopularityTracker(fader, upgradesTracker);
@@ -2328,9 +2326,9 @@ class Application {
         const scheduler = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
-        const credits = new Credits(canvas, $clouds, game);
-        const gameOver = new GameOver(canvas, $clouds, game, orchestrator, popularityTracker, newGame);
-        const pause = new Pause(canvas, $clouds, game, upgradesTracker, ui, newGame);
+        const credits = new Credits(canvas, clouds, game);
+        const gameOver = new GameOver(canvas, clouds, game, orchestrator, popularityTracker, newGame);
+        const pause = new Pause(canvas, clouds, game, upgradesTracker, ui, newGame);
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
         const gameScene = new Game(canvas, game, scheduler, orchestrator, gameArea, fader);
         const tutorial = new Tutorial([
@@ -2349,15 +2347,9 @@ class Application {
             new TutorialStep13(canvas, game, orchestrator, popularityTracker),
             new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
-        const menu = new Menu(canvas, $clouds, game, ui, tutorial, newGame);
+        const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);
         cursor.bind();
         music.loop = true;
-        $clouds.createCloud(w / 4, h / 4, 220);
-        $clouds.createCloud(0 - w / 4, h / 2, 220);
-        $clouds.createCloud(w / 2, h / 2, 220, 40);
-        $clouds.createCloud(0 - w / 2, h * 3 / 4, 220);
-        $clouds.createCloud(w * 3 / 4, h / 4, 220);
-        $clouds.createCloud(0 - w * 3 / 4, h / 2, 220);
         return new Application([
             menu,
             gameScene,
@@ -2366,7 +2358,7 @@ class Application {
             pause,
             upgrade,
             tutorial
-        ], game, ui, cursor, context, fpsCounter);
+        ], game, ui, cursor, canvas, fpsCounter, clouds);
     }
     run() {
         setInterval(() => this.mainLoop(), 1000 / Defaults.frameRate);
@@ -2375,6 +2367,7 @@ class Application {
         if (this.activeScene.id !== this.game.currentGameMode) {
             this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode);
         }
+        this.clouds.update(1000 / Defaults.frameRate);
         this.activeScene.update();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();
@@ -2383,14 +2376,21 @@ class Application {
             this.fpsCounter.logFps();
         }
     }
+    createCloud(x, y) {
+        const w = this.getRandomInt(350, 500), h = this.getRandomInt(w, 700), circles = this.getRandomInt(15, 30), n = this.getRandomInt(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = this.getRandomInt(100, 200);
+        this.clouds.add(x, y, w, h, circles, color, speed);
+    }
+    getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
     drawButtons() {
-        const mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
+        const context = this.canvas.getContext('2d'), mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
         this.ui.buttons.forEach((button) => {
             const hovered = mouseX > button.x - (button.width + 2) / 2 &&
                 mouseX < button.x + (button.width + 2) / 2 &&
                 mouseY > button.y - (button.height + 4) / 2 &&
                 mouseY < button.y + (button.height + 2) / 2;
-            button.draw(hovered, this.context);
+            button.draw(hovered, context);
         });
     }
     blurHandler() {
@@ -2412,7 +2412,3 @@ class Application {
         }
     }
 }
-const canvas = document.getElementById('canvas');
-const context = canvas.getContext("2d");
-const app = Application.build();
-app.run();
