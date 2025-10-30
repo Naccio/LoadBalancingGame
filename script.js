@@ -94,23 +94,23 @@ class Attacker {
     orchestrator;
     x;
     y;
-    msgNr;
+    messages;
     connectedTo;
     lastMessageTime;
     messagesToSend;
     messagesToReceive;
-    constructor(orchestrator, x, y, msgNr, connectedTo) {
+    constructor(orchestrator, x, y, messages, connectedTo) {
         this.orchestrator = orchestrator;
         this.x = x;
         this.y = y;
-        this.msgNr = msgNr;
+        this.messages = messages;
         this.connectedTo = connectedTo;
         this.x = x;
         this.y = y;
         this.connectedTo = connectedTo;
         this.lastMessageTime = 0;
-        this.messagesToSend = msgNr;
-        this.messagesToReceive = msgNr;
+        this.messagesToSend = messages;
+        this.messagesToReceive = messages;
     }
     sendMessage(elapsedTime) {
         this.orchestrator.createMessage(this, this.connectedTo);
