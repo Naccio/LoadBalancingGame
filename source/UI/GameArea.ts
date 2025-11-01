@@ -141,13 +141,20 @@ class GameArea {
             x = attacker.x,
             y = attacker.y;
 
-        Utilities.drawTriangle(x, y, size * 2 / Math.sqrt(3), size, '#333333', 'black', 2, context);
-
+        Utilities.drawTriangle({
+            x,
+            y,
+            base: size * 2 / Math.sqrt(3),
+            height: size,
+            color: '#333333',
+            borderColor: 'black',
+            borderWidth: 2
+        }, context);
         Utilities.drawText({
             x,
-            y: y + 5,
+            y: y + 8,
             text: 'DoS',
-            font: 'bold 10px Arial',
+            font: 'bold 9px Arial',
             align: 'center',
             color: 'white'
         }, context);

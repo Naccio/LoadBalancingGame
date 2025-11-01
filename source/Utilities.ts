@@ -1,5 +1,6 @@
 /// <reference path='UI/Circle.ts' />
 /// <reference path='UI/Rectangle.ts' />
+/// <reference path='UI/Triangle.ts' />
 /// <reference path='UI/UIText.ts' />
 
 class Utilities {
@@ -93,36 +94,17 @@ class Utilities {
         context.fillText(text.text, text.x, text.y);
     }
 
-    public static drawTriangle(x: number, y: number, b: number, h: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawTriangleBorder(x, y, b, h, bc, bw, context);
-        }
-        var path = new Path2D();
-        path.moveTo(x, y - h / 2);
-        path.lineTo(x + b / 2, y + h / 2);
-        path.lineTo(x - b / 2, y + h / 2);
-        context.fillStyle = c;
-        context.fill(path);
-    }
+    public static drawTriangle(triangle: Triangle, context: CanvasRenderingContext2D) {
+        const x = triangle.x,
+            y = triangle.y,
+            b = triangle.base,
+            h = triangle.height;
 
-    public static drawTriangleBorder(x: number, y: number, b: number, h: number, c: string, bw: number, context: CanvasRenderingContext2D) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        var path = new Path2D();
-        path.moveTo(x, y - h / 2);
-        path.lineTo(x + b / 2, y + h / 2);
-        path.lineTo(x - b / 2, y + h / 2);
-        path.closePath();
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.stroke(path);
+        context.beginPath();
+        context.moveTo(x, y - h / 2);
+        context.lineTo(x + b / 2, y + h / 2);
+        context.lineTo(x - b / 2, y + h / 2);
+        Utilities.draw(triangle, context);
     }
 
     public static getDistance(x1: number, y1: number, x2: number, y2: number) {

@@ -325,35 +325,13 @@ class Utilities {
         context.fillStyle = text.color ?? Defaults.defaultColor;
         context.fillText(text.text, text.x, text.y);
     }
-    static drawTriangle(x, y, b, h, c, bc, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawTriangleBorder(x, y, b, h, bc, bw, context);
-        }
-        var path = new Path2D();
-        path.moveTo(x, y - h / 2);
-        path.lineTo(x + b / 2, y + h / 2);
-        path.lineTo(x - b / 2, y + h / 2);
-        context.fillStyle = c;
-        context.fill(path);
-    }
-    static drawTriangleBorder(x, y, b, h, c, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        var path = new Path2D();
-        path.moveTo(x, y - h / 2);
-        path.lineTo(x + b / 2, y + h / 2);
-        path.lineTo(x - b / 2, y + h / 2);
-        path.closePath();
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.stroke(path);
+    static drawTriangle(triangle, context) {
+        const x = triangle.x, y = triangle.y, b = triangle.base, h = triangle.height;
+        context.beginPath();
+        context.moveTo(x, y - h / 2);
+        context.lineTo(x + b / 2, y + h / 2);
+        context.lineTo(x - b / 2, y + h / 2);
+        Utilities.draw(triangle, context);
     }
     static getDistance(x1, y1, x2, y2) {
         var xs = x2 - x1, ys = y2 - y1;
@@ -1231,12 +1209,20 @@ class GameArea {
     }
     drawAttacker(attacker) {
         const context = this.canvas.getContext('2d'), size = Defaults.clientSize, x = attacker.x, y = attacker.y;
-        Utilities.drawTriangle(x, y, size * 2 / Math.sqrt(3), size, '#333333', 'black', 2, context);
+        Utilities.drawTriangle({
+            x,
+            y,
+            base: size * 2 / Math.sqrt(3),
+            height: size,
+            color: '#333333',
+            borderColor: 'black',
+            borderWidth: 2
+        }, context);
         Utilities.drawText({
             x,
-            y: y + 5,
+            y: y + 8,
             text: 'DoS',
-            font: 'bold 10px Arial',
+            font: 'bold 9px Arial',
             align: 'center',
             color: 'white'
         }, context);
