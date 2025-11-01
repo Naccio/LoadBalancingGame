@@ -35,9 +35,25 @@ class TutorialStep9 extends TutorialStep {
                 align: 'center',
                 color: 'red'
             }, context);
-            Utilities.drawRect(x1 + 15, y1, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
+            Utilities.drawRect({
+                x: x1 + 15,
+                y: y1,
+                width: serverSize,
+                height: serverSize,
+                color: '#DDDDDD',
+                borderColor: 'red',
+                borderWidth: 1
+            }, context);
             Utilities.drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, '#BBBBBB', '#999999', 2, context);
-            Utilities.drawRect(x1 + serverSize / 2 + 8, y1 + 1, 6, serverSize - 10, '#BBBBBB', '#999999', 1, context);
+            Utilities.drawRect({
+                x: x1 + serverSize / 2 + 8,
+                y: y1 + 1,
+                width: 6,
+                height: serverSize - 10,
+                color: '#BBBBBB',
+                borderColor: '#999999',
+                borderWidth: 1
+            }, context);
 
             if (hovered) {
                 Utilities.drawText({
@@ -60,8 +76,24 @@ class TutorialStep9 extends TutorialStep {
                 starY = y2 + serverSize / 2 - 9,
                 color = 'red',
                 lineWidth = 3;
-            Utilities.drawRect(x2, y2, serverSize, serverSize, '#DDDDDD', '#999999', 1, context);
-            Utilities.drawRect(queueX, queueY, 6, serverSize - 10, 'salmon', 'red', 1, context);
+            Utilities.drawRect({
+                x: x2,
+                y: y2,
+                width: serverSize,
+                height: serverSize,
+                color: '#DDDDDD',
+                borderColor: '#999999',
+                borderWidth: 1
+            }, context);
+            Utilities.drawRect({
+                x: queueX,
+                y: queueY,
+                width: 6,
+                height: serverSize - 10,
+                color: 'salmon',
+                borderColor: 'red',
+                borderWidth: 1
+            }, context);
             Utilities.drawStar(starX, starY, 5, 4, 2, '#BBBBBB', '#999999', 2, context);
             Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
             Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
@@ -91,8 +123,24 @@ class TutorialStep9 extends TutorialStep {
                 starY = y3 + serverSize / 2 - 9,
                 color = 'red',
                 lineWidth = 3;
-            Utilities.drawRect(x3, y3, serverSize, serverSize, '#DDDDDD', '#999999', 1, context);
-            Utilities.drawRect(queueX, queueY, 6, serverSize - 10, '#BBBBBB', '#999999', 1, context);
+            Utilities.drawRect({
+                x: x3,
+                y: y3,
+                width: serverSize,
+                height: serverSize,
+                color: '#DDDDDD',
+                borderColor: '#999999',
+                borderWidth: 1
+            }, context);
+            Utilities.drawRect({
+                x: queueX,
+                y: queueY,
+                width: 6,
+                height: serverSize - 10,
+                color: '#BBBBBB',
+                borderColor: '#999999',
+                borderWidth: 1
+            }, context);
             Utilities.drawStar(starX, starY, 5, 4, 2, 'salmon', 'red', 2, context);
             Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
             Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
@@ -122,7 +170,13 @@ class TutorialStep9 extends TutorialStep {
             w = this.canvas.width,
             h = this.canvas.height;
 
-        Utilities.drawRect(w / 2, h / 2, w, h - 160, '#0360AE', '', 0, context);
+        Utilities.drawRect({
+            x: w / 2,
+            y: h / 2,
+            width: w,
+            height: h - 158,
+            color: '#0360AE'
+        }, context);
         Utilities.drawText({
             x: w / 2,
             y: h / 2 + 60,

@@ -1,6 +1,6 @@
-interface UIText {
-    x: number,
-    y: number,
+/// <reference path='../Model/GameObject.ts' />
+
+interface UIText extends GameObject {
     text: string,
     font: string,
     align?: CanvasTextAlign,

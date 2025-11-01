@@ -84,14 +84,14 @@ class Upgrade implements Scene {
         const w = this.canvas.width,
             h = this.canvas.height;
 
-        return new BorderButton(x, y, Math.floor(w / 3) - 2, Math.floor(h / 3) - 2, '', '#CCCCCC', 'limeGreen', 1, () => {
+        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '', '#CCCCCC', 'limeGreen', 1, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
 
     private createServerButton(server: Server, action: () => void) {
-        return new BorderButton(server.x, server.y, Defaults.serverSize, Defaults.serverSize, '', 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
+        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, '', 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
             action();
             this.selectUpgrade();
         });

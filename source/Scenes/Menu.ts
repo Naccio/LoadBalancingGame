@@ -43,7 +43,15 @@ class Menu implements Scene {
 
         this.clouds.draw();
 
-        Utilities.drawRect(w / 2, 140, w, 180, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
+        Utilities.drawRect({
+            x: w / 2,
+            y: 140,
+            width: w,
+            height: 180,
+            color: 'rgba(0,0,0,0.1)',
+            borderColor: 'rgba(200,200,200,0.5)',
+            borderWidth: 1
+        }, context);
         Utilities.drawText({
             x: w / 2,
             y: 110,

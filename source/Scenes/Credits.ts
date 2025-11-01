@@ -40,7 +40,15 @@ class Credits implements Scene {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width;
 
-        Utilities.drawRect(w / 2, y, w, 100, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
+        Utilities.drawRect({
+            x: w / 2,
+            y,
+            width: this.canvas.width,
+            height: 100,
+            color: 'rgba(0,0,0,0.1)',
+            borderColor: 'rgba(200,200,200,0.5)',
+            borderWidth: 1
+        }, context);
     }
 
     private drawHeading(y: number, text: string) {

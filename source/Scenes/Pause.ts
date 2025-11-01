@@ -44,9 +44,26 @@ class Pause implements Scene {
                     align: 'center',
                     color: 'red'
                 }, context);
-                Utilities.drawRect(x + 15, y, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
+                Utilities.drawRect({
+                    x: x + 15,
+                    y,
+                    width: serverSize,
+                    height: serverSize,
+                    color: '#DDDDDD',
+                    borderColor: 'red',
+
+                    borderWidth: 1
+                }, context);
                 Utilities.drawStar(x - serverSize / 2 + 22, y + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
-                Utilities.drawRect(x + serverSize / 2 + 8, y + 1, 6, serverSize - 10, "#BBBBBB", "#999999", 1, context);
+                Utilities.drawRect({
+                    x: x + serverSize / 2 + 8,
+                    y: y + 1,
+                    width: 6,
+                    height: serverSize - 10,
+                    color: "#BBBBBB",
+                    borderColor: "#999999",
+                    borderWidth: 1
+                }, context);
             }),
             this.createUpgradeButton(w / 2, 'capacity', 'Scale off at one location', (x: number, y: number) => {
                 var queueX = x + serverSize / 2 - 7,
@@ -55,8 +72,24 @@ class Pause implements Scene {
                     starY = y + serverSize / 2 - 9,
                     color = 'red',
                     lineWidth = 3;
-                Utilities.drawRect(x, y, serverSize, serverSize, "#DDDDDD", "#999999", 1, context);
-                Utilities.drawRect(queueX, queueY, 6, serverSize - 10, "salmon", "red", 1, context);
+                Utilities.drawRect({
+                    x,
+                    y,
+                    width: serverSize,
+                    height: serverSize,
+                    color: "#DDDDDD",
+                    borderColor: "#999999",
+                    borderWidth: 1
+                }, context);
+                Utilities.drawRect({
+                    x: queueX,
+                    y: queueY,
+                    width: 6,
+                    height: serverSize - 10,
+                    color: "salmon",
+                    borderColor: "red",
+                    borderWidth: 1
+                }, context);
                 Utilities.drawStar(starX, starY, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
                 Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
                 Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
@@ -69,8 +102,24 @@ class Pause implements Scene {
                     starY = y + serverSize / 2 - 9,
                     color = "red",
                     lineWidth = 3;
-                Utilities.drawRect(x, y, serverSize, serverSize, "#DDDDDD", "#999999", 1, context);
-                Utilities.drawRect(queueX, queueY, 6, serverSize - 10, "#BBBBBB", "#999999", 1, context);
+                Utilities.drawRect({
+                    x,
+                    y,
+                    width: serverSize,
+                    height: serverSize,
+                    color: "#DDDDDD",
+                    borderColor: "#999999",
+                    borderWidth: 1
+                }, context);
+                Utilities.drawRect({
+                    x: queueX,
+                    y: queueY,
+                    width: 6,
+                    height: serverSize - 10,
+                    color: "#BBBBBB",
+                    borderColor: "#999999",
+                    borderWidth: 1
+                }, context);
                 Utilities.drawStar(starX, starY, 5, 4, 2, "salmon", "red", 2, context);
                 Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
                 Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);

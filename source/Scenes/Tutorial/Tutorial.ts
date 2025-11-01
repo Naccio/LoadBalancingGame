@@ -53,7 +53,16 @@ class Tutorial implements Scene {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
-            texts = this.currentStep.texts;
+            texts = this.currentStep.texts,
+            rectangle = {
+                x: w / 2,
+                y: 0,
+                width: w,
+                height: 80,
+                color: '#0360AE',
+                borderColor: '#02467F',
+                borderWidth: 1
+            };
         this.currentStep.run();
         this.fader.update(1 / Defaults.frameRate);
 
@@ -64,7 +73,7 @@ class Tutorial implements Scene {
         context.clearRect(0, 0, w, h);
         this.gameArea.draw();
         this.fader.draw();
-        Utilities.drawRect(w / 2, 40, w, 80, '#0360AE', '#02467F', 1, context);
+        Utilities.drawRect({ ...rectangle, y: 40 }, context);
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
             Utilities.drawText({
@@ -76,7 +85,7 @@ class Tutorial implements Scene {
                 color: 'white'
             }, context);
         }
-        Utilities.drawRect(w / 2, h - 40, w, 80, '#0360AE', '#02467F', 1, context);
+        Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
         this.currentStep.draw();
     }
 

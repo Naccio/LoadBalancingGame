@@ -13,11 +13,15 @@ class SpecialButton extends Button {
     }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
-        Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, '', 0, context);
-
-        if (hovered) {
-            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.hoverColor, this.borderWidth, context);
-        }
+        Utilities.drawRect({
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+            color: this.color,
+            borderColor: hovered ? this.hoverColor : undefined,
+            borderWidth: 1
+        }, context);
 
         this.specialDraw(hovered);
     };

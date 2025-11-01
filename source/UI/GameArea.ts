@@ -240,7 +240,15 @@ class GameArea {
         for (; i > -1; i -= 1) {
             const fill = `rgb(0,${128 - 15 * i},0)`,
                 border = `rgb(0,${100 - 15 * i},0)`;
-            Utilities.drawRect(server.x + 3 * i, server.y - 3 * i, serverSize, serverSize, fill, border, 1, context);
+            Utilities.drawRect({
+                x: server.x + 3 * i,
+                y: server.y - 3 * i,
+                width: serverSize,
+                height: serverSize,
+                color: fill,
+                borderColor: border,
+                borderWidth: 1
+            }, context);
         }
 
         //draw server's queue
@@ -255,11 +263,25 @@ class GameArea {
             gradientX = queueX,
             gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
 
-        Utilities.drawRectBorder(queueX, queueY, queueWidth, queueHeight, '#004500', 1, context);
+        Utilities.drawRect({
+            x: queueX,
+            y: queueY,
+            width: queueWidth,
+            height: queueHeight,
+            borderColor: '#004500',
+            borderWidth: 1
+        }, context);
+
         const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
         gradient.addColorStop(0.5, 'limeGreen');
         gradient.addColorStop(1, 'red');
-        Utilities.drawRect(gradientX, gradientY, gradientWidth, gradientHeight, gradient, '', 0, context);
+        Utilities.drawRect({
+            x: gradientX,
+            y: gradientY,
+            width: gradientWidth,
+            height: gradientHeight,
+            color: gradient
+        }, context);
 
         //draw server's speed
         for (i = server.speed; i > 0; i -= serversSpeed) {

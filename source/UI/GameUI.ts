@@ -21,17 +21,23 @@ class GameUI {
                 music.pause();
             }
         }, (hovered) => {
-            var clr = hovered ? 'white' : 'rgba(255,255,255,0.8)',
+            var color = hovered ? 'white' : 'rgba(255,255,255,0.8)',
                 status = music.paused ? 'Off' : 'On';
 
-            Utilities.drawRect(x - w / 4 + 1, y, w / 4 + 1, h / 2 - 1, clr, '', 0, context);
+            Utilities.drawRect({
+                x: x - w / 4 + 1,
+                y,
+                width: w / 4 + 1,
+                height: h / 2 - 1,
+                color
+            }, context);
             var path = new Path2D();
             path.moveTo(x - 1, y - h / 4);
             path.lineTo(x + w / 4, y - h / 2 + 1);
             path.lineTo(x + w / 4, y + h / 2 - 1);
             path.lineTo(x - 1, y + h / 4);
             path.closePath();
-            context.fillStyle = clr;
+            context.fillStyle = color;
             context.fill(path);
 
             if (music.paused) {

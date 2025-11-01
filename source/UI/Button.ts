@@ -9,14 +9,17 @@ class Button {
         public onClick: () => void) { }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
-        let color;
-        if (hovered) {
-            Utilities.drawRect(this.x, this.y, this.width, this.height, this.color, this.color, 2, context);
-            color = Utilities.invertColor(this.color);
-        } else {
-            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.color, 2, context);
-            color = this.color;
-        }
+        const color = hovered ? Utilities.invertColor(this.color) : this.color;
+
+        Utilities.drawRect({
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+            color: hovered ? this.color : undefined,
+            borderColor: this.color,
+            borderWidth: 2
+        }, context);
         Utilities.drawText({
             x: this.x,
             y: this.y,

@@ -1,8 +1,5 @@
-interface Circle {
-    x: number,
-    y: number,
-    radius: number,
-    color?: string,
-    borderColor?: string,
-    borderWidth?: number
+/// <reference path='Shape.ts' />
+
+interface Circle extends Shape {
+    radius: number
 }

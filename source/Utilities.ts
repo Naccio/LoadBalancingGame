@@ -1,4 +1,5 @@
 /// <reference path='UI/Circle.ts' />
+/// <reference path='UI/Rectangle.ts' />
 /// <reference path='UI/UIText.ts' />
 
 class Utilities {
@@ -7,25 +8,18 @@ class Utilities {
         context.beginPath();
         context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
         context.closePath();
-        if (circle.color) {
-            context.fillStyle = circle.color;
-            context.fill();
-        }
-        if (circle.borderColor && circle.borderWidth) {
-            context.strokeStyle = circle.borderColor;
-            context.lineWidth = circle.borderWidth;
-            context.stroke();
-        }
+        Utilities.draw(circle, context);
     }
 
     public static drawCircleHighlight(x: number, y: number, radius: number, context: CanvasRenderingContext2D) {
-        const innerCircle = {
-            x,
-            y,
-            radius,
-            borderColor: 'fireBrick',
-            borderWidth: 2
-        },
+        const
+            innerCircle = {
+                x,
+                y,
+                radius,
+                borderColor: 'fireBrick',
+                borderWidth: 2
+            },
             outerCircle = {
                 ...innerCircle,
                 radius: radius + 1,
@@ -48,46 +42,16 @@ class Utilities {
     }
 
     // x, y = center
-    public static drawRectBorder(
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        c: string,
-        bw: number,
-        context: CanvasRenderingContext2D) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.strokeRect(x - w / 2 - bw / 2, y - h / 2 - bw / 2, w + bw, h + bw);
-    }
+    public static drawRect(rectangle: Rectangle, context: CanvasRenderingContext2D) {
+        const x = rectangle.x,
+            y = rectangle.y,
+            w = rectangle.width,
+            h = rectangle.height;
 
-    // x, y = center
-    public static drawRect(
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        c: string | CanvasGradient,
-        bc: string,
-        bw: number,
-        context: CanvasRenderingContext2D) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawRectBorder(x, y, w, h, bc, bw, context);
-        }
-        context.fillStyle = c;
         context.beginPath();
         context.rect(x - w / 2, y - h / 2, w, h);
         context.closePath();
-        context.fill();
+        Utilities.draw(rectangle, context);
     }
 
     public static drawStar(cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
@@ -177,5 +141,17 @@ class Utilities {
         color = ('000000' + color).slice(-6);
         color = '#' + color;
         return color;
+    }
+
+    private static draw(shape: Shape, context: CanvasRenderingContext2D) {
+        if (shape.color) {
+            context.fillStyle = shape.color;
+            context.fill();
+        }
+        if (shape.borderColor && shape.borderWidth) {
+            context.strokeStyle = shape.borderColor;
+            context.lineWidth = shape.borderWidth;
+            context.stroke();
+        }
     }
 }

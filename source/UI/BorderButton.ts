@@ -14,14 +14,16 @@ class BorderButton extends Button {
     }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
-        let color;
-        if (!hovered) {
-            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.color, this.borderWidth, context);
-            color = this.color;
-        } else {
-            Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.hoverColor, this.borderWidth, context);
-            color = this.hoverColor;
-        }
+        const color = hovered ? this.hoverColor : this.color;
+
+        Utilities.drawRect({
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+            borderColor: color,
+            borderWidth: this.borderWidth
+        }, context);
         Utilities.drawText({
             x: this.x,
             y: this.y,
