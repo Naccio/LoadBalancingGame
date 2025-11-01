@@ -14,8 +14,7 @@ class TutorialHelper {
             circle = {
                 x,
                 y,
-                radius: iconRadius,
-                borderWidth: 1
+                radius: iconRadius
             },
             text = {
                 x: x + textSpacing + iconRadius,

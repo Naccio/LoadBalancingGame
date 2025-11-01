@@ -60,8 +60,7 @@ class Tutorial implements Scene {
                 width: w,
                 height: 80,
                 color: '#0360AE',
-                borderColor: '#02467F',
-                borderWidth: 1
+                borderColor: '#02467F'
             };
         this.currentStep.run();
         this.fader.update(1 / Defaults.frameRate);

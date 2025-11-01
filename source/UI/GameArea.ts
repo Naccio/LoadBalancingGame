@@ -171,8 +171,7 @@ class GameArea {
                 y,
                 radius: clientSize / 2,
                 color: 'gray',
-                borderColor: 'dimGray',
-                borderWidth: 1
+                borderColor: 'dimGray'
             };
 
         if (client.connectedTo === undefined) {
@@ -234,8 +233,7 @@ class GameArea {
             y: message.y,
             radius: Defaults.messageSize / 2,
             color: fill,
-            borderColor: border,
-            borderWidth: 1
+            borderColor: border
         }, context);
     }
 
@@ -253,8 +251,7 @@ class GameArea {
                 width: serverSize,
                 height: serverSize,
                 color: fill,
-                borderColor: border,
-                borderWidth: 1
+                borderColor: border
             }, context);
         }
 
@@ -275,8 +272,7 @@ class GameArea {
             y: queueY,
             width: queueWidth + 2,
             height: queueHeight + 2,
-            borderColor: '#004500',
-            borderWidth: 1
+            borderColor: '#004500'
         }, context);
 
         const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
@@ -300,8 +296,7 @@ class GameArea {
                 outerRadius: 4,
                 innerRadius: 2,
                 color: 'limeGreen',
-                borderColor: '#004500',
-                borderWidth: 1
+                borderColor: '#004500'
             }, context);
         }
     }

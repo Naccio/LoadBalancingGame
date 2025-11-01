@@ -38,7 +38,6 @@ class Menu implements Scene {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             align = "center",
-            baseline = "middle",
             color = "rgba(255,255,255,0.6)";
 
         this.clouds.draw();
@@ -49,8 +48,7 @@ class Menu implements Scene {
             width: w,
             height: 180,
             color: 'rgba(0,0,0,0.1)',
-            borderColor: 'rgba(200,200,200,0.5)',
-            borderWidth: 1
+            borderColor: 'rgba(200,200,200,0.5)'
         }, context);
         Utilities.drawText({
             x: w / 2,

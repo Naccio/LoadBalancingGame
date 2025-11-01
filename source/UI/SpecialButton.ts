@@ -19,8 +19,7 @@ class SpecialButton extends Button {
             width: this.width,
             height: this.height,
             color: this.color,
-            borderColor: hovered ? this.hoverColor : undefined,
-            borderWidth: 1
+            borderColor: hovered ? this.hoverColor : undefined
         }, context);
 
         this.specialDraw(hovered);

@@ -46,8 +46,7 @@ class Credits implements Scene {
             width: this.canvas.width,
             height: 100,
             color: 'rgba(0,0,0,0.1)',
-            borderColor: 'rgba(200,200,200,0.5)',
-            borderWidth: 1
+            borderColor: 'rgba(200,200,200,0.5)'
         }, context);
     }
 

@@ -46,8 +46,7 @@ class TutorialStep12 extends TutorialStep {
                 width: serverSize,
                 height: serverSize,
                 color: '#DDDDDD',
-                borderColor: 'red',
-                borderWidth: 1
+                borderColor: 'red'
             }, context);
             Utilities.drawStar({
                 x: x1 - serverSize / 2 + 22,
@@ -55,8 +54,7 @@ class TutorialStep12 extends TutorialStep {
                 outerRadius: 4,
                 innerRadius: 2,
                 color: '#BBBBBB',
-                borderColor: '#999999',
-                borderWidth: 1
+                borderColor: '#999999'
             }, context);
             Utilities.drawRect({
                 x: x1 + serverSize / 2 + 8,
@@ -64,8 +62,7 @@ class TutorialStep12 extends TutorialStep {
                 width: 6,
                 height: serverSize - 10,
                 color: '#BBBBBB',
-                borderColor: '#999999',
-                borderWidth: 1
+                borderColor: '#999999'
             }, context);
 
             if (hovered) {
@@ -95,8 +92,7 @@ class TutorialStep12 extends TutorialStep {
                 width: serverSize,
                 height: serverSize,
                 color: '#DDDDDD',
-                borderColor: '#999999',
-                borderWidth: 1
+                borderColor: '#999999'
             }, context);
             Utilities.drawRect({
                 x: queueX,
@@ -104,8 +100,7 @@ class TutorialStep12 extends TutorialStep {
                 width: 6,
                 height: serverSize - 10,
                 color: 'salmon',
-                borderColor: 'red',
-                borderWidth: 1
+                borderColor: 'red'
             }, context);
             Utilities.drawStar({
                 x: starX,
@@ -113,8 +108,7 @@ class TutorialStep12 extends TutorialStep {
                 outerRadius: 4,
                 innerRadius: 2,
                 color: '#BBBBBB',
-                borderColor: '#999999',
-                borderWidth: 1
+                borderColor: '#999999'
             }, context);
             Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
             Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
@@ -147,8 +141,7 @@ class TutorialStep12 extends TutorialStep {
                 width: serverSize,
                 height: serverSize,
                 color: '#DDDDDD',
-                borderColor: '#999999',
-                borderWidth: 1
+                borderColor: '#999999'
             }, context);
             Utilities.drawRect({
                 x: queueX,
@@ -156,8 +149,7 @@ class TutorialStep12 extends TutorialStep {
                 width: 6,
                 height: serverSize - 10,
                 color: '#BBBBBB',
-                borderColor: '#999999',
-                borderWidth: 1
+                borderColor: '#999999'
             }, context);
             Utilities.drawStar({
                 x: starX,
@@ -165,8 +157,7 @@ class TutorialStep12 extends TutorialStep {
                 outerRadius: 4,
                 innerRadius: 2,
                 color: 'salmon',
-                borderColor: 'red',
-                borderWidth: 1
+                borderColor: 'red'
             }, context);
             Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
             Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);

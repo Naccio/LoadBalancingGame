@@ -130,9 +130,9 @@ class Utilities {
             context.fillStyle = shape.color;
             context.fill();
         }
-        if (shape.borderColor && shape.borderWidth) {
+        if (shape.borderColor) {
             context.strokeStyle = shape.borderColor;
-            context.lineWidth = shape.borderWidth;
+            context.lineWidth = shape.borderWidth ?? 1;
             context.stroke();
         }
     }
