@@ -1,4 +1,4 @@
-/// <reference path='Model/Circle.ts' />
+/// <reference path='UI/Circle.ts' />
 /// <reference path='UI/UIText.ts' />
 
 class Utilities {
