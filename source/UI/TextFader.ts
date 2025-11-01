@@ -141,6 +141,13 @@ class TextFader {
             a = text.alpha,
             color = `rgba(${r}, ${g}, ${b}, ${a})`;
 
-        Utilities.drawText(x, y - delta, text.text, text.font, "center", "middle", color, this.context);
+        Utilities.drawText({
+            x,
+            y: y - delta,
+            text: text.text,
+            font: text.font,
+            align: 'center',
+            color
+        }, this.context);
     }
 }

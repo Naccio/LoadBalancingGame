@@ -70,7 +70,14 @@ class Upgrade implements Scene {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText(w / 2, 60, `~ Select ${text} ~`, '30px monospace', 'center', 'middle', 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 60,
+            text: `~ Select ${text} ~`,
+            font: '30px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
     }
 
     private createAreaButton(x: number, y: number, area: string) {

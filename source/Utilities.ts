@@ -1,4 +1,5 @@
 /// <reference path='Model/Circle.ts' />
+/// <reference path='Model/UIText.ts' />
 
 class Utilities {
 
@@ -120,21 +121,12 @@ class Utilities {
         context.fill();
     }
 
-    public static drawText(
-        x: number,
-        y: number,
-        text: string,
-        font: string,
-        align: CanvasTextAlign,
-        baseline: CanvasTextBaseline,
-        color: string,
-        context: CanvasRenderingContext2D
-    ) {
-        context.font = font;
-        context.textAlign = align;
-        context.textBaseline = baseline;
-        context.fillStyle = color;
-        context.fillText(text, x, y);
+    public static drawText(text: UIText, context: CanvasRenderingContext2D) {
+        context.font = text.font;
+        context.textAlign = text.align ?? 'start';
+        context.textBaseline = text.baseline ?? 'middle';
+        context.fillStyle = text.color ?? Defaults.defaultColor;
+        context.fillText(text.text, text.x, text.y);
     }
 
     public static drawTriangle(x: number, y: number, b: number, h: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {

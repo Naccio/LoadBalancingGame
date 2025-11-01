@@ -22,6 +22,13 @@ class BorderButton extends Button {
             Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.hoverColor, this.borderWidth, context);
             color = this.hoverColor;
         }
-        Utilities.drawText(this.x, this.y, this.text, '15px monospace', 'center', 'middle', color, context);
+        Utilities.drawText({
+            x: this.x,
+            y: this.y,
+            text: this.text,
+            font: '15px monospace',
+            align: 'center',
+            color
+        }, context);
     }
 }

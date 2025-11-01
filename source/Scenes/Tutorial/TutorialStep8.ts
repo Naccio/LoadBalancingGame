@@ -53,16 +53,18 @@ class TutorialStep8 extends TutorialStep {
     draw() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
-            h = this.canvas.height,
-            align: CanvasTextAlign = 'start',
-            baseline: CanvasTextBaseline = 'middle',
-            color = 'black',
-            font = '18px sans-serif';
+            h = this.canvas.height;
 
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawText(w / 2, h - 95, 'Press space to pause', '18px sans-serif', 'center', baseline, 'darkGray', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 95,
+            text: 'Press space to pause',
+            font: '18px sans-serif',
+            align: 'center',
+            color: 'darkGray'
+        }, context);
     }
 }

@@ -10,16 +10,18 @@ class TutorialHelper {
             iconRadius = 3,
             textSpacing = 2,
             lineSpacing = iconRadius + 5,
-            textX = x + textSpacing + iconRadius,
-            align: CanvasTextAlign = 'start',
-            baseline: CanvasTextBaseline = 'middle',
-            color = 'black',
             font = "10px sans-serif",
             circle = {
                 x,
                 y,
                 radius: iconRadius,
                 borderWidth: 1
+            },
+            text = {
+                x: x + textSpacing + iconRadius,
+                y,
+                text: '',
+                font
             };
 
         Utilities.drawCircle({
@@ -27,14 +29,21 @@ class TutorialHelper {
             color: 'lightBlue',
             borderColor: 'skyBlue'
         }, context);
-        Utilities.drawText(textX, y, ': Request', font, align, baseline, color, context);
+        Utilities.drawText({
+            ...text,
+            text: ': Request'
+        }, context);
         Utilities.drawCircle({
             ...circle,
             y: y + lineSpacing,
             color: 'lime',
             borderColor: 'limeGreen'
         }, context);
-        Utilities.drawText(textX, y + lineSpacing, ': Response (+1)', font, align, baseline, color, context);
+        Utilities.drawText({
+            ...text,
+            y: y + lineSpacing,
+            text: ': Response (+1)'
+        }, context);
         if (includeNACK) {
             Utilities.drawCircle({
                 ...circle,
@@ -42,7 +51,11 @@ class TutorialHelper {
                 color: 'tomato',
                 borderColor: 'indianRed'
             }, context);
-            Utilities.drawText(textX, y + lineSpacing * 2, ': Datacenter busy (-1)', font, align, baseline, color, context);
+            Utilities.drawText({
+                ...text,
+                y: y + lineSpacing * 2,
+                text: ': Datacenter busy (-1)'
+            }, context);
         }
     }
 }

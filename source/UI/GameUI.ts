@@ -40,7 +40,15 @@ class GameUI {
             }
 
             if (hovered) {
-                Utilities.drawText(x, y + w / 2 + 2, 'Music: ' + status, '10px monospace', 'center', 'top', '#fff', context);
+                Utilities.drawText({
+                    x,
+                    y: y + w / 2 + 2,
+                    text: 'Music: ' + status,
+                    font: '10px monospace',
+                    align: 'center',
+                    baseline: 'top',
+                    color: '#fff'
+                }, context);
             }
         });
     }

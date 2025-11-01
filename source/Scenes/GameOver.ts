@@ -8,7 +8,6 @@
 /// <reference path='Scene.ts' />
 
 class GameOver implements Scene {
-    private readonly baseline = 'middle';
     private readonly color = 'white';
     private buttons: Button[];
 
@@ -41,7 +40,14 @@ class GameOver implements Scene {
             h = this.canvas.height;
 
         this.clouds.draw();
-        Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 100,
+            text: 'Game Over',
+            font: 'small-caps 60px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
 
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
@@ -49,8 +55,22 @@ class GameOver implements Scene {
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
 
         const font = '30px monospace';
-        Utilities.drawText(w / 2 + 68, h / 2 + 50, 'Popularity:', font, 'end', this.baseline, this.color, context);
-        Utilities.drawText(w / 2 + 75, h / 2 + 50, this.popularity.popularity.toString(), font, 'start', this.baseline, this.color, context);
+        Utilities.drawText({
+            x: w / 2 + 68,
+            y: h / 2 + 50,
+            text: 'Popularity:',
+            font,
+            align: 'end',
+            color: this.color
+        }, context);
+        Utilities.drawText({
+            x: w / 2 + 75,
+            y: h / 2 + 50,
+            text: this.popularity.popularity.toString(),
+            font,
+            align: 'start',
+            color: this.color
+        }, context);
 
         Utilities.drawLine(w / 2 - 130, h / 2 + 20, w / 2 + 130, h / 2 + 20, 'red', 1, context);
     }
@@ -64,13 +84,27 @@ class GameOver implements Scene {
         const context = this.canvas.getContext('2d')!,
             x = this.canvas.width / 2 + 80;
 
-        Utilities.drawText(x, y, text + ':', '15px monospace', 'end', this.baseline, this.color, context);
+        Utilities.drawText({
+            x,
+            y,
+            text: text + ':',
+            font: '15px monospace',
+            align: 'end',
+            color: this.color
+        }, context);
     }
 
     private drawStatValue(y: number, value: number) {
         const context = this.canvas.getContext('2d')!,
             x = this.canvas.width / 2 + 90;
 
-        Utilities.drawText(x, y, value.toString(), '15px monospace', 'start', this.baseline, this.color, context);
+        Utilities.drawText({
+            x,
+            y,
+            text: value.toString(),
+            font: '15px monospace',
+            align: 'start',
+            color: this.color
+        }, context);
     }
 }

@@ -70,18 +70,21 @@ class GameArea {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height;
-
-        let font = "18px sans-serif",
-            color = "black";
-
         this.fader.draw();
 
         //bottom left
-        Utilities.drawText(10, h - 14, "Popularity: " + this.popularityTracker.popularity, font, 'start', 'alphabetic', color, context);
+        this.popularityTracker.draw(h - 14);
 
         //bottom center
-        color = "darkGray";
-        Utilities.drawText(w / 2, h - 14, "Press space to pause", font, 'center', 'alphabetic', color, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 14,
+            text: 'Press space to pause',
+            font: '18px sans-serif',
+            align: 'center',
+            baseline: 'alphabetic',
+            color: 'darkGray'
+        }, context);
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
@@ -89,10 +92,10 @@ class GameArea {
                 y: h - 35,
                 fontSize: 20,
                 fontWeight: '',
-                font: "20px sans-serif",
+                font: '20px sans-serif',
                 color: { r: 255, g: 0, b: 0 },
-                id: "upgrade",
-                text: "- Upgrade available! -",
+                id: 'upgrade',
+                text: '- Upgrade available! -',
                 life: 400,
                 alpha: 0,
                 delta: 0
@@ -115,13 +118,21 @@ class GameArea {
         }
         text += s;
 
+        let color = 'darkGray'
         if (remaining <= 30) {
-            color = "tomato";
+            color = 'tomato';
         }
         if (remaining <= 10) {
-            color = "red";
+            color = 'red';
         }
-        Utilities.drawText(w - 10, h - 14, text, font, 'end', 'alphabetic', color, context);
+        Utilities.drawText({
+            x: w - 10,
+            y: h - 14,
+            text,
+            font: '18px sans-serif',
+            align: 'end',
+            baseline: 'alphabetic', color
+        }, context);
     }
 
     private drawAttacker(attacker: Attacker) {
@@ -132,7 +143,14 @@ class GameArea {
 
         Utilities.drawTriangle(x, y, size * 2 / Math.sqrt(3), size, '#333333', 'black', 2, context);
 
-        Utilities.drawText(x, y + 5, 'DoS', 'bold 10px Arial', 'center', 'middle', 'white', context);
+        Utilities.drawText({
+            x,
+            y: y + 5,
+            text: 'DoS',
+            font: 'bold 10px Arial',
+            align: 'center',
+            color: 'white'
+        }, context);
     }
 
     private drawClient(client: Client) {
@@ -159,7 +177,14 @@ class GameArea {
                 Utilities.drawCircle(circle, context);
             }
 
-            Utilities.drawText(x, y, Math.round(maxClientWaitTime - client.life).toString(), 'bold 15px Arial', 'center', 'middle', 'white', context);
+            Utilities.drawText({
+                x,
+                y,
+                text: Math.round(maxClientWaitTime - client.life).toString(),
+                font: 'bold 15px Arial',
+                align: 'center',
+                color: 'white'
+            }, context);
         }
         else {
             Utilities.drawCircle(circle, context);

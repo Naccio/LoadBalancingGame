@@ -244,7 +244,154 @@ class TextFader {
     ;
     drawText(text, x, y) {
         const delta = text.delta ?? 0, { r, g, b } = text.color, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
-        Utilities.drawText(x, y - delta, text.text, text.font, "center", "middle", color, this.context);
+        Utilities.drawText({
+            x,
+            y: y - delta,
+            text: text.text,
+            font: text.font,
+            align: 'center',
+            color
+        }, this.context);
+    }
+}
+class Utilities {
+    static drawCircle(circle, context) {
+        context.beginPath();
+        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
+        context.closePath();
+        if (circle.color) {
+            context.fillStyle = circle.color;
+            context.fill();
+        }
+        if (circle.borderColor && circle.borderWidth) {
+            context.strokeStyle = circle.borderColor;
+            context.lineWidth = circle.borderWidth;
+            context.stroke();
+        }
+    }
+    static drawCircleHighlight(x, y, radius, context) {
+        const innerCircle = {
+            x,
+            y,
+            radius,
+            borderColor: 'fireBrick',
+            borderWidth: 2
+        }, outerCircle = {
+            ...innerCircle,
+            radius: radius + 1,
+            borderColor: 'red'
+        };
+        Utilities.drawCircle(innerCircle, context);
+        Utilities.drawCircle(outerCircle, context);
+    }
+    static drawLine(x1, y1, x2, y2, c, w, context) {
+        if (!w) {
+            w = 1;
+        }
+        context.strokeStyle = c;
+        context.lineWidth = w;
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+    }
+    static drawRectBorder(x, y, w, h, c, bw, context) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (!bw) {
+            bw = 1;
+        }
+        context.strokeStyle = c;
+        context.lineWidth = bw;
+        context.strokeRect(x - w / 2 - bw / 2, y - h / 2 - bw / 2, w + bw, h + bw);
+    }
+    static drawRect(x, y, w, h, c, bc, bw, context) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (bc) {
+            Utilities.drawRectBorder(x, y, w, h, bc, bw, context);
+        }
+        context.fillStyle = c;
+        context.beginPath();
+        context.rect(x - w / 2, y - h / 2, w, h);
+        context.closePath();
+        context.fill();
+    }
+    static drawStar(cx, cy, spikes, outerRadius, innerRadius, c, bc, bw, context) {
+        let rot = Math.PI / 2 * 3, x = cx, y = cy, step = Math.PI / spikes;
+        context.beginPath();
+        context.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i += 1) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            context.lineTo(x, y);
+            rot += step;
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            context.lineTo(x, y);
+            rot += step;
+        }
+        context.lineTo(cx, cy - outerRadius);
+        context.closePath();
+        if (bc && bw) {
+            context.lineWidth = bw;
+            context.strokeStyle = bc;
+            context.stroke();
+        }
+        context.fillStyle = c;
+        context.fill();
+    }
+    static drawText(text, context) {
+        context.font = text.font;
+        context.textAlign = text.align ?? 'start';
+        context.textBaseline = text.baseline ?? 'middle';
+        context.fillStyle = text.color ?? Defaults.defaultColor;
+        context.fillText(text.text, text.x, text.y);
+    }
+    static drawTriangle(x, y, b, h, c, bc, bw, context) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (bc) {
+            Utilities.drawTriangleBorder(x, y, b, h, bc, bw, context);
+        }
+        var path = new Path2D();
+        path.moveTo(x, y - h / 2);
+        path.lineTo(x + b / 2, y + h / 2);
+        path.lineTo(x - b / 2, y + h / 2);
+        context.fillStyle = c;
+        context.fill(path);
+    }
+    static drawTriangleBorder(x, y, b, h, c, bw, context) {
+        if (!c) {
+            c = Defaults.defaultColor;
+        }
+        if (!bw) {
+            bw = 1;
+        }
+        var path = new Path2D();
+        path.moveTo(x, y - h / 2);
+        path.lineTo(x + b / 2, y + h / 2);
+        path.lineTo(x - b / 2, y + h / 2);
+        path.closePath();
+        context.strokeStyle = c;
+        context.lineWidth = bw;
+        context.stroke(path);
+    }
+    static getDistance(x1, y1, x2, y2) {
+        var xs = x2 - x1, ys = y2 - y1;
+        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
+    }
+    static invertColor(color) {
+        color = color.substring(1);
+        let colorNumber = parseInt(color, 16);
+        colorNumber = 0xFFFFFF ^ colorNumber;
+        color = colorNumber.toString(16);
+        color = ('000000' + color).slice(-6);
+        color = '#' + color;
+        return color;
     }
 }
 class UpgradesTracker {
@@ -272,11 +419,22 @@ class UpgradesTracker {
 class PopularityTracker {
     fader;
     upgrades;
+    canvas;
     popularity;
-    constructor(fader, upgrades) {
+    constructor(fader, upgrades, canvas) {
         this.fader = fader;
         this.upgrades = upgrades;
+        this.canvas = canvas;
         this.popularity = 0;
+    }
+    draw(y) {
+        const context = this.canvas.getContext('2d');
+        Utilities.drawText({
+            x: 10,
+            y,
+            text: "Popularity: " + this.popularity,
+            font: '18px sans-serif'
+        }, context);
     }
     reset() {
         this.popularity = 0;
@@ -438,7 +596,14 @@ class Button {
             Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.color, 2, context);
             color = this.color;
         }
-        Utilities.drawText(this.x, this.y, this.text, '15px monospace', 'center', 'middle', color, context);
+        Utilities.drawText({
+            x: this.x,
+            y: this.y,
+            text: this.text,
+            font: '15px monospace',
+            align: 'center',
+            color
+        }, context);
     }
     ;
 }
@@ -470,7 +635,15 @@ class GameUI {
                 status = "Off";
             }
             if (hovered) {
-                Utilities.drawText(x, y + w / 2 + 2, 'Music: ' + status, '10px monospace', 'center', 'top', '#fff', context);
+                Utilities.drawText({
+                    x,
+                    y: y + w / 2 + 2,
+                    text: 'Music: ' + status,
+                    font: '10px monospace',
+                    align: 'center',
+                    baseline: 'top',
+                    color: '#fff'
+                }, context);
             }
         });
     }
@@ -781,146 +954,6 @@ class NewGame {
         this.fader.emptyQueues();
     }
 }
-class Utilities {
-    static drawCircle(circle, context) {
-        context.beginPath();
-        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
-        context.closePath();
-        if (circle.color) {
-            context.fillStyle = circle.color;
-            context.fill();
-        }
-        if (circle.borderColor && circle.borderWidth) {
-            context.strokeStyle = circle.borderColor;
-            context.lineWidth = circle.borderWidth;
-            context.stroke();
-        }
-    }
-    static drawCircleHighlight(x, y, radius, context) {
-        const innerCircle = {
-            x,
-            y,
-            radius,
-            borderColor: 'fireBrick',
-            borderWidth: 2
-        }, outerCircle = {
-            ...innerCircle,
-            radius: radius + 1,
-            borderColor: 'red'
-        };
-        Utilities.drawCircle(innerCircle, context);
-        Utilities.drawCircle(outerCircle, context);
-    }
-    static drawLine(x1, y1, x2, y2, c, w, context) {
-        if (!w) {
-            w = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = w;
-        context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
-        context.stroke();
-    }
-    static drawRectBorder(x, y, w, h, c, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.strokeRect(x - w / 2 - bw / 2, y - h / 2 - bw / 2, w + bw, h + bw);
-    }
-    static drawRect(x, y, w, h, c, bc, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawRectBorder(x, y, w, h, bc, bw, context);
-        }
-        context.fillStyle = c;
-        context.beginPath();
-        context.rect(x - w / 2, y - h / 2, w, h);
-        context.closePath();
-        context.fill();
-    }
-    static drawStar(cx, cy, spikes, outerRadius, innerRadius, c, bc, bw, context) {
-        let rot = Math.PI / 2 * 3, x = cx, y = cy, step = Math.PI / spikes;
-        context.beginPath();
-        context.moveTo(cx, cy - outerRadius);
-        for (let i = 0; i < spikes; i += 1) {
-            x = cx + Math.cos(rot) * outerRadius;
-            y = cy + Math.sin(rot) * outerRadius;
-            context.lineTo(x, y);
-            rot += step;
-            x = cx + Math.cos(rot) * innerRadius;
-            y = cy + Math.sin(rot) * innerRadius;
-            context.lineTo(x, y);
-            rot += step;
-        }
-        context.lineTo(cx, cy - outerRadius);
-        context.closePath();
-        if (bc && bw) {
-            context.lineWidth = bw;
-            context.strokeStyle = bc;
-            context.stroke();
-        }
-        context.fillStyle = c;
-        context.fill();
-    }
-    static drawText(x, y, text, font, align, baseline, color, context) {
-        context.font = font;
-        context.textAlign = align;
-        context.textBaseline = baseline;
-        context.fillStyle = color;
-        context.fillText(text, x, y);
-    }
-    static drawTriangle(x, y, b, h, c, bc, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawTriangleBorder(x, y, b, h, bc, bw, context);
-        }
-        var path = new Path2D();
-        path.moveTo(x, y - h / 2);
-        path.lineTo(x + b / 2, y + h / 2);
-        path.lineTo(x - b / 2, y + h / 2);
-        context.fillStyle = c;
-        context.fill(path);
-    }
-    static drawTriangleBorder(x, y, b, h, c, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        var path = new Path2D();
-        path.moveTo(x, y - h / 2);
-        path.lineTo(x + b / 2, y + h / 2);
-        path.lineTo(x - b / 2, y + h / 2);
-        path.closePath();
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.stroke(path);
-    }
-    static getDistance(x1, y1, x2, y2) {
-        var xs = x2 - x1, ys = y2 - y1;
-        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
-    }
-    static invertColor(color) {
-        color = color.substring(1);
-        let colorNumber = parseInt(color, 16);
-        colorNumber = 0xFFFFFF ^ colorNumber;
-        color = colorNumber.toString(16);
-        color = ('000000' + color).slice(-6);
-        color = '#' + color;
-        return color;
-    }
-}
 class Credits {
     canvas;
     clouds;
@@ -963,8 +996,15 @@ class Credits {
         this.drawText(y, text, '15px monospace', '#ddd');
     }
     drawText(y, text, font, color) {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = "center", baseline = "middle";
-        Utilities.drawText(w / 2, y, text, font, align, baseline, color, context);
+        const context = this.canvas.getContext('2d'), w = this.canvas.width;
+        Utilities.drawText({
+            x: w / 2,
+            y,
+            text,
+            font,
+            align: 'center',
+            color
+        }, context);
     }
 }
 class Defaults {
@@ -1135,21 +1175,27 @@ class GameArea {
     }
     drawUI() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        let font = "18px sans-serif", color = "black";
         this.fader.draw();
-        Utilities.drawText(10, h - 14, "Popularity: " + this.popularityTracker.popularity, font, 'start', 'alphabetic', color, context);
-        color = "darkGray";
-        Utilities.drawText(w / 2, h - 14, "Press space to pause", font, 'center', 'alphabetic', color, context);
+        this.popularityTracker.draw(h - 14);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 14,
+            text: 'Press space to pause',
+            font: '18px sans-serif',
+            align: 'center',
+            baseline: 'alphabetic',
+            color: 'darkGray'
+        }, context);
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
                 x: w / 2,
                 y: h - 35,
                 fontSize: 20,
                 fontWeight: '',
-                font: "20px sans-serif",
+                font: '20px sans-serif',
                 color: { r: 255, g: 0, b: 0 },
-                id: "upgrade",
-                text: "- Upgrade available! -",
+                id: 'upgrade',
+                text: '- Upgrade available! -',
                 life: 400,
                 alpha: 0,
                 delta: 0
@@ -1166,18 +1212,33 @@ class GameArea {
             text += '0';
         }
         text += s;
+        let color = 'darkGray';
         if (remaining <= 30) {
-            color = "tomato";
+            color = 'tomato';
         }
         if (remaining <= 10) {
-            color = "red";
+            color = 'red';
         }
-        Utilities.drawText(w - 10, h - 14, text, font, 'end', 'alphabetic', color, context);
+        Utilities.drawText({
+            x: w - 10,
+            y: h - 14,
+            text,
+            font: '18px sans-serif',
+            align: 'end',
+            baseline: 'alphabetic', color
+        }, context);
     }
     drawAttacker(attacker) {
         const context = this.canvas.getContext('2d'), size = Defaults.clientSize, x = attacker.x, y = attacker.y;
         Utilities.drawTriangle(x, y, size * 2 / Math.sqrt(3), size, '#333333', 'black', 2, context);
-        Utilities.drawText(x, y + 5, 'DoS', 'bold 10px Arial', 'center', 'middle', 'white', context);
+        Utilities.drawText({
+            x,
+            y: y + 5,
+            text: 'DoS',
+            font: 'bold 10px Arial',
+            align: 'center',
+            color: 'white'
+        }, context);
     }
     drawClient(client) {
         const context = this.canvas.getContext('2d'), clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y, circle = {
@@ -1198,7 +1259,14 @@ class GameArea {
             else {
                 Utilities.drawCircle(circle, context);
             }
-            Utilities.drawText(x, y, Math.round(maxClientWaitTime - client.life).toString(), 'bold 15px Arial', 'center', 'middle', 'white', context);
+            Utilities.drawText({
+                x,
+                y,
+                text: Math.round(maxClientWaitTime - client.life).toString(),
+                font: 'bold 15px Arial',
+                align: 'center',
+                color: 'white'
+            }, context);
         }
         else {
             Utilities.drawCircle(circle, context);
@@ -1303,7 +1371,6 @@ class GameOver {
     game;
     orchestrator;
     popularity;
-    baseline = 'middle';
     color = 'white';
     buttons;
     id = Defaults.gameModes.GAME_OVER;
@@ -1325,14 +1392,35 @@ class GameOver {
     update() {
         var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         this.clouds.draw();
-        Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 100,
+            text: 'Game Over',
+            font: 'small-caps 60px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
         const font = '30px monospace';
-        Utilities.drawText(w / 2 + 68, h / 2 + 50, 'Popularity:', font, 'end', this.baseline, this.color, context);
-        Utilities.drawText(w / 2 + 75, h / 2 + 50, this.popularity.popularity.toString(), font, 'start', this.baseline, this.color, context);
+        Utilities.drawText({
+            x: w / 2 + 68,
+            y: h / 2 + 50,
+            text: 'Popularity:',
+            font,
+            align: 'end',
+            color: this.color
+        }, context);
+        Utilities.drawText({
+            x: w / 2 + 75,
+            y: h / 2 + 50,
+            text: this.popularity.popularity.toString(),
+            font,
+            align: 'start',
+            color: this.color
+        }, context);
         Utilities.drawLine(w / 2 - 130, h / 2 + 20, w / 2 + 130, h / 2 + 20, 'red', 1, context);
     }
     drawStat(y, text, value) {
@@ -1341,11 +1429,25 @@ class GameOver {
     }
     drawStatTitle(y, text) {
         const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 80;
-        Utilities.drawText(x, y, text + ':', '15px monospace', 'end', this.baseline, this.color, context);
+        Utilities.drawText({
+            x,
+            y,
+            text: text + ':',
+            font: '15px monospace',
+            align: 'end',
+            color: this.color
+        }, context);
     }
     drawStatValue(y, value) {
         const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 90;
-        Utilities.drawText(x, y, value.toString(), '15px monospace', 'start', this.baseline, this.color, context);
+        Utilities.drawText({
+            x,
+            y,
+            text: value.toString(),
+            font: '15px monospace',
+            align: 'start',
+            color: this.color
+        }, context);
     }
 }
 class TutorialStep {
@@ -1412,7 +1514,14 @@ class Tutorial {
         Utilities.drawRect(w / 2, 40, w, 80, '#0360AE', '#02467F', 1, context);
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText(w / 2, 18 + 20 * i, text, 'bold 18px monospace', 'center', 'middle', 'white', context);
+            Utilities.drawText({
+                x: w / 2,
+                y: 18 + 20 * i,
+                text,
+                font: 'bold 18px monospace',
+                align: 'center',
+                color: 'white'
+            }, context);
         }
         Utilities.drawRect(w / 2, h - 40, w, 80, '#0360AE', '#02467F', 1, context);
         this.currentStep.draw();
@@ -1458,8 +1567,22 @@ class Menu {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, align = "center", baseline = "middle", color = "rgba(255,255,255,0.6)";
         this.clouds.draw();
         Utilities.drawRect(w / 2, 140, w, 180, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
-        Utilities.drawText(w / 2, 110, 'Load Balancing', 'small-caps bold 110px monospace', align, baseline, color, context);
-        Utilities.drawText(w / 2, 185, 'The Game', '45px monospace', align, baseline, color, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 110,
+            text: 'Load Balancing',
+            font: 'small-caps bold 110px monospace',
+            align,
+            color
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 185,
+            text: 'The Game',
+            font: '45px monospace',
+            align,
+            color
+        }, context);
         Utilities.drawLine(120, 160, w - 118, 160, 'red', 2, context);
     }
 }
@@ -1504,7 +1627,14 @@ class Pause {
         ];
         this.upgradeButtons = [
             this.createUpgradeButton(250, 'server', 'Buy new datacenter', (x, y) => {
-                Utilities.drawText(x - 25, y, "+", '45px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: x - 25,
+                    y,
+                    text: "+",
+                    font: '45px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
                 Utilities.drawRect(x + 15, y, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
                 Utilities.drawStar(x - serverSize / 2 + 22, y + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
                 Utilities.drawRect(x + serverSize / 2 + 8, y + 1, 6, serverSize - 10, "#BBBBBB", "#999999", 1, context);
@@ -1539,15 +1669,36 @@ class Pause {
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
             color = "black";
-            Utilities.drawText(x, h / 2 + 60, "Choose an upgrade:", font, 'center', 'middle', color, context);
+            Utilities.drawText({
+                x,
+                y: h / 2 + 60,
+                text: "Choose an upgrade:",
+                font,
+                align: 'center',
+                color
+            }, context);
         }
         else {
             color = "#DDDDDD";
-            Utilities.drawText(x, h / 2 + 60, "No upgrades available", font, 'center', 'middle', color, context);
+            Utilities.drawText({
+                x,
+                y: h / 2 + 60,
+                text: "No upgrades available",
+                font,
+                align: 'center',
+                color
+            }, context);
         }
         color = "red";
         font = "50px monospace";
-        Utilities.drawText(x, 60, "~ Paused ~", font, 'center', 'middle', color, context);
+        Utilities.drawText({
+            x,
+            y: 60,
+            text: "~ Paused ~",
+            font,
+            align: 'center',
+            color
+        }, context);
     }
     createUpgradeButton(x, id, text, draw) {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, y = h / 2 + 150;
@@ -1557,7 +1708,14 @@ class Pause {
         }, (hovered) => {
             draw(x, y);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, text, '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text,
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         });
     }
@@ -1662,25 +1820,37 @@ class TutorialStep4 extends TutorialStep {
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, textX = x + textSpacing + iconRadius, align = 'start', baseline = 'middle', color = 'black', font = "10px sans-serif", circle = {
+        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, font = "10px sans-serif", circle = {
             x,
             y,
             radius: iconRadius,
             borderWidth: 1
+        }, text = {
+            x: x + textSpacing + iconRadius,
+            y,
+            text: '',
+            font
         };
         Utilities.drawCircle({
             ...circle,
             color: 'lightBlue',
             borderColor: 'skyBlue'
         }, context);
-        Utilities.drawText(textX, y, ': Request', font, align, baseline, color, context);
+        Utilities.drawText({
+            ...text,
+            text: ': Request'
+        }, context);
         Utilities.drawCircle({
             ...circle,
             y: y + lineSpacing,
             color: 'lime',
             borderColor: 'limeGreen'
         }, context);
-        Utilities.drawText(textX, y + lineSpacing, ': Response (+1)', font, align, baseline, color, context);
+        Utilities.drawText({
+            ...text,
+            y: y + lineSpacing,
+            text: ': Response (+1)'
+        }, context);
         if (includeNACK) {
             Utilities.drawCircle({
                 ...circle,
@@ -1688,7 +1858,11 @@ class TutorialHelper {
                 color: 'tomato',
                 borderColor: 'indianRed'
             }, context);
-            Utilities.drawText(textX, y + lineSpacing * 2, ': Datacenter busy (-1)', font, align, baseline, color, context);
+            Utilities.drawText({
+                ...text,
+                y: y + lineSpacing * 2,
+                text: ': Datacenter busy (-1)'
+            }, context);
         }
     }
 }
@@ -1718,10 +1892,10 @@ class TutorialStep5 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        Utilities.drawCircleHighlight(70, h - 95, 67, context);
+        const context = this.canvas.getContext('2d'), h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
+        Utilities.drawCircleHighlight(70, h - 95, 67, context);
     }
 }
 class TutorialStep6 extends TutorialStep {
@@ -1761,8 +1935,8 @@ class TutorialStep6 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
     }
     spawnClients() {
@@ -1795,8 +1969,8 @@ class TutorialStep7 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', serverSize = Defaults.serverSize, font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
         Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
     }
@@ -1842,10 +2016,17 @@ class TutorialStep8 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText(w / 2, h - 95, 'Press space to pause', '18px sans-serif', 'center', baseline, 'darkGray', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 95,
+            text: 'Press space to pause',
+            font: '18px sans-serif',
+            align: 'center',
+            color: 'darkGray'
+        }, context);
     }
 }
 class TutorialStep9 extends TutorialStep {
@@ -1864,12 +2045,26 @@ class TutorialStep9 extends TutorialStep {
         const context = canvas.getContext('2d'), w = canvas.width, h = canvas.height, buttons = [], serverSize = Defaults.serverSize;
         const x1 = 250, y1 = h / 2 + 150;
         buttons.push(new SpecialButton(x1, y1, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
-            Utilities.drawText(x1 - 25, y1, '+', '45px monospace', 'center', 'middle', 'red', context);
+            Utilities.drawText({
+                x: x1 - 25,
+                y: y1,
+                text: '+',
+                font: '45px monospace',
+                align: 'center',
+                color: 'red'
+            }, context);
             Utilities.drawRect(x1 + 15, y1, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
             Utilities.drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, '#BBBBBB', '#999999', 2, context);
             Utilities.drawRect(x1 + serverSize / 2 + 8, y1 + 1, 6, serverSize - 10, '#BBBBBB', '#999999', 1, context);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Buy new datacenter', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Buy new datacenter',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
         const x2 = w / 2, y2 = y1;
@@ -1882,7 +2077,14 @@ class TutorialStep9 extends TutorialStep {
             Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
             Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Scale off at one location', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Scale off at one location',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
         const x3 = w - 250, y3 = y1;
@@ -1898,7 +2100,14 @@ class TutorialStep9 extends TutorialStep {
             Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
             Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Improve speed at one location', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Improve speed at one location',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
         this.extraButtons = buttons;
@@ -1909,8 +2118,21 @@ class TutorialStep9 extends TutorialStep {
     draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         Utilities.drawRect(w / 2, h / 2, w, h - 160, '#0360AE', '', 0, context);
-        Utilities.drawText(w / 2, h / 2 + 60, 'Choose an upgrade:', '25px monospace', 'center', 'middle', 'black', context);
-        Utilities.drawText(w / 2, h / 3, '~ Paused ~', '50px monospace', 'center', 'middle', 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 2 + 60,
+            text: 'Choose an upgrade:',
+            font: '25px monospace',
+            align: 'center',
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 3,
+            text: '~ Paused ~',
+            font: '50px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
     }
 }
 class TutorialStep10 extends TutorialStep {
@@ -1954,8 +2176,8 @@ class TutorialStep10 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', serverSize = Defaults.serverSize, font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
         Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
     }
@@ -2009,10 +2231,16 @@ class TutorialStep11 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, 'Popularity: ' + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText(w / 2, h - 95, 'Press space to pause', '18px sans-serif', 'center', baseline, 'darkGray', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 95,
+            text: 'Press space to pause',
+            font: '18px sans-serif',
+            align: 'center',
+            color: 'darkGray'
+        }, context);
     }
     spawnClients() {
         const w = this.canvas.width, h = this.canvas.height, client0 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 3, 10000), client1 = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 3, 10000);
@@ -2042,12 +2270,26 @@ class TutorialStep12 extends TutorialStep {
             this.game.servers.push(server);
             this.advance = true;
         }, (hovered) => {
-            Utilities.drawText(x1 - 25, y1, '+', '45px monospace', 'center', 'middle', 'red', context);
+            Utilities.drawText({
+                x: x1 - 25,
+                y: y1,
+                text: '+',
+                font: '45px monospace',
+                align: 'center',
+                color: 'red'
+            }, context);
             Utilities.drawRect(x1 + 15, y1, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
             Utilities.drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, '#BBBBBB', '#999999', 2, context);
             Utilities.drawRect(x1 + serverSize / 2 + 8, y1 + 1, 6, serverSize - 10, '#BBBBBB', '#999999', 1, context);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Buy new datacenter', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Buy new datacenter',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
         const x2 = w / 2, y2 = y1;
@@ -2060,7 +2302,14 @@ class TutorialStep12 extends TutorialStep {
             Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
             Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Scale off at one location', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Scale off at one location',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
         const x3 = w - 250, y3 = y1;
@@ -2073,7 +2322,14 @@ class TutorialStep12 extends TutorialStep {
             Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
             Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Improve speed at one location', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Improve speed at one location',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
         this.extraButtons = buttons;
@@ -2084,8 +2340,21 @@ class TutorialStep12 extends TutorialStep {
     draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         Utilities.drawRect(w / 2, h / 2, w, h - 160, '#0360AE', '', 0, context);
-        Utilities.drawText(w / 2, h / 2 + 60, 'Choose an upgrade:', '25px monospace', 'center', 'middle', 'black', context);
-        Utilities.drawText(w / 2, h / 3, '~ Paused ~', '50px monospace', 'center', 'middle', 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 2 + 60,
+            text: 'Choose an upgrade:',
+            font: '25px monospace',
+            align: 'center',
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 3,
+            text: '~ Paused ~',
+            font: '50px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
     }
 }
 class TutorialStep13 extends TutorialStep {
@@ -2123,8 +2392,8 @@ class TutorialStep13 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
     }
 }
@@ -2154,8 +2423,8 @@ class TutorialStep14 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
+        const h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
     }
 }
@@ -2177,7 +2446,14 @@ class BorderButton extends Button {
             Utilities.drawRectBorder(this.x, this.y, this.width, this.height, this.hoverColor, this.borderWidth, context);
             color = this.hoverColor;
         }
-        Utilities.drawText(this.x, this.y, this.text, '15px monospace', 'center', 'middle', color, context);
+        Utilities.drawText({
+            x: this.x,
+            y: this.y,
+            text: this.text,
+            font: '15px monospace',
+            align: 'center',
+            color
+        }, context);
     }
 }
 class Upgrade {
@@ -2236,7 +2512,14 @@ class Upgrade {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText(w / 2, 60, `~ Select ${text} ~`, '30px monospace', 'center', 'middle', 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 60,
+            text: `~ Select ${text} ~`,
+            font: '30px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
     }
     createAreaButton(x, y, area) {
         const w = this.canvas.width, h = this.canvas.height;
@@ -2321,7 +2604,7 @@ class Application {
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
-        const popularityTracker = new PopularityTracker(fader, upgradesTracker);
+        const popularityTracker = new PopularityTracker(fader, upgradesTracker, canvas);
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui);
         const cursor = new CursorTracker(game, canvas, ui);

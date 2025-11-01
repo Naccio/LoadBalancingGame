@@ -44,8 +44,22 @@ class Menu implements Scene {
         this.clouds.draw();
 
         Utilities.drawRect(w / 2, 140, w, 180, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
-        Utilities.drawText(w / 2, 110, 'Load Balancing', 'small-caps bold 110px monospace', align, baseline, color, context);
-        Utilities.drawText(w / 2, 185, 'The Game', '45px monospace', align, baseline, color, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 110,
+            text: 'Load Balancing',
+            font: 'small-caps bold 110px monospace',
+            align,
+            color
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 185,
+            text: 'The Game',
+            font: '45px monospace',
+            align,
+            color
+        }, context);
 
         Utilities.drawLine(120, 160, w - 118, 160, 'red', 2, context);
     }

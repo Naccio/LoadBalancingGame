@@ -36,7 +36,14 @@ class Pause implements Scene {
         //TODO: Unify upgrade buttons code with tutorial step 9 and 12
         this.upgradeButtons = [
             this.createUpgradeButton(250, 'server', 'Buy new datacenter', (x: number, y: number) => {
-                Utilities.drawText(x - 25, y, "+", '45px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: x - 25,
+                    y,
+                    text: "+",
+                    font: '45px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
                 Utilities.drawRect(x + 15, y, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
                 Utilities.drawStar(x - serverSize / 2 + 22, y + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
                 Utilities.drawRect(x + serverSize / 2 + 8, y + 1, 6, serverSize - 10, "#BBBBBB", "#999999", 1, context);
@@ -90,15 +97,36 @@ class Pause implements Scene {
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             color = "black";
-            Utilities.drawText(x, h / 2 + 60, "Choose an upgrade:", font, 'center', 'middle', color, context);
+            Utilities.drawText({
+                x,
+                y: h / 2 + 60,
+                text: "Choose an upgrade:",
+                font,
+                align: 'center',
+                color
+            }, context);
         } else {
             color = "#DDDDDD";
-            Utilities.drawText(x, h / 2 + 60, "No upgrades available", font, 'center', 'middle', color, context);
+            Utilities.drawText({
+                x,
+                y: h / 2 + 60,
+                text: "No upgrades available",
+                font,
+                align: 'center',
+                color
+            }, context);
         }
 
         color = "red";
         font = "50px monospace";
-        Utilities.drawText(x, 60, "~ Paused ~", font, 'center', 'middle', color, context);
+        Utilities.drawText({
+            x,
+            y: 60,
+            text: "~ Paused ~",
+            font,
+            align: 'center',
+            color
+        }, context);
     }
 
     private createUpgradeButton(x: number, id: string, text: string, draw: (x: number, y: number) => void) {
@@ -114,7 +142,14 @@ class Pause implements Scene {
             draw(x, y);
 
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, text, '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text,
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         });
     }

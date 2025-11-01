@@ -33,14 +33,9 @@ class TutorialStep7 extends TutorialStep {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
-            align: CanvasTextAlign = 'start',
-            baseline: CanvasTextBaseline = 'middle',
-            color = 'black',
-            serverSize = Defaults.serverSize,
-            font = '18px sans-serif';
+            serverSize = Defaults.serverSize;
 
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
 
         Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);

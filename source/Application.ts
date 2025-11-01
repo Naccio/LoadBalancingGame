@@ -82,7 +82,7 @@ class Application {
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
-        const popularityTracker = new PopularityTracker(fader, upgradesTracker);
+        const popularityTracker = new PopularityTracker(fader, upgradesTracker, canvas);
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui);
         const cursor = new CursorTracker(game, canvas, ui);

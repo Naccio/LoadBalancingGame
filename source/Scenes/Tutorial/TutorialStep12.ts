@@ -32,13 +32,27 @@ class TutorialStep12 extends TutorialStep {
             this.game.servers.push(server);
             this.advance = true;
         }, (hovered) => {
-            Utilities.drawText(x1 - 25, y1, '+', '45px monospace', 'center', 'middle', 'red', context);
+            Utilities.drawText({
+                x: x1 - 25,
+                y: y1,
+                text: '+',
+                font: '45px monospace',
+                align: 'center',
+                color: 'red'
+            }, context);
             Utilities.drawRect(x1 + 15, y1, serverSize, serverSize, '#DDDDDD', 'red', 1, context);
             Utilities.drawStar(x1 - serverSize / 2 + 22, y1 + serverSize / 2 - 9, 5, 4, 2, '#BBBBBB', '#999999', 2, context);
             Utilities.drawRect(x1 + serverSize / 2 + 8, y1 + 1, 6, serverSize - 10, '#BBBBBB', '#999999', 1, context);
 
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Buy new datacenter', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Buy new datacenter',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
 
@@ -59,7 +73,14 @@ class TutorialStep12 extends TutorialStep {
             Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
 
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Scale off at one location', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Scale off at one location',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
 
@@ -80,7 +101,14 @@ class TutorialStep12 extends TutorialStep {
             Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
 
             if (hovered) {
-                Utilities.drawText(w / 2, h - 50, 'Improve speed at one location', '20px monospace', 'center', 'middle', 'red', context);
+                Utilities.drawText({
+                    x: w / 2,
+                    y: h - 50,
+                    text: 'Improve speed at one location',
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
             }
         }));
 
@@ -97,7 +125,20 @@ class TutorialStep12 extends TutorialStep {
             h = this.canvas.height;
 
         Utilities.drawRect(w / 2, h / 2, w, h - 160, '#0360AE', '', 0, context);
-        Utilities.drawText(w / 2, h / 2 + 60, 'Choose an upgrade:', '25px monospace', 'center', 'middle', 'black', context);
-        Utilities.drawText(w / 2, h / 3, '~ Paused ~', '50px monospace', 'center', 'middle', 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 2 + 60,
+            text: 'Choose an upgrade:',
+            font: '25px monospace',
+            align: 'center',
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 3,
+            text: '~ Paused ~',
+            font: '50px monospace',
+            align: 'center',
+            color: 'red'
+        }, context);
     }
 }

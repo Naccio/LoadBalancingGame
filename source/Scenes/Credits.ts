@@ -57,10 +57,15 @@ class Credits implements Scene {
 
     private drawText(y: number, text: string, font: string, color: string) {
         const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            align = "center",
-            baseline = "middle";
+            w = this.canvas.width;
 
-        Utilities.drawText(w / 2, y, text, font, align, baseline, color, context)
+        Utilities.drawText({
+            x: w / 2,
+            y,
+            text,
+            font,
+            align: 'center',
+            color
+        }, context)
     }
 }

@@ -67,7 +67,14 @@ class Tutorial implements Scene {
         Utilities.drawRect(w / 2, 40, w, 80, '#0360AE', '#02467F', 1, context);
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText(w / 2, 18 + 20 * i, text, 'bold 18px monospace', 'center', 'middle', 'white', context);
+            Utilities.drawText({
+                x: w / 2,
+                y: 18 + 20 * i,
+                text,
+                font: 'bold 18px monospace',
+                align: 'center',
+                color: 'white'
+            }, context);
         }
         Utilities.drawRect(w / 2, h - 40, w, 80, '#0360AE', '#02467F', 1, context);
         this.currentStep.draw();

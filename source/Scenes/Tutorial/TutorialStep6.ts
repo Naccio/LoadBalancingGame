@@ -45,15 +45,9 @@ class TutorialStep6 extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            h = this.canvas.height,
-            align: CanvasTextAlign = 'start',
-            baseline: CanvasTextBaseline = 'middle',
-            color = 'black',
-            font = '18px sans-serif';
+        const h = this.canvas.height;
 
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-
+        this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
     }
 
