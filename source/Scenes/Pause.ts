@@ -54,7 +54,15 @@ class Pause implements Scene {
 
                     borderWidth: 1
                 }, context);
-                Utilities.drawStar(x - serverSize / 2 + 22, y + serverSize / 2 - 9, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
+                Utilities.drawStar({
+                    x: x - serverSize / 2 + 22,
+                    y: y + serverSize / 2 - 9,
+                    outerRadius: 4,
+                    innerRadius: 2,
+                    color: "#BBBBBB",
+                    borderColor: "#999999",
+                    borderWidth: 1
+                }, context);
                 Utilities.drawRect({
                     x: x + serverSize / 2 + 8,
                     y: y + 1,
@@ -90,7 +98,15 @@ class Pause implements Scene {
                     borderColor: "red",
                     borderWidth: 1
                 }, context);
-                Utilities.drawStar(starX, starY, 5, 4, 2, "#BBBBBB", "#999999", 2, context);
+                Utilities.drawStar({
+                    x: starX,
+                    y: starY,
+                    outerRadius: 4,
+                    innerRadius: 2,
+                    color: "#BBBBBB",
+                    borderColor: "#999999",
+                    borderWidth: 1
+                }, context);
                 Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
                 Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
                 Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
@@ -120,7 +136,15 @@ class Pause implements Scene {
                     borderColor: "#999999",
                     borderWidth: 1
                 }, context);
-                Utilities.drawStar(starX, starY, 5, 4, 2, "salmon", "red", 2, context);
+                Utilities.drawStar({
+                    x: starX,
+                    y: starY,
+                    outerRadius: 4,
+                    innerRadius: 2,
+                    color: "salmon",
+                    borderColor: "red",
+                    borderWidth: 1
+                }, context);
                 Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
                 Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
                 Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);

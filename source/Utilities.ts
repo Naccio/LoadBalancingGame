@@ -1,5 +1,6 @@
 /// <reference path='UI/Circle.ts' />
 /// <reference path='UI/Rectangle.ts' />
+/// <reference path='UI/Star.ts' />
 /// <reference path='UI/Triangle.ts' />
 /// <reference path='UI/UIText.ts' />
 
@@ -55,35 +56,34 @@ class Utilities {
         Utilities.draw(rectangle, context);
     }
 
-    public static drawStar(cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
-        let rot = Math.PI / 2 * 3,
-            x = cx,
-            y = cy,
+    public static drawStar(star: Star, context: CanvasRenderingContext2D) {
+        const centerX = star.x,
+            centerY = star.y,
+            spikes = star.spikes ?? 5,
+            outerRadius = star.outerRadius,
+            innerRadius = star.innerRadius,
             step = Math.PI / spikes;
 
+        let x, y,
+            rot = Math.PI / 2 * 3;
+
         context.beginPath();
-        context.moveTo(cx, cy - outerRadius);
+        context.moveTo(centerX, centerY - outerRadius);
         for (let i = 0; i < spikes; i += 1) {
-            x = cx + Math.cos(rot) * outerRadius;
-            y = cy + Math.sin(rot) * outerRadius;
+            x = centerX + Math.cos(rot) * outerRadius;
+            y = centerY + Math.sin(rot) * outerRadius;
             context.lineTo(x, y);
             rot += step;
 
-            x = cx + Math.cos(rot) * innerRadius;
-            y = cy + Math.sin(rot) * innerRadius;
+            x = centerX + Math.cos(rot) * innerRadius;
+            y = centerY + Math.sin(rot) * innerRadius;
             context.lineTo(x, y);
             rot += step;
         }
 
-        context.lineTo(cx, cy - outerRadius);
+        context.lineTo(centerX, centerY - outerRadius);
         context.closePath();
-        if (bc && bw) {
-            context.lineWidth = bw;
-            context.strokeStyle = bc;
-            context.stroke();
-        }
-        context.fillStyle = c;
-        context.fill();
+        Utilities.draw(star, context);
     }
 
     public static drawText(text: UIText, context: CanvasRenderingContext2D) {

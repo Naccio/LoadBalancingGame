@@ -273,8 +273,8 @@ class GameArea {
         Utilities.drawRect({
             x: queueX,
             y: queueY,
-            width: queueWidth,
-            height: queueHeight,
+            width: queueWidth + 2,
+            height: queueHeight + 2,
             borderColor: '#004500',
             borderWidth: 1
         }, context);
@@ -294,7 +294,15 @@ class GameArea {
         for (i = server.speed; i > 0; i -= serversSpeed) {
             const starX = server.x - serverSize / 2 + 7,
                 starY = server.y + serverSize / 2 - 4 - 5 * (i / serversSpeed)
-            Utilities.drawStar(starX, starY, 5, 4, 2, 'limeGreen', '#004500', 2, context);
+            Utilities.drawStar({
+                x: starX,
+                y: starY,
+                outerRadius: 4,
+                innerRadius: 2,
+                color: 'limeGreen',
+                borderColor: '#004500',
+                borderWidth: 1
+            }, context);
         }
     }
 }
