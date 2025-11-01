@@ -782,36 +782,34 @@ class NewGame {
     }
 }
 class Utilities {
-    static drawCircle(x, y, r, c, bc, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawCircleBorder(x, y, r, bc, bw, context);
-        }
-        context.fillStyle = c;
+    static drawCircle(circle, context) {
         context.beginPath();
-        context.arc(x, y, r, 0, Math.PI * 2, true);
+        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
         context.closePath();
-        context.fill();
-    }
-    static drawCircleBorder(x, y, r, c, bw, context) {
-        if (!c) {
-            c = Defaults.defaultColor;
+        if (circle.color) {
+            context.fillStyle = circle.color;
+            context.fill();
         }
-        if (!bw) {
-            bw = 1;
+        if (circle.borderColor && circle.borderWidth) {
+            context.strokeStyle = circle.borderColor;
+            context.lineWidth = circle.borderWidth;
+            context.stroke();
         }
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.beginPath();
-        context.arc(x, y, r, 0, Math.PI * 2, true);
-        context.closePath();
-        context.stroke();
     }
-    static drawCircleHighlight(x, y, r, context) {
-        Utilities.drawCircleBorder(x, y, r, "fireBrick", 2, context);
-        Utilities.drawCircleBorder(x, y, r + 1, "red", 3, context);
+    static drawCircleHighlight(x, y, radius, context) {
+        const innerCircle = {
+            x,
+            y,
+            radius,
+            borderColor: 'fireBrick',
+            borderWidth: 2
+        }, outerCircle = {
+            ...innerCircle,
+            radius: radius + 1,
+            borderColor: 'red'
+        };
+        Utilities.drawCircle(innerCircle, context);
+        Utilities.drawCircle(outerCircle, context);
     }
     static drawLine(x1, y1, x2, y2, c, w, context) {
         if (!w) {
@@ -1105,7 +1103,12 @@ class GameArea {
         const context = this.canvas.getContext('2d'), sc = this.game.selectedClient;
         if (sc !== undefined) {
             Utilities.drawLine(sc.x, sc.y, this.cursor.mouseX, this.cursor.mouseY, 'lightBlue', 3, context);
-            Utilities.drawCircle(sc.x, sc.y, Defaults.clientSize / 2 + 3, 'lightBlue', '', 0, context);
+            Utilities.drawCircle({
+                x: sc.x,
+                y: sc.y,
+                radius: Defaults.clientSize / 2 + 3,
+                color: 'lightBlue'
+            }, context);
         }
         this.drawConnections();
         this.drawMessages();
@@ -1177,21 +1180,28 @@ class GameArea {
         Utilities.drawText(x, y + 5, 'DoS', 'bold 10px Arial', 'center', 'middle', 'white', context);
     }
     drawClient(client) {
-        const context = this.canvas.getContext('2d'), clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y;
+        const context = this.canvas.getContext('2d'), clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y, circle = {
+            x,
+            y,
+            radius: clientSize / 2,
+            color: 'gray',
+            borderColor: 'dimGray',
+            borderWidth: 1
+        };
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle(x, y, clientSize / 2, 'red', 'fireBrick', 2, context);
+                Utilities.drawCircle({ ...circle, color: 'red', borderColor: 'fireBrick' }, context);
             }
             else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle(x, y, clientSize / 2, 'tomato', 'indianRed', 2, context);
+                Utilities.drawCircle({ ...circle, color: 'tomato', borderColor: 'indianRed' }, context);
             }
             else {
-                Utilities.drawCircle(x, y, clientSize / 2, 'gray', 'dimGray', 2, context);
+                Utilities.drawCircle(circle, context);
             }
             Utilities.drawText(x, y, Math.round(maxClientWaitTime - client.life).toString(), 'bold 15px Arial', 'center', 'middle', 'white', context);
         }
         else {
-            Utilities.drawCircle(x, y, clientSize / 2, 'gray', 'dimGray', 2, context);
+            Utilities.drawCircle(circle, context);
         }
     }
     drawConnection(t, color) {
@@ -1222,7 +1232,14 @@ class GameArea {
             default:
                 throw 'Invalid message status: ' + message.status;
         }
-        Utilities.drawCircle(message.x, message.y, Defaults.messageSize / 2, fill, border, 1, context);
+        Utilities.drawCircle({
+            x: message.x,
+            y: message.y,
+            radius: Defaults.messageSize / 2,
+            color: fill,
+            borderColor: border,
+            borderWidth: 1
+        }, context);
     }
     drawServer(server) {
         const context = this.canvas.getContext('2d'), serverSize = Defaults.serverSize;
@@ -1608,7 +1625,12 @@ class TutorialStep3 extends TutorialStep {
     draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
-        Utilities.drawCircle(w * 3 / 4, h / 2, Defaults.clientSize / 2, 'gray', '', 0, context);
+        Utilities.drawCircle({
+            x: w * 3 / 4,
+            y: h / 2,
+            radius: Defaults.clientSize / 2,
+            color: 'gray'
+        }, context);
     }
 }
 class TutorialStep4 extends TutorialStep {
@@ -1638,6 +1660,38 @@ class TutorialStep4 extends TutorialStep {
         this.game.updateClients();
     }
 }
+class TutorialHelper {
+    static drawLegend(canvas, includeNACK) {
+        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, textX = x + textSpacing + iconRadius, align = 'start', baseline = 'middle', color = 'black', font = "10px sans-serif", circle = {
+            x,
+            y,
+            radius: iconRadius,
+            borderWidth: 1
+        };
+        Utilities.drawCircle({
+            ...circle,
+            color: 'lightBlue',
+            borderColor: 'skyBlue'
+        }, context);
+        Utilities.drawText(textX, y, ': Request', font, align, baseline, color, context);
+        Utilities.drawCircle({
+            ...circle,
+            y: y + lineSpacing,
+            color: 'lime',
+            borderColor: 'limeGreen'
+        }, context);
+        Utilities.drawText(textX, y + lineSpacing, ': Response (+1)', font, align, baseline, color, context);
+        if (includeNACK) {
+            Utilities.drawCircle({
+                ...circle,
+                y: y + lineSpacing * 2,
+                color: 'tomato',
+                borderColor: 'indianRed'
+            }, context);
+            Utilities.drawText(textX, y + lineSpacing * 2, ': Datacenter busy (-1)', font, align, baseline, color, context);
+        }
+    }
+}
 class TutorialStep5 extends TutorialStep {
     canvas;
     game;
@@ -1664,15 +1718,10 @@ class TutorialStep5 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
         Utilities.drawCircleHighlight(70, h - 95, 67, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
+        TutorialHelper.drawLegend(this.canvas, false);
     }
 }
 class TutorialStep6 extends TutorialStep {
@@ -1712,14 +1761,9 @@ class TutorialStep6 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
+        TutorialHelper.drawLegend(this.canvas, false);
     }
     spawnClients() {
         const w = this.canvas.width, h = this.canvas.height, client1 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 4, 10000), client2 = new Client(this.orchestrator, this.popularityTracker, w / 4, h * 3 / 4, 10000);
@@ -1751,16 +1795,9 @@ class TutorialStep7 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize, serverSize = Defaults.serverSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', serverSize = Defaults.serverSize, font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
         Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
     }
 }
@@ -1805,16 +1842,9 @@ class TutorialStep8 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
         Utilities.drawText(w / 2, h - 95, 'Press space to pause', '18px sans-serif', 'center', baseline, 'darkGray', context);
     }
 }
@@ -1924,16 +1954,9 @@ class TutorialStep10 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize, serverSize = Defaults.serverSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', serverSize = Defaults.serverSize, font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
         Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
     }
 }
@@ -1986,16 +2009,9 @@ class TutorialStep11 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
         Utilities.drawText(10, h - 95, 'Popularity: ' + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = '10px sans-serif';
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
         Utilities.drawText(w / 2, h - 95, 'Press space to pause', '18px sans-serif', 'center', baseline, 'darkGray', context);
     }
     spawnClients() {
@@ -2107,16 +2123,9 @@ class TutorialStep13 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
     }
 }
 class TutorialStep14 extends TutorialStep {
@@ -2145,16 +2154,9 @@ class TutorialStep14 extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', messageSize = Defaults.messageSize;
-        let font = '18px sans-serif';
+        const context = this.canvas.getContext('2d'), h = this.canvas.height, align = 'start', baseline = 'middle', color = 'black', font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
     }
 }
 class BorderButton extends Button {

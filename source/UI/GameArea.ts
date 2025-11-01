@@ -29,7 +29,12 @@ class GameArea {
         //draw a line connecting the selected client to the mouse pointer
         if (sc !== undefined) {
             Utilities.drawLine(sc.x, sc.y, this.cursor.mouseX, this.cursor.mouseY, 'lightBlue', 3, context);
-            Utilities.drawCircle(sc.x, sc.y, Defaults.clientSize / 2 + 3, 'lightBlue', '', 0, context);
+            Utilities.drawCircle({
+                x: sc.x,
+                y: sc.y,
+                radius: Defaults.clientSize / 2 + 3,
+                color: 'lightBlue'
+            }, context);
         }
 
         this.drawConnections();
@@ -135,21 +140,29 @@ class GameArea {
             clientSize = Defaults.clientSize,
             maxClientWaitTime = Defaults.maxClientWaitTime,
             x = client.x,
-            y = client.y;
+            y = client.y,
+            circle = {
+                x,
+                y,
+                radius: clientSize / 2,
+                color: 'gray',
+                borderColor: 'dimGray',
+                borderWidth: 1
+            };
 
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle(x, y, clientSize / 2, 'red', 'fireBrick', 2, context);
+                Utilities.drawCircle({ ...circle, color: 'red', borderColor: 'fireBrick' }, context);
             } else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle(x, y, clientSize / 2, 'tomato', 'indianRed', 2, context);
+                Utilities.drawCircle({ ...circle, color: 'tomato', borderColor: 'indianRed' }, context);
             } else {
-                Utilities.drawCircle(x, y, clientSize / 2, 'gray', 'dimGray', 2, context);
+                Utilities.drawCircle(circle, context);
             }
 
             Utilities.drawText(x, y, Math.round(maxClientWaitTime - client.life).toString(), 'bold 15px Arial', 'center', 'middle', 'white', context);
         }
         else {
-            Utilities.drawCircle(x, y, clientSize / 2, 'gray', 'dimGray', 2, context);
+            Utilities.drawCircle(circle, context);
         }
     }
 
@@ -184,7 +197,14 @@ class GameArea {
                 throw 'Invalid message status: ' + message.status;
         }
 
-        Utilities.drawCircle(message.x, message.y, Defaults.messageSize / 2, fill, border, 1, context);
+        Utilities.drawCircle({
+            x: message.x,
+            y: message.y,
+            radius: Defaults.messageSize / 2,
+            color: fill,
+            borderColor: border,
+            borderWidth: 1
+        }, context);
     }
 
     private drawServer(server: Server) {

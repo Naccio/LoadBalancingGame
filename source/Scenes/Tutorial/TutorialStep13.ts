@@ -1,9 +1,9 @@
-/// <reference path='../../Defaults.ts' />
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
+/// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
 
 class TutorialStep13 extends TutorialStep {
@@ -33,7 +33,7 @@ class TutorialStep13 extends TutorialStep {
                 h = this.canvas.height,
                 client0 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 3, 10000),
                 client1 = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 3, 10000);
-                
+
             client0.life = - 21;
             client1.life = - 21;
 
@@ -48,22 +48,14 @@ class TutorialStep13 extends TutorialStep {
 
     draw() {
         const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
             h = this.canvas.height,
             align: CanvasTextAlign = 'start',
             baseline: CanvasTextBaseline = 'middle',
             color = 'black',
-            messageSize = Defaults.messageSize;
+            font = '18px sans-serif';
 
-        let font = '18px sans-serif';
         Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
 
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        TutorialHelper.drawLegend(this.canvas, true);
     }
 }

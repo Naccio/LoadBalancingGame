@@ -1,37 +1,37 @@
+/// <reference path='Model/Circle.ts' />
+
 class Utilities {
 
-    public static drawCircle(x: number, y: number, r: number, c: string, bc: string, bw: number, context: CanvasRenderingContext2D) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (bc) {
-            Utilities.drawCircleBorder(x, y, r, bc, bw, context);
-        }
-        context.fillStyle = c;
+    public static drawCircle(circle: Circle, context: CanvasRenderingContext2D) {
         context.beginPath();
-        context.arc(x, y, r, 0, Math.PI * 2, true);
+        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
         context.closePath();
-        context.fill();
+        if (circle.color) {
+            context.fillStyle = circle.color;
+            context.fill();
+        }
+        if (circle.borderColor && circle.borderWidth) {
+            context.strokeStyle = circle.borderColor;
+            context.lineWidth = circle.borderWidth;
+            context.stroke();
+        }
     }
 
-    public static drawCircleBorder(x: number, y: number, r: number, c: string, bw: number, context: CanvasRenderingContext2D) {
-        if (!c) {
-            c = Defaults.defaultColor;
-        }
-        if (!bw) {
-            bw = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = bw;
-        context.beginPath();
-        context.arc(x, y, r, 0, Math.PI * 2, true);
-        context.closePath();
-        context.stroke();
-    }
-
-    public static drawCircleHighlight(x: number, y: number, r: number, context: CanvasRenderingContext2D) {
-        Utilities.drawCircleBorder(x, y, r, "fireBrick", 2, context);
-        Utilities.drawCircleBorder(x, y, r + 1, "red", 3, context);
+    public static drawCircleHighlight(x: number, y: number, radius: number, context: CanvasRenderingContext2D) {
+        const innerCircle = {
+            x,
+            y,
+            radius,
+            borderColor: 'fireBrick',
+            borderWidth: 2
+        },
+            outerCircle = {
+                ...innerCircle,
+                radius: radius + 1,
+                borderColor: 'red'
+            };
+        Utilities.drawCircle(innerCircle, context);
+        Utilities.drawCircle(outerCircle, context);
     }
 
     public static drawLine(x1: number, y1: number, x2: number, y2: number, c: string, w: number, context: CanvasRenderingContext2D) {

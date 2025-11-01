@@ -39,6 +39,11 @@ class TutorialStep3 extends TutorialStep {
             h = this.canvas.height;
 
         Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
-        Utilities.drawCircle(w * 3 / 4, h / 2, Defaults.clientSize / 2, 'gray', '', 0, context);
+        Utilities.drawCircle({
+            x: w * 3 / 4,
+            y: h / 2,
+            radius: Defaults.clientSize / 2,
+            color: 'gray'
+        }, context);
     }
 }
