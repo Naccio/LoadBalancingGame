@@ -24,8 +24,8 @@ class TutorialStep9 extends TutorialStep {
             y = h / 2 + 150;
 
         this.extraButtons = [
-            new ServerUpgradeButton(250, y, () => { }),
-            new CapacityUpgradeButton(w / 2, y, () => { }),
+            new ServerUpgradeButton(250, y),
+            new CapacityUpgradeButton(w / 2, y),
             new SpeedUpgradeButton(w - 250, y, () => {
                 this.game.servers[0].speed += Defaults.serversSpeed;
                 this.advance = true;

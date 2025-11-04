@@ -29,8 +29,8 @@ class TutorialStep12 extends TutorialStep {
                 this.game.servers.push(server);
                 this.advance = true;
             }),
-            new CapacityUpgradeButton(w / 2, y, () => { }),
-            new SpeedUpgradeButton(w - 250, y, () => { })
+            new CapacityUpgradeButton(w / 2, y),
+            new SpeedUpgradeButton(w - 250, y)
         ];
     }
 
