@@ -1,5 +1,7 @@
+/// <reference path='../UI/Button.ts' />
+
 interface Scene {
     id: number;
-    getButtons(): SimpleButton[];
+    getButtons(): Button[];
     update(): void;
 }

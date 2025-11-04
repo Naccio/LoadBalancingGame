@@ -528,45 +528,6 @@ class Server {
     }
     ;
 }
-class SimpleButton {
-    x;
-    y;
-    width;
-    height;
-    text;
-    color;
-    onClick;
-    constructor(x, y, width, height, text, color, onClick) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.text = text;
-        this.color = color;
-        this.onClick = onClick;
-    }
-    draw(hovered, context) {
-        const color = hovered ? Utilities.invertColor(this.color) : this.color;
-        Utilities.drawRect({
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height,
-            color: hovered ? this.color : undefined,
-            borderColor: this.color,
-            borderWidth: 2
-        }, context);
-        Utilities.drawText({
-            x: this.x,
-            y: this.y,
-            text: this.text,
-            font: '15px monospace',
-            align: 'center',
-            color
-        }, context);
-    }
-    ;
-}
 class GameUI {
     buttons = [];
     volumeButton;
@@ -919,6 +880,45 @@ class NewGame {
         this.scheduler.reset();
         this.fader.emptyQueues();
     }
+}
+class SimpleButton {
+    x;
+    y;
+    width;
+    height;
+    text;
+    color;
+    onClick;
+    constructor(x, y, width, height, text, color, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.text = text;
+        this.color = color;
+        this.onClick = onClick;
+    }
+    draw(hovered, context) {
+        const color = hovered ? Utilities.invertColor(this.color) : this.color;
+        Utilities.drawRect({
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+            color: hovered ? this.color : undefined,
+            borderColor: this.color,
+            borderWidth: 2
+        }, context);
+        Utilities.drawText({
+            x: this.x,
+            y: this.y,
+            text: this.text,
+            font: '15px monospace',
+            align: 'center',
+            color
+        }, context);
+    }
+    ;
 }
 class Credits {
     canvas;

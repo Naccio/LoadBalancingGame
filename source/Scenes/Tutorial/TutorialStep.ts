@@ -1,4 +1,4 @@
-/// <reference path='../../UI/SimpleButton.ts' />
+/// <reference path='../../UI/Button.ts' />
 
 class TutorialStep {
 
@@ -6,7 +6,7 @@ class TutorialStep {
     public hasHome = false;
     public advance = false;
     public advanceOnSpace = false;
-    public extraButtons: SimpleButton[] = [];
+    public extraButtons: Button[] = [];
 
     constructor(public id: number, public texts: [string, string, string]) { }
 

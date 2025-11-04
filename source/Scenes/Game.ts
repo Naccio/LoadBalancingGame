@@ -2,6 +2,7 @@
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/Scheduler.ts' />
+/// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameArea.ts' />
 /// <reference path='../UI/TextFader.ts' />
 /// <reference path='Scene.ts' />
@@ -18,7 +19,7 @@ class Game implements Scene {
         private fader: TextFader
     ) { }
 
-    getButtons(): SimpleButton[] {
+    getButtons(): Button[] {
         return [];
     }
 
