@@ -54,55 +54,55 @@ class Scheduler {
         let x, y, minX, minY, maxX, maxY;
 
         switch (zone) {
-            case "nw":
+            case 'nw':
                 minX = serverSize;
                 minY = serverSize;
                 maxX = width / 3;
                 maxY = height / 3;
                 break;
-            case "n":
+            case 'n':
                 minX = width / 3;
                 minY = serverSize;
                 maxX = width * 2 / 3;
                 maxY = height / 3;
                 break;
-            case "ne":
+            case 'ne':
                 minX = width * 2 / 3;
                 minY = serverSize;
                 maxX = width - serverSize;
                 maxY = height / 3;
                 break;
-            case "w":
+            case 'w':
                 minX = serverSize;
                 minY = height / 3;
                 maxX = width / 3;
                 maxY = height * 2 / 3;
                 break;
-            case "c":
+            case 'c':
                 minX = width / 3;
                 minY = height / 3;
                 maxX = width * 2 / 3;
                 maxY = height * 2 / 3;
                 break;
-            case "e":
+            case 'e':
                 minX = width * 2 / 3;
                 minY = height / 3;
                 maxX = width - serverSize;
                 maxY = height * 2 / 3;
                 break;
-            case "sw":
+            case 'sw':
                 minX = serverSize;
                 minY = height * 2 / 3;
                 maxX = width / 3;
                 maxY = height - serverSize;
                 break;
-            case "s":
+            case 's':
                 minX = width / 3;
                 minY = height * 2 / 3;
                 maxX = width * 2 / 3;
                 maxY = height - serverSize;
                 break;
-            case "se":
+            case 'se':
                 minX = width * 2 / 3;
                 minY = height * 2 / 3;
                 maxX = width - serverSize;
@@ -157,7 +157,7 @@ class Scheduler {
             modifier = Math.floor(this.popularityTracker.popularity / 400),
             messages = this.attackersMessages + modifier,
             number = this.attackersNumber + modifier;
-            
+
         for (let i = 0; i < number; i += 1) {
             let x = Utilities.random(minX, maxX),
                 y = Utilities.random(minY, maxY);

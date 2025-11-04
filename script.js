@@ -17,7 +17,7 @@ class Message {
         this.dy = 0;
         this.sender = sender;
         this.receiver = receiver;
-        this.status = "req";
+        this.status = 'req';
         this.life = 0;
         this.computeVelocity();
     }
@@ -63,23 +63,23 @@ class MessageOrchestrator {
         for (let i = 0; i < this.messages.length; i += 1) {
             var m = this.messages[i];
             m.life += 1 / Defaults.frameRate;
-            if (m.status === "req") {
+            if (m.status === 'req') {
                 if (m.sender.connectedTo === undefined) {
                     this.messages.splice(i--, 1);
                     continue;
                 }
             }
-            if (m.status === "ack" || m.status === "nack") {
+            if (m.status === 'ack' || m.status === 'nack') {
                 if (m.receiver.connectedTo === undefined) {
                     this.messages.splice(i--, 1);
                     continue;
                 }
             }
-            if (m.status === "done") {
+            if (m.status === 'done') {
                 this.messages.splice(i--, 1);
                 continue;
             }
-            if (m.status != "queued") {
+            if (m.status != 'queued') {
                 var r = m.receiver;
                 if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
                     m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
@@ -119,7 +119,7 @@ class Attacker {
     }
     ;
     receiveMessage(message) {
-        message.status = "done";
+        message.status = 'done';
         this.messagesToReceive -= 1;
     }
     ;
@@ -201,7 +201,7 @@ class TextFader {
             text.alpha = 1;
         }
         text.delta = 0;
-        text.font = text.fontWeight + " " + text.fontSize + "px Arial";
+        text.font = text.fontWeight + ' ' + text.fontSize + 'px Arial';
         this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
     }
     ;
@@ -256,7 +256,7 @@ class TextFader {
 }
 class Utilities {
     static defaultButton(x, y, text, onClick) {
-        return new SimpleButton(x, y, 120, 40, text, "#FFFFFF", onClick);
+        return new SimpleButton(x, y, 120, 40, text, '#FFFFFF', onClick);
     }
     static drawCircle(circle, context) {
         context.beginPath();
@@ -394,7 +394,7 @@ class PopularityTracker {
         Utilities.drawText({
             x: 10,
             y,
-            text: "Popularity: " + this.popularity,
+            text: 'Popularity: ' + this.popularity,
             font: '18px sans-serif'
         }, context);
     }
@@ -415,7 +415,7 @@ class PopularityTracker {
             text: amount.toString(),
             color: color,
             fontSize: fontSize,
-            fontWeight: "bold",
+            fontWeight: 'bold',
             border: true,
             borderColor: borderColor,
             borderWidth: borderWidth,
@@ -467,7 +467,7 @@ class Client {
     ;
     receiveMessage(message) {
         let n;
-        if (message.status === "ack") {
+        if (message.status === 'ack') {
             this.ACKsToReceive -= 1;
             n = 1;
             if (this.ACKsToReceive === 0) {
@@ -487,7 +487,7 @@ class Client {
             }
             this.popularity.updatePopularity(n, this.x, this.y);
         }
-        message.status = "done";
+        message.status = 'done';
     }
     ;
 }
@@ -511,7 +511,7 @@ class Server {
     sendMessage(elapsedTime) {
         const msg = this.queue.shift();
         if (msg) {
-            msg.status = "ack";
+            msg.status = 'ack';
             msg.invertDirection();
             this.lastMessageTime = elapsedTime;
         }
@@ -522,10 +522,10 @@ class Server {
         message.y = this.y;
         if (this.queue.length < this.capacity) {
             this.queue.push(message);
-            message.status = "queued";
+            message.status = 'queued';
         }
         else {
-            message.status = "nack";
+            message.status = 'nack';
             message.invertDirection();
         }
     }
@@ -748,55 +748,55 @@ class Scheduler {
         const width = this.canvas.width, height = this.canvas.height, serverSize = Defaults.serverSize;
         let x, y, minX, minY, maxX, maxY;
         switch (zone) {
-            case "nw":
+            case 'nw':
                 minX = serverSize;
                 minY = serverSize;
                 maxX = width / 3;
                 maxY = height / 3;
                 break;
-            case "n":
+            case 'n':
                 minX = width / 3;
                 minY = serverSize;
                 maxX = width * 2 / 3;
                 maxY = height / 3;
                 break;
-            case "ne":
+            case 'ne':
                 minX = width * 2 / 3;
                 minY = serverSize;
                 maxX = width - serverSize;
                 maxY = height / 3;
                 break;
-            case "w":
+            case 'w':
                 minX = serverSize;
                 minY = height / 3;
                 maxX = width / 3;
                 maxY = height * 2 / 3;
                 break;
-            case "c":
+            case 'c':
                 minX = width / 3;
                 minY = height / 3;
                 maxX = width * 2 / 3;
                 maxY = height * 2 / 3;
                 break;
-            case "e":
+            case 'e':
                 minX = width * 2 / 3;
                 minY = height / 3;
                 maxX = width - serverSize;
                 maxY = height * 2 / 3;
                 break;
-            case "sw":
+            case 'sw':
                 minX = serverSize;
                 minY = height * 2 / 3;
                 maxX = width / 3;
                 maxY = height - serverSize;
                 break;
-            case "s":
+            case 's':
                 minX = width / 3;
                 minY = height * 2 / 3;
                 maxX = width * 2 / 3;
                 maxY = height - serverSize;
                 break;
-            case "se":
+            case 'se':
                 minX = width * 2 / 3;
                 minY = height * 2 / 3;
                 maxX = width - serverSize;
@@ -948,7 +948,7 @@ class Credits {
         this.canvas = canvas;
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
-        this.buttons = [Utilities.defaultButton(w / 2, h - 60, "Back", () => {
+        this.buttons = [Utilities.defaultButton(w / 2, h - 60, 'Back', () => {
                 game.switchMode(Defaults.gameModes.MENU);
             })];
     }
@@ -1087,17 +1087,17 @@ class CursorTracker {
     touchHandler(event) {
         const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], x = touch.pageX - canvas.offsetLeft, y = touch.pageY - canvas.offsetTop;
         event.preventDefault();
-        if (event.type == "touchstart") {
+        if (event.type == 'touchstart') {
             this.mouseX = x;
             this.mouseY = y;
             this.ui.click(x, y);
             this.cursorPositionHandler(x, y);
         }
-        else if (event.type == "touchmove") {
+        else if (event.type == 'touchmove') {
             this.mouseX = x;
             this.mouseY = y;
         }
-        else if (event.type == "touchend") {
+        else if (event.type == 'touchend') {
             if (game.selectedClient !== undefined) {
                 const mouseX = this.mouseX, mouseY = this.mouseY, serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
                 game.servers.forEach(function (server) {
@@ -1298,16 +1298,16 @@ class GameArea {
             case 'done':
                 return;
             case 'req':
-                fill = "lightBlue";
-                border = "steelBlue";
+                fill = 'lightBlue';
+                border = 'steelBlue';
                 break;
             case 'ack':
-                fill = "lime";
-                border = "limeGreen";
+                fill = 'lime';
+                border = 'limeGreen';
                 break;
             case 'nack':
-                fill = "tomato";
-                border = "indianRed";
+                fill = 'tomato';
+                border = 'indianRed';
                 break;
             default:
                 throw 'Invalid message status: ' + message.status;
@@ -1614,7 +1614,7 @@ class Menu {
         return this.buttons;
     }
     update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = "center", color = "rgba(255,255,255,0.6)";
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = 'center', color = 'rgba(255,255,255,0.6)';
         this.clouds.draw();
         Utilities.drawRect({
             x: w / 2,
@@ -1702,24 +1702,24 @@ class CapacityUpgradeButton extends UpgradeButton {
             y,
             width: serverSize,
             height: serverSize,
-            color: "#DDDDDD",
-            borderColor: "#999999"
+            color: '#DDDDDD',
+            borderColor: '#999999'
         }, context);
         Utilities.drawRect({
             x: queueX,
             y: queueY,
             width: 6,
             height: serverSize - 10,
-            color: "salmon",
-            borderColor: "red"
+            color: 'salmon',
+            borderColor: 'red'
         }, context);
         Utilities.drawStar({
             x: starX,
             y: starY,
             outerRadius: 4,
             innerRadius: 2,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
         Utilities.drawLine({
             x1: queueX,
@@ -1756,7 +1756,7 @@ class ServerUpgradeButton extends UpgradeButton {
         Utilities.drawText({
             x: x - 25,
             y,
-            text: "+",
+            text: '+',
             font: '45px monospace',
             align: 'center',
             color: 'red'
@@ -1774,16 +1774,16 @@ class ServerUpgradeButton extends UpgradeButton {
             y: y + serverSize / 2 - 9,
             outerRadius: 4,
             innerRadius: 2,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
         Utilities.drawRect({
             x: x + serverSize / 2 + 8,
             y: y + 1,
             width: 6,
             height: serverSize - 10,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
     }
 }
@@ -1793,30 +1793,30 @@ class SpeedUpgradeButton extends UpgradeButton {
     }
     drawIcon(context) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = "red", lineWidth = 3;
+        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = 'red', lineWidth = 3;
         Utilities.drawRect({
             x,
             y,
             width: serverSize,
             height: serverSize,
-            color: "#DDDDDD",
-            borderColor: "#999999"
+            color: '#DDDDDD',
+            borderColor: '#999999'
         }, context);
         Utilities.drawRect({
             x: queueX,
             y: queueY,
             width: 6,
             height: serverSize - 10,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
         Utilities.drawStar({
             x: starX,
             y: starY,
             outerRadius: 4,
             innerRadius: 2,
-            color: "salmon",
-            borderColor: "red"
+            color: 'salmon',
+            borderColor: 'red'
         }, context);
         Utilities.drawLine({
             x1: starX,
@@ -1876,36 +1876,36 @@ class Pause {
             : [...this.buttons];
     }
     update() {
-        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, font = "25px monospace", color;
+        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, font = '25px monospace', color;
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            color = "black";
+            color = 'black';
             Utilities.drawText({
                 x,
                 y: h / 2 + 60,
-                text: "Choose an upgrade:",
+                text: 'Choose an upgrade:',
                 font,
                 align: 'center',
                 color
             }, context);
         }
         else {
-            color = "#DDDDDD";
+            color = '#DDDDDD';
             Utilities.drawText({
                 x,
                 y: h / 2 + 60,
-                text: "No upgrades available",
+                text: 'No upgrades available',
                 font,
                 align: 'center',
                 color
             }, context);
         }
-        color = "red";
-        font = "50px monospace";
+        color = 'red';
+        font = '50px monospace';
         Utilities.drawText({
             x,
             y: 60,
-            text: "~ Paused ~",
+            text: '~ Paused ~',
             font,
             align: 'center',
             color
@@ -2016,7 +2016,7 @@ class TutorialStep4 extends TutorialStep {
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, font = "10px sans-serif", circle = {
+        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, font = '10px sans-serif', circle = {
             x,
             y,
             radius: iconRadius
@@ -2643,13 +2643,13 @@ class FpsCounter {
     }
     ;
     logFps() {
-        let l = document.getElementById("fps");
+        let l = document.getElementById('fps');
         if (!l) {
-            const log = document.getElementById("log");
+            const log = document.getElementById('log');
             if (log) {
                 log.innerHTML = 'Fps: <span id="fps"></span><br />' + log.innerHTML;
             }
-            l = document.getElementById("fps");
+            l = document.getElementById('fps');
         }
         l.innerHTML = this.fps.toString();
     }
@@ -2682,13 +2682,13 @@ class Application {
         this.createCloud(0 - w / 2, h * 3 / 4);
         this.createCloud(w * 3 / 4, h * 2 / 3);
         this.createCloud(0 - w * 3 / 4, h / 2);
-        document.addEventListener("keypress", e => this.keyboardHandler(e));
+        document.addEventListener('keypress', e => this.keyboardHandler(e));
         window.addEventListener('blur', () => this.blurHandler());
     }
     static build(clouds) {
         const canvas = document.getElementById('canvas');
-        const context = canvas.getContext("2d");
-        const music = new Audio("assets/music.mp3");
+        const context = canvas.getContext('2d');
+        const music = new Audio('assets/music.mp3');
         const fader = new TextFader(context);
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();

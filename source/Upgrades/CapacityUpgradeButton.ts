@@ -23,24 +23,24 @@ class CapacityUpgradeButton extends UpgradeButton {
             y,
             width: serverSize,
             height: serverSize,
-            color: "#DDDDDD",
-            borderColor: "#999999"
+            color: '#DDDDDD',
+            borderColor: '#999999'
         }, context);
         Utilities.drawRect({
             x: queueX,
             y: queueY,
             width: 6,
             height: serverSize - 10,
-            color: "salmon",
-            borderColor: "red"
+            color: 'salmon',
+            borderColor: 'red'
         }, context);
         Utilities.drawStar({
             x: starX,
             y: starY,
             outerRadius: 4,
             innerRadius: 2,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
         Utilities.drawLine({
             x1: queueX,

@@ -38,8 +38,8 @@ class Menu implements Scene {
     update() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
-            align = "center",
-            color = "rgba(255,255,255,0.6)";
+            align = 'center',
+            color = 'rgba(255,255,255,0.6)';
 
         this.clouds.draw();
 

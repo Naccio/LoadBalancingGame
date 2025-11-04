@@ -19,7 +19,7 @@ class Server implements MessageTransmitter {
         const msg = this.queue.shift();
 
         if (msg) {
-            msg.status = "ack";
+            msg.status = 'ack';
             msg.invertDirection();
             this.lastMessageTime = elapsedTime;
         }
@@ -31,9 +31,9 @@ class Server implements MessageTransmitter {
 
         if (this.queue.length < this.capacity) {
             this.queue.push(message);
-            message.status = "queued";
+            message.status = 'queued';
         } else {
-            message.status = "nack";
+            message.status = 'nack';
             message.invertDirection();
         }
     };

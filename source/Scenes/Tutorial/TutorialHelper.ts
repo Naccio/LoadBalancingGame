@@ -10,7 +10,7 @@ class TutorialHelper {
             iconRadius = 3,
             textSpacing = 2,
             lineSpacing = iconRadius + 5,
-            font = "10px sans-serif",
+            font = '10px sans-serif',
             circle = {
                 x,
                 y,

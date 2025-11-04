@@ -15,7 +15,7 @@ class PopularityTracker {
         Utilities.drawText({
             x: 10,
             y,
-            text: "Popularity: " + this.popularity,
+            text: 'Popularity: ' + this.popularity,
             font: '18px sans-serif'
         }, context);
     }
@@ -44,7 +44,7 @@ class PopularityTracker {
             text: amount.toString(),
             color: color,
             fontSize: fontSize,
-            fontWeight: "bold",
+            fontWeight: 'bold',
             border: true,
             borderColor: borderColor,
             borderWidth: borderWidth,

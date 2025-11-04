@@ -1,7 +1,4 @@
 /// <reference path='Commands/NewGame.ts' />
-/// <reference path='Model/Attacker.ts' />
-/// <reference path='Model/Client.ts' />
-/// <reference path='Model/Server.ts' />
 /// <reference path='Scenes/Credits.ts' />
 /// <reference path='Scenes/Game.ts' />
 /// <reference path='Scenes/GameOver.ts' />
@@ -64,16 +61,16 @@ class Application {
         this.createCloud(w * 3 / 4, h * 2 / 3);
         this.createCloud(0 - w * 3 / 4, h / 2);
 
-        document.addEventListener("keypress", e => this.keyboardHandler(e));
+        document.addEventListener('keypress', e => this.keyboardHandler(e));
 
         window.addEventListener('blur', () => this.blurHandler());
     }
 
     public static build(clouds: Clouds) {
         const canvas = <HTMLCanvasElement>document.getElementById('canvas');
-        const context = canvas.getContext("2d")!;
+        const context = canvas.getContext('2d')!;
 
-        const music = new Audio("assets/music.mp3");
+        const music = new Audio('assets/music.mp3');
 
         const fader = new TextFader(context);
         const fpsCounter = new FpsCounter();

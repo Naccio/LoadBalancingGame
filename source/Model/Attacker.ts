@@ -22,7 +22,7 @@ class Attacker implements MessageTransmitter {
     };
 
     receiveMessage(message: Message) {
-        message.status = "done";
+        message.status = 'done';
         this.messagesToReceive -= 1;
     };
 }

@@ -8,7 +8,7 @@
 class Utilities {
 
     public static defaultButton(x: number, y: number, text: string, onClick: () => void) {
-        return new SimpleButton(x, y, 120, 40, text, "#FFFFFF", onClick);
+        return new SimpleButton(x, y, 120, 40, text, '#FFFFFF', onClick);
     }
 
     public static drawCircle(circle: Circle, context: CanvasRenderingContext2D) {
@@ -116,7 +116,7 @@ class Utilities {
         return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
     }
 
-    //must be string containing hex value ("#xxxxxx")
+    //must be string containing hex value ('#xxxxxx')
     public static invertColor(color: string) {
         color = color.substring(1);
         let colorNumber = parseInt(color, 16);

@@ -94,7 +94,7 @@ class TextFader {
             text.alpha = 1;
         }
         text.delta = 0;
-        text.font = text.fontWeight + " " + text.fontSize + "px Arial";
+        text.font = text.fontWeight + ' ' + text.fontSize + 'px Arial';
         this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
     };
 

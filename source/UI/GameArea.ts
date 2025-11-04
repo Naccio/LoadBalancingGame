@@ -226,16 +226,16 @@ class GameArea {
             case 'done':
                 return;
             case 'req':
-                fill = "lightBlue";
-                border = "steelBlue";
+                fill = 'lightBlue';
+                border = 'steelBlue';
                 break;
             case 'ack':
-                fill = "lime";
-                border = "limeGreen";
+                fill = 'lime';
+                border = 'limeGreen';
                 break;
             case 'nack':
-                fill = "tomato";
-                border = "indianRed";
+                fill = 'tomato';
+                border = 'indianRed';
                 break;
             default:
                 throw 'Invalid message status: ' + message.status;

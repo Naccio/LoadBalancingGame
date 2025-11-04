@@ -105,18 +105,18 @@ class CursorTracker {
 
         event.preventDefault();
 
-        if (event.type == "touchstart") {
+        if (event.type == 'touchstart') {
             this.mouseX = x;
             this.mouseY = y;
 
             this.ui.click(x, y);
             this.cursorPositionHandler(x, y);
         }
-        else if (event.type == "touchmove") {
+        else if (event.type == 'touchmove') {
             this.mouseX = x;
             this.mouseY = y;
         }
-        else if (event.type == "touchend") {
+        else if (event.type == 'touchend') {
             if (game.selectedClient !== undefined) {
                 const mouseX = this.mouseX,
                     mouseY = this.mouseY,

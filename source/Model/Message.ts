@@ -3,7 +3,7 @@ class Message {
     public y: number;
     public dx: number;
     public dy: number;
-    public status: string;
+    public status: 'req' | 'ack' | 'nack' | 'queued' | 'done';
     public life: number;
 
     constructor(public sender: MessageTransmitter, public receiver: MessageTransmitter) {
@@ -13,7 +13,7 @@ class Message {
         this.dy = 0;
         this.sender = sender;
         this.receiver = receiver;
-        this.status = "req";
+        this.status = 'req';
         this.life = 0;
         this.computeVelocity();
     }

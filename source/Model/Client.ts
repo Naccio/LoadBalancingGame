@@ -32,7 +32,7 @@ class Client implements MessageTransmitter {
 
     receiveMessage(message: Message) {
         let n;
-        if (message.status === "ack") {
+        if (message.status === 'ack') {
             this.ACKsToReceive -= 1;
             n = 1;
             if (this.ACKsToReceive === 0) {
@@ -51,6 +51,6 @@ class Client implements MessageTransmitter {
             this.popularity.updatePopularity(n, this.x, this.y);
         }
 
-        message.status = "done";
+        message.status = 'done';
     };
 }

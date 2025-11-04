@@ -15,7 +15,7 @@ class ServerUpgradeButton extends UpgradeButton {
         Utilities.drawText({
             x: x - 25,
             y,
-            text: "+",
+            text: '+',
             font: '45px monospace',
             align: 'center',
             color: 'red'
@@ -33,16 +33,16 @@ class ServerUpgradeButton extends UpgradeButton {
             y: y + serverSize / 2 - 9,
             outerRadius: 4,
             innerRadius: 2,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
         Utilities.drawRect({
             x: x + serverSize / 2 + 8,
             y: y + 1,
             width: 6,
             height: serverSize - 10,
-            color: "#BBBBBB",
-            borderColor: "#999999"
+            color: '#BBBBBB',
+            borderColor: '#999999'
         }, context);
     }
 }
