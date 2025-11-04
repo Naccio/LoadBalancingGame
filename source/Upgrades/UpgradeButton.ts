@@ -4,7 +4,20 @@
 class UpgradeButton extends SpecialButton {
 
     constructor(x: number, y: number, text: string, onClick: () => void, draw: (c: CanvasRenderingContext2D) => void) {
-        super(x, y, 100, 100, '#333333', 'white', 2, onClick, (hovered, context) => {
+        const width = 100,
+            height = 100;
+
+        super(x, y, width, height, onClick, (hovered, context) => {
+            Utilities.drawRect({
+                x,
+                y,
+                width,
+                height,
+                color: '#333333',
+                borderColor: hovered ? 'white' : undefined,
+                borderWidth: 2
+            }, context);
+
             draw(context);
 
             if (hovered) {

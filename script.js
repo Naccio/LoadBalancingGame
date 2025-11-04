@@ -528,57 +528,73 @@ class Server {
     }
     ;
 }
+class VolumeButton {
+    x;
+    y;
+    onClick;
+    width;
+    height;
+    isOn = false;
+    constructor(x, y, size, onClick) {
+        this.x = x;
+        this.y = y;
+        this.onClick = onClick;
+        this.width = size;
+        this.height = size;
+    }
+    draw(hovered, context) {
+        const x = this.x, y = this.y, w = this.width, h = this.height, color = hovered ? 'white' : 'rgba(255,255,255,0.8)', status = this.isOn ? 'On' : 'Off';
+        Utilities.drawRect({
+            x: x - w / 4 + 1,
+            y,
+            width: w / 4 + 1,
+            height: h / 2 - 1,
+            color
+        }, context);
+        var path = new Path2D();
+        path.moveTo(x - 1, y - h / 4);
+        path.lineTo(x + w / 4, y - h / 2 + 1);
+        path.lineTo(x + w / 4, y + h / 2 - 1);
+        path.lineTo(x - 1, y + h / 4);
+        path.closePath();
+        context.fillStyle = color;
+        context.fill(path);
+        if (!this.isOn) {
+            Utilities.drawLine({
+                x1: x - w / 2,
+                y1: y + h / 2,
+                x2: x + w / 2,
+                y2: y - h / 2,
+                color: 'red',
+                width: 2
+            }, context);
+        }
+        if (hovered) {
+            Utilities.drawText({
+                x,
+                y: y + w / 2 + 2,
+                text: 'Music: ' + status,
+                font: '10px monospace',
+                align: 'center',
+                baseline: 'top',
+                color: '#fff'
+            }, context);
+        }
+    }
+}
 class GameUI {
     buttons = [];
     volumeButton;
     constructor(music, canvas) {
-        const WIDTH = canvas.width, HEIGHT = canvas.height, x = WIDTH - 40, y = HEIGHT - 40, w = 20, h = 20;
-        this.volumeButton = new SpecialButton(x, y, w, h, 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 0, () => {
+        const w = canvas.width, h = canvas.height, x = w - 40, y = h - 40;
+        this.volumeButton = new VolumeButton(x, y, 20, () => {
             if (music.paused) {
                 music.play();
             }
             else {
                 music.pause();
             }
-        }, (hovered, context) => {
-            var color = hovered ? 'white' : 'rgba(255,255,255,0.8)', status = music.paused ? 'Off' : 'On';
-            Utilities.drawRect({
-                x: x - w / 4 + 1,
-                y,
-                width: w / 4 + 1,
-                height: h / 2 - 1,
-                color
-            }, context);
-            var path = new Path2D();
-            path.moveTo(x - 1, y - h / 4);
-            path.lineTo(x + w / 4, y - h / 2 + 1);
-            path.lineTo(x + w / 4, y + h / 2 - 1);
-            path.lineTo(x - 1, y + h / 4);
-            path.closePath();
-            context.fillStyle = color;
-            context.fill(path);
-            if (music.paused) {
-                Utilities.drawLine({
-                    x1: x - w / 2,
-                    y1: y + h / 2,
-                    x2: x + w / 2,
-                    y2: y - h / 2,
-                    color: 'red',
-                    width: 2
-                }, context);
-                status = 'Off';
-            }
-            if (hovered) {
-                Utilities.drawText({
-                    x,
-                    y: y + w / 2 + 2,
-                    text: 'Music: ' + status,
-                    font: '10px monospace',
-                    align: 'center',
-                    baseline: 'top',
-                    color: '#fff'
-                }, context);
-            }
+            this.volumeButton.isOn = !music.paused;
         });
     }
     click(x, y) {
@@ -1631,32 +1647,35 @@ class Menu {
         }, context);
     }
 }
-class SpecialButton extends SimpleButton {
-    hoverColor;
-    borderWidth;
-    specialDraw;
-    constructor(x, y, width, height, color, hoverColor, borderWidth, onClick, specialDraw) {
-        super(x, y, width, height, '', color, onClick);
-        this.hoverColor = hoverColor;
-        this.borderWidth = borderWidth;
-        this.specialDraw = specialDraw;
+class SpecialButton {
+    x;
+    y;
+    width;
+    height;
+    onClick;
+    draw;
+    constructor(x, y, width, height, onClick, draw) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.onClick = onClick;
+        this.draw = draw;
     }
-    draw(hovered, context) {
-        Utilities.drawRect({
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height,
-            color: this.color,
-            borderColor: hovered ? this.hoverColor : undefined
-        }, context);
-        this.specialDraw(hovered, context);
-    }
-    ;
 }
 class UpgradeButton extends SpecialButton {
     constructor(x, y, text, onClick, draw) {
-        super(x, y, 100, 100, '#333333', 'white', 2, onClick, (hovered, context) => {
+        const width = 100, height = 100;
+        super(x, y, width, height, onClick, (hovered, context) => {
+            Utilities.drawRect({
+                x,
+                y,
+                width,
+                height,
+                color: '#333333',
+                borderColor: hovered ? 'white' : undefined,
+                borderWidth: 2
+            }, context);
             draw(context);
             if (hovered) {
                 Utilities.drawText({

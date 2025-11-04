@@ -2,8 +2,9 @@
 /// <reference path='../Defaults.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/UpgradesTracker.ts' />
-/// <reference path='../UI/SimpleButton.ts' />
+/// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameUI.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../Upgrades/CapacityUpgradeButton.ts' />
 /// <reference path='../Upgrades/ServerUpgradeButton.ts' />
 /// <reference path='../Upgrades/SpeedUpgradeButton.ts' />
@@ -11,8 +12,8 @@
 /// <reference path='Scene.ts' />
 
 class Pause implements Scene {
-    private buttons: SimpleButton[];
-    private upgradeButtons: SimpleButton[];
+    private buttons: Button[];
+    private upgradeButtons: Button[];
 
     public id = Defaults.gameModes.PAUSE;
 

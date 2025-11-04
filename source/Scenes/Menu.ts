@@ -1,13 +1,14 @@
 /// <reference path='../Commands/NewGame.ts' />
 /// <reference path='../Services/GameTracker.ts' />
-/// <reference path='../UI/SimpleButton.ts' />
+/// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameUI.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 /// <reference path='Tutorial/Tutorial.ts' />
 
 class Menu implements Scene {
-    private buttons: SimpleButton[];
+    private buttons: Button[];
 
     public id = Defaults.gameModes.MENU;
 
