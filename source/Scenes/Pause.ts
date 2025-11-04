@@ -2,7 +2,7 @@
 /// <reference path='../Defaults.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/UpgradesTracker.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../UI/GameUI.ts' />
 /// <reference path='../Upgrades/CapacityUpgradeButton.ts' />
 /// <reference path='../Upgrades/ServerUpgradeButton.ts' />
@@ -11,8 +11,8 @@
 /// <reference path='Scene.ts' />
 
 class Pause implements Scene {
-    private buttons: Button[];
-    private upgradeButtons: Button[];
+    private buttons: SimpleButton[];
+    private upgradeButtons: SimpleButton[];
 
     public id = Defaults.gameModes.PAUSE;
 
@@ -29,9 +29,9 @@ class Pause implements Scene {
             y = h / 2 + 150;
 
         this.buttons = [
-            new Button(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
-            new Button(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
-            new Button(w / 2, 270, 120, 40, "Abandon", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU)),
+            new SimpleButton(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
+            new SimpleButton(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
+            new SimpleButton(w / 2, 270, 120, 40, "Abandon", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU)),
             ui.volumeButton
         ];
 

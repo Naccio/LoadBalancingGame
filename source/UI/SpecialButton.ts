@@ -1,7 +1,7 @@
 /// <reference path='../Utilities.ts' />
-/// <reference path='Button.ts' />
+/// <reference path='SimpleButton.ts' />
 
-class SpecialButton extends Button {
+class SpecialButton extends SimpleButton {
     constructor(
         x: number,
         y: number,

@@ -1,7 +1,7 @@
 /// <reference path='../../Defaults.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
-/// <reference path='../../UI/Button.ts' />
+/// <reference path='../../UI/SimpleButton.ts' />
 /// <reference path='../../UI/GameArea.ts' />
 /// <reference path='../../UI/TextFader.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -9,8 +9,8 @@
 /// <reference path='TutorialStep.ts' />
 
 class Tutorial implements Scene {
-    private readonly nextButton: Button;
-    private readonly homeButton: Button;
+    private readonly nextButton: SimpleButton;
+    private readonly homeButton: SimpleButton;
 
     private currentStep: TutorialStep;
 
@@ -28,8 +28,8 @@ class Tutorial implements Scene {
             h = canvas.height;
 
         this.currentStep = steps[0];
-        this.nextButton = new Button(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
-        this.homeButton = new Button(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = new SimpleButton(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
+        this.homeButton = new SimpleButton(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
 
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));

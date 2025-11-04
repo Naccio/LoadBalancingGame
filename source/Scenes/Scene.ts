@@ -1,5 +1,5 @@
 interface Scene {
     id: number;
-    getButtons(): Button[];
+    getButtons(): SimpleButton[];
     update(): void;
 }

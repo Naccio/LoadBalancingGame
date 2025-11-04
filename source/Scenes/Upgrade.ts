@@ -4,7 +4,7 @@
 /// <reference path='../Services/Scheduler.ts' />
 /// <reference path='../Services/UpgradesTracker.ts' />
 /// <reference path='../UI/BorderButton.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../UI/GameArea.ts' />
 /// <reference path='../UI/TextFader.ts' />
 /// <reference path='Scene.ts' />
@@ -24,7 +24,7 @@ class Upgrade implements Scene {
     getButtons() {
         const w = this.canvas.width,
             h = this.canvas.height;
-        let buttons = [new Button(w / 2, h - 100, 120, 40, 'Cancel', '#333333', () => this.game.switchMode(Defaults.gameModes.PAUSE))];
+        let buttons = [new SimpleButton(w / 2, h - 100, 120, 40, 'Cancel', '#333333', () => this.game.switchMode(Defaults.gameModes.PAUSE))];
 
         switch (this.upgradesTracker.selectedUpgrade) {
             case 'speed':

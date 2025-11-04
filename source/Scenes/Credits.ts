@@ -1,10 +1,10 @@
 /// <reference path='../Services/GameTracker.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 
 class Credits implements Scene {
-    private buttons: Button[];
+    private buttons: SimpleButton[];
 
     public id = Defaults.gameModes.CREDITS;
 
@@ -12,7 +12,7 @@ class Credits implements Scene {
         const w = canvas.width,
             h = canvas.height;
 
-        this.buttons = [new Button(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
+        this.buttons = [new SimpleButton(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
             game.switchMode(Defaults.gameModes.MENU);
         })];
     }

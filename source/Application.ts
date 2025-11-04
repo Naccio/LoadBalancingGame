@@ -25,13 +25,10 @@
 /// <reference path='Scenes/Upgrade.ts' />
 /// <reference path='Services/GameTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />
-/// <reference path='UI/BorderButton.ts' />
-/// <reference path='UI/Button.ts' />
 /// <reference path='UI/CursorTracker.ts' />
 /// <reference path='UI/FpsCounter.ts' />
 /// <reference path='UI/GameArea.ts' />
 /// <reference path='UI/GameUI.ts' />
-/// <reference path='UI/SpecialButton.ts' />
 /// <reference path='UI/TextFader.ts' />
 
 declare class Clouds {

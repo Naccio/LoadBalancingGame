@@ -1,6 +1,6 @@
 /// <reference path='../Utilities.ts' />
 
-class Button {
+class SimpleButton {
     constructor(
         public x: number,
         public y: number,

@@ -1,7 +1,7 @@
-/// <reference path='Button.ts' />
+/// <reference path='SimpleButton.ts' />
 
 class GameUI {
-    public buttons: Button[] = [];
+    public buttons: SimpleButton[] = [];
 
     public readonly volumeButton: SpecialButton;
 

@@ -3,13 +3,13 @@
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/PopularityTracker.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 
 class GameOver implements Scene {
     private readonly color = 'white';
-    private buttons: Button[];
+    private buttons: SimpleButton[];
 
     public id = Defaults.gameModes.GAME_OVER;
 
@@ -25,8 +25,8 @@ class GameOver implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            new Button(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
-            new Button(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
+            new SimpleButton(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
+            new SimpleButton(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
 

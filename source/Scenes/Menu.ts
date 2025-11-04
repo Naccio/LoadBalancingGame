@@ -1,13 +1,13 @@
 /// <reference path='../Commands/NewGame.ts' />
 /// <reference path='../Services/GameTracker.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../UI/GameUI.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 /// <reference path='Tutorial/Tutorial.ts' />
 
 class Menu implements Scene {
-    private buttons: Button[];
+    private buttons: SimpleButton[];
 
     public id = Defaults.gameModes.MENU;
 
@@ -23,9 +23,9 @@ class Menu implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
-            new Button(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
-            new Button(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
+            new SimpleButton(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
+            new SimpleButton(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
+            new SimpleButton(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
             ui.volumeButton
         ];
     }

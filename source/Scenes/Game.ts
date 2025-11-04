@@ -18,7 +18,7 @@ class Game implements Scene {
         private fader: TextFader
     ) { }
 
-    getButtons(): Button[] {
+    getButtons(): SimpleButton[] {
         return [];
     }
 

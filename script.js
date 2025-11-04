@@ -528,7 +528,7 @@ class Server {
     }
     ;
 }
-class Button {
+class SimpleButton {
     x;
     y;
     width;
@@ -929,7 +929,7 @@ class Credits {
         this.canvas = canvas;
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
-        this.buttons = [new Button(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
+        this.buttons = [new SimpleButton(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
                 game.switchMode(Defaults.gameModes.MENU);
             })];
     }
@@ -1400,8 +1400,8 @@ class GameOver {
         this.popularity = popularity;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            new Button(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
-            new Button(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
+            new SimpleButton(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
+            new SimpleButton(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
     getButtons() {
@@ -1510,8 +1510,8 @@ class Tutorial {
         this.orchestrator = orchestrator;
         const w = canvas.width, h = canvas.height;
         this.currentStep = steps[0];
-        this.nextButton = new Button(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
-        this.homeButton = new Button(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = new SimpleButton(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
+        this.homeButton = new SimpleButton(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));
     }
@@ -1585,9 +1585,9 @@ class Menu {
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            new Button(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
-            new Button(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
-            new Button(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
+            new SimpleButton(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
+            new SimpleButton(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
+            new SimpleButton(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
             ui.volumeButton
         ];
     }
@@ -1631,7 +1631,7 @@ class Menu {
         }, context);
     }
 }
-class SpecialButton extends Button {
+class SpecialButton extends SimpleButton {
     hoverColor;
     borderWidth;
     specialDraw;
@@ -1837,9 +1837,9 @@ class Pause {
         this.upgradesTracker = upgradesTracker;
         const w = canvas.width, h = this.canvas.height, y = h / 2 + 150;
         this.buttons = [
-            new Button(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
-            new Button(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
-            new Button(w / 2, 270, 120, 40, "Abandon", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU)),
+            new SimpleButton(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
+            new SimpleButton(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
+            new SimpleButton(w / 2, 270, 120, 40, "Abandon", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU)),
             ui.volumeButton
         ];
         this.upgradeButtons = [
@@ -2480,7 +2480,7 @@ class TutorialStep14 extends TutorialStep {
         const w = canvas.width, h = canvas.height;
         this.hasHome = true;
         this.extraButtons = [
-            new Button(w / 3, h - 40, 120, 40, 'New game', '#FFFFFF', () => newGame.execute())
+            new SimpleButton(w / 3, h - 40, 120, 40, 'New game', '#FFFFFF', () => newGame.execute())
         ];
     }
     run() {
@@ -2493,7 +2493,7 @@ class TutorialStep14 extends TutorialStep {
         TutorialHelper.drawLegend(this.canvas, true);
     }
 }
-class BorderButton extends Button {
+class BorderButton extends SimpleButton {
     hoverColor;
     borderWidth;
     constructor(x, y, width, height, text, color, hoverColor, borderWidth, onClick) {
@@ -2539,7 +2539,7 @@ class Upgrade {
     }
     getButtons() {
         const w = this.canvas.width, h = this.canvas.height;
-        let buttons = [new Button(w / 2, h - 100, 120, 40, 'Cancel', '#333333', () => this.game.switchMode(Defaults.gameModes.PAUSE))];
+        let buttons = [new SimpleButton(w / 2, h - 100, 120, 40, 'Cancel', '#333333', () => this.game.switchMode(Defaults.gameModes.PAUSE))];
         switch (this.upgradesTracker.selectedUpgrade) {
             case 'speed':
                 buttons = [...buttons, ...this.createServerButtons(s => s.speed += 2)];

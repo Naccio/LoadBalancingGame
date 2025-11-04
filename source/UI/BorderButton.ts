@@ -1,4 +1,4 @@
-class BorderButton extends Button {
+class BorderButton extends SimpleButton {
     constructor(
         x: number,
         y: number,
