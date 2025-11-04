@@ -28,8 +28,8 @@ class Tutorial implements Scene {
             h = canvas.height;
 
         this.currentStep = steps[0];
-        this.nextButton = new SimpleButton(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
-        this.homeButton = new SimpleButton(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
+        this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
 
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));

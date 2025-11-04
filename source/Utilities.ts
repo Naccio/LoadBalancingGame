@@ -7,6 +7,10 @@
 
 class Utilities {
 
+    public static defaultButton(x: number, y: number, text: string, onClick: () => void) {
+        return new SimpleButton(x, y, 120, 40, text, "#FFFFFF", onClick);
+    }
+
     public static drawCircle(circle: Circle, context: CanvasRenderingContext2D) {
         context.beginPath();
         context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);

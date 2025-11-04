@@ -24,9 +24,9 @@ class Menu implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            new SimpleButton(w / 2, h / 2, 120, 40, 'Tutorial', '#FFFFFF', () => tutorial.reset()),
-            new SimpleButton(w / 2, h / 2 + 60, 120, 40, 'New Game', '#FFFFFF', () => newGame.execute()),
-            new SimpleButton(w / 2, h / 2 + 120, 120, 40, 'Credits', '#FFFFFF', () => game.switchMode(Defaults.gameModes.CREDITS)),
+            Utilities.defaultButton(w / 2, h / 2, 'Tutorial', () => tutorial.reset()),
+            Utilities.defaultButton(w / 2, h / 2 + 60, 'New Game', () => newGame.execute()),
+            Utilities.defaultButton(w / 2, h / 2 + 120, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
             ui.volumeButton
         ];
     }

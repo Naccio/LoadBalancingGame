@@ -12,7 +12,7 @@ class Credits implements Scene {
         const w = canvas.width,
             h = canvas.height;
 
-        this.buttons = [new SimpleButton(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
+        this.buttons = [Utilities.defaultButton(w / 2, h - 60, "Back", () => {
             game.switchMode(Defaults.gameModes.MENU);
         })];
     }

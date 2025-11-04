@@ -26,7 +26,7 @@ class TutorialStep14 extends TutorialStep {
         this.hasHome = true;
 
         this.extraButtons = [
-            new SimpleButton(w / 3, h - 40, 120, 40, 'New game', '#FFFFFF', () => newGame.execute())
+            Utilities.defaultButton(w / 3, h - 40, 'New game', () => newGame.execute())
         ]
     }
 

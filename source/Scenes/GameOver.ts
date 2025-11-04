@@ -25,8 +25,8 @@ class GameOver implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            new SimpleButton(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
-            new SimpleButton(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
+            Utilities.defaultButton(w / 2, h - 110, 'Restart', () => newGame.execute()),
+            Utilities.defaultButton(w / 2, h - 60, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
 

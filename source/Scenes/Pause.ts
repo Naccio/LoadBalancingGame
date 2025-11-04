@@ -30,9 +30,9 @@ class Pause implements Scene {
             y = h / 2 + 150;
 
         this.buttons = [
-            new SimpleButton(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
-            new SimpleButton(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
-            new SimpleButton(w / 2, 270, 120, 40, "Abandon", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU)),
+            Utilities.defaultButton(w / 2, 150, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
+            Utilities.defaultButton(w / 2, 210, 'New game', () => newGame.execute()),
+            Utilities.defaultButton(w / 2, 270, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
             ui.volumeButton
         ];
 
