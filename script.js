@@ -571,7 +571,7 @@ class GameUI {
     buttons = [];
     volumeButton;
     constructor(music, canvas) {
-        const context = canvas.getContext('2d'), WIDTH = canvas.width, HEIGHT = canvas.height, x = WIDTH - 40, y = HEIGHT - 40, w = 20, h = 20;
+        const WIDTH = canvas.width, HEIGHT = canvas.height, x = WIDTH - 40, y = HEIGHT - 40, w = 20, h = 20;
         this.volumeButton = new SpecialButton(x, y, w, h, 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 0, () => {
             if (music.paused) {
                 music.play();
@@ -579,7 +579,7 @@ class GameUI {
             else {
                 music.pause();
             }
-        }, (hovered) => {
+        }, (hovered, context) => {
             var color = hovered ? 'white' : 'rgba(255,255,255,0.8)', status = music.paused ? 'Off' : 'On';
             Utilities.drawRect({
                 x: x - w / 4 + 1,
@@ -1650,9 +1650,177 @@ class SpecialButton extends Button {
             color: this.color,
             borderColor: hovered ? this.hoverColor : undefined
         }, context);
-        this.specialDraw(hovered);
+        this.specialDraw(hovered, context);
     }
     ;
+}
+class UpgradeButton extends SpecialButton {
+    constructor(x, y, text, onClick, draw) {
+        super(x, y, 100, 100, '#333333', 'white', 2, onClick, (hovered, context) => {
+            draw(context);
+            if (hovered) {
+                Utilities.drawText({
+                    x: context.canvas.width / 2,
+                    y: context.canvas.height - 50,
+                    text,
+                    font: '20px monospace',
+                    align: 'center',
+                    color: 'red'
+                }, context);
+            }
+        });
+    }
+}
+class CapacityUpgradeButton extends UpgradeButton {
+    constructor(x, y, onClick) {
+        super(x, y, 'Scale off at one location', onClick, context => {
+            const serverSize = Defaults.serverSize;
+            var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = 'red', lineWidth = 3;
+            Utilities.drawRect({
+                x,
+                y,
+                width: serverSize,
+                height: serverSize,
+                color: "#DDDDDD",
+                borderColor: "#999999"
+            }, context);
+            Utilities.drawRect({
+                x: queueX,
+                y: queueY,
+                width: 6,
+                height: serverSize - 10,
+                color: "salmon",
+                borderColor: "red"
+            }, context);
+            Utilities.drawStar({
+                x: starX,
+                y: starY,
+                outerRadius: 4,
+                innerRadius: 2,
+                color: "#BBBBBB",
+                borderColor: "#999999"
+            }, context);
+            Utilities.drawLine({
+                x1: queueX,
+                y1: queueY - serverSize / 2 + 2,
+                x2: queueX,
+                y2: queueY - serverSize / 2 - 13,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: queueX - 1,
+                y1: queueY - serverSize / 2 - 13,
+                x2: queueX + 5,
+                y2: queueY - serverSize / 2 - 6,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: queueX + 1,
+                y1: queueY - serverSize / 2 - 13,
+                x2: queueX - 5,
+                y2: queueY - serverSize / 2 - 6,
+                color,
+                width: lineWidth
+            }, context);
+        });
+    }
+}
+class ServerUpgradeButton extends UpgradeButton {
+    constructor(x, y, onClick) {
+        super(x, y, 'Buy new datacenter', onClick, context => {
+            const serverSize = Defaults.serverSize;
+            Utilities.drawText({
+                x: x - 25,
+                y,
+                text: "+",
+                font: '45px monospace',
+                align: 'center',
+                color: 'red'
+            }, context);
+            Utilities.drawRect({
+                x: x + 15,
+                y,
+                width: serverSize,
+                height: serverSize,
+                color: '#DDDDDD',
+                borderColor: 'red'
+            }, context);
+            Utilities.drawStar({
+                x: x - serverSize / 2 + 22,
+                y: y + serverSize / 2 - 9,
+                outerRadius: 4,
+                innerRadius: 2,
+                color: "#BBBBBB",
+                borderColor: "#999999"
+            }, context);
+            Utilities.drawRect({
+                x: x + serverSize / 2 + 8,
+                y: y + 1,
+                width: 6,
+                height: serverSize - 10,
+                color: "#BBBBBB",
+                borderColor: "#999999"
+            }, context);
+        });
+    }
+}
+class SpeedUpgradeButton extends UpgradeButton {
+    constructor(x, y, onClick) {
+        super(x, y, 'Improve speed at one location', onClick, context => {
+            const serverSize = Defaults.serverSize;
+            var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = "red", lineWidth = 3;
+            Utilities.drawRect({
+                x,
+                y,
+                width: serverSize,
+                height: serverSize,
+                color: "#DDDDDD",
+                borderColor: "#999999"
+            }, context);
+            Utilities.drawRect({
+                x: queueX,
+                y: queueY,
+                width: 6,
+                height: serverSize - 10,
+                color: "#BBBBBB",
+                borderColor: "#999999"
+            }, context);
+            Utilities.drawStar({
+                x: starX,
+                y: starY,
+                outerRadius: 4,
+                innerRadius: 2,
+                color: "salmon",
+                borderColor: "red"
+            }, context);
+            Utilities.drawLine({
+                x1: starX,
+                y1: starY - 8,
+                x2: starX,
+                y2: starY - 21,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: starX - 1,
+                y1: starY - 21,
+                x2: starX + 5,
+                y2: starY - 14,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: starX + 1,
+                y1: starY - 21,
+                x2: starX - 5,
+                y2: starY - 14,
+                color,
+                width: lineWidth
+            }, context);
+        });
+    }
 }
 class Pause {
     canvas;
@@ -1667,7 +1835,7 @@ class Pause {
         this.clouds = clouds;
         this.game = game;
         this.upgradesTracker = upgradesTracker;
-        const context = canvas.getContext('2d'), w = canvas.width, serverSize = Defaults.serverSize;
+        const w = canvas.width, h = this.canvas.height, y = h / 2 + 150;
         this.buttons = [
             new Button(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
             new Button(w / 2, 210, 120, 40, "New game", "#FFFFFF", () => newGame.execute()),
@@ -1675,142 +1843,9 @@ class Pause {
             ui.volumeButton
         ];
         this.upgradeButtons = [
-            this.createUpgradeButton(250, 'server', 'Buy new datacenter', (x, y) => {
-                Utilities.drawText({
-                    x: x - 25,
-                    y,
-                    text: "+",
-                    font: '45px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-                Utilities.drawRect({
-                    x: x + 15,
-                    y,
-                    width: serverSize,
-                    height: serverSize,
-                    color: '#DDDDDD',
-                    borderColor: 'red'
-                }, context);
-                Utilities.drawStar({
-                    x: x - serverSize / 2 + 22,
-                    y: y + serverSize / 2 - 9,
-                    outerRadius: 4,
-                    innerRadius: 2,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawRect({
-                    x: x + serverSize / 2 + 8,
-                    y: y + 1,
-                    width: 6,
-                    height: serverSize - 10,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-            }),
-            this.createUpgradeButton(w / 2, 'capacity', 'Scale off at one location', (x, y) => {
-                var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = 'red', lineWidth = 3;
-                Utilities.drawRect({
-                    x,
-                    y,
-                    width: serverSize,
-                    height: serverSize,
-                    color: "#DDDDDD",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawRect({
-                    x: queueX,
-                    y: queueY,
-                    width: 6,
-                    height: serverSize - 10,
-                    color: "salmon",
-                    borderColor: "red"
-                }, context);
-                Utilities.drawStar({
-                    x: starX,
-                    y: starY,
-                    outerRadius: 4,
-                    innerRadius: 2,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawLine({
-                    x1: queueX,
-                    y1: queueY - serverSize / 2 + 2,
-                    x2: queueX,
-                    y2: queueY - serverSize / 2 - 13,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: queueX - 1,
-                    y1: queueY - serverSize / 2 - 13,
-                    x2: queueX + 5,
-                    y2: queueY - serverSize / 2 - 6,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: queueX + 1,
-                    y1: queueY - serverSize / 2 - 13,
-                    x2: queueX - 5,
-                    y2: queueY - serverSize / 2 - 6,
-                    color,
-                    width: lineWidth
-                }, context);
-            }),
-            this.createUpgradeButton(w - 250, 'speed', 'Improve speed at one location', (x, y) => {
-                var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = "red", lineWidth = 3;
-                Utilities.drawRect({
-                    x,
-                    y,
-                    width: serverSize,
-                    height: serverSize,
-                    color: "#DDDDDD",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawRect({
-                    x: queueX,
-                    y: queueY,
-                    width: 6,
-                    height: serverSize - 10,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawStar({
-                    x: starX,
-                    y: starY,
-                    outerRadius: 4,
-                    innerRadius: 2,
-                    color: "salmon",
-                    borderColor: "red"
-                }, context);
-                Utilities.drawLine({
-                    x1: starX,
-                    y1: starY - 8,
-                    x2: starX,
-                    y2: starY - 21,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: starX - 1,
-                    y1: starY - 21,
-                    x2: starX + 5,
-                    y2: starY - 14,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: starX + 1,
-                    y1: starY - 21,
-                    x2: starX - 5,
-                    y2: starY - 14,
-                    color,
-                    width: lineWidth
-                }, context);
-            })
+            new ServerUpgradeButton(250, y, () => this.selectUpgrade('server')),
+            new CapacityUpgradeButton(w / 2, y, () => this.selectUpgrade('capacity')),
+            new SpeedUpgradeButton(w - 250, y, () => this.selectUpgrade('speed'))
         ];
     }
     getButtons() {
@@ -1854,24 +1889,9 @@ class Pause {
             color
         }, context);
     }
-    createUpgradeButton(x, id, text, draw) {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, y = h / 2 + 150;
-        return new SpecialButton(x, y, 100, 100, '#333333', 'white', 2, () => {
-            this.upgradesTracker.selectedUpgrade = id;
-            this.game.switchMode(Defaults.gameModes.UPGRADE);
-        }, (hovered) => {
-            draw(x, y);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text,
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        });
+    selectUpgrade(id) {
+        this.upgradesTracker.selectedUpgrade = id;
+        this.game.switchMode(Defaults.gameModes.UPGRADE);
     }
 }
 class TutorialStep1 extends TutorialStep {
@@ -2195,180 +2215,15 @@ class TutorialStep9 extends TutorialStep {
         this.canvas = canvas;
         this.game = game;
         this.fader = fader;
-        const context = canvas.getContext('2d'), w = canvas.width, h = canvas.height, buttons = [], serverSize = Defaults.serverSize;
-        const x1 = 250, y1 = h / 2 + 150;
-        buttons.push(new SpecialButton(x1, y1, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
-            Utilities.drawText({
-                x: x1 - 25,
-                y: y1,
-                text: '+',
-                font: '45px monospace',
-                align: 'center',
-                color: 'red'
-            }, context);
-            Utilities.drawRect({
-                x: x1 + 15,
-                y: y1,
-                width: serverSize,
-                height: serverSize,
-                color: '#DDDDDD',
-                borderColor: 'red'
-            }, context);
-            Utilities.drawStar({
-                x: x1 - serverSize / 2 + 22,
-                y: y1 + serverSize / 2 - 9,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawRect({
-                x: x1 + serverSize / 2 + 8,
-                y: y1 + 1,
-                width: 6,
-                height: serverSize - 10,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text: 'Buy new datacenter',
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        }));
-        const x2 = w / 2, y2 = y1;
-        buttons.push(new SpecialButton(x2, y2, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
-            const queueX = x2 + serverSize / 2 - 7, queueY = y2 + 1, starX = x2 - serverSize / 2 + 7, starY = y2 + serverSize / 2 - 9, color = 'red', lineWidth = 3;
-            Utilities.drawRect({
-                x: x2,
-                y: y2,
-                width: serverSize,
-                height: serverSize,
-                color: '#DDDDDD',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawRect({
-                x: queueX,
-                y: queueY,
-                width: 6,
-                height: serverSize - 10,
-                color: 'salmon',
-                borderColor: 'red'
-            }, context);
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawLine({
-                x1: queueX,
-                y1: queueY - serverSize / 2 + 2,
-                x2: queueX,
-                y2: queueY - serverSize / 2 - 13,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: queueX - 1,
-                y1: queueY - serverSize / 2 - 13,
-                x2: queueX + 5,
-                y2: queueY - serverSize / 2 - 6,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: queueX + 1,
-                y1: queueY - serverSize / 2 - 13,
-                x2: queueX - 5,
-                y2: queueY - serverSize / 2 - 6,
-                color,
-                width: lineWidth
-            }, context);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text: 'Scale off at one location',
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        }));
-        const x3 = w - 250, y3 = y1;
-        buttons.push(new SpecialButton(x3, y3, 100, 100, '#333333', 'white', 2, () => {
-            this.game.servers[0].speed += Defaults.serversSpeed;
-            this.advance = true;
-        }, (hovered) => {
-            const queueX = x3 + serverSize / 2 - 7, queueY = y3 + 1, starX = x3 - serverSize / 2 + 7, starY = y3 + serverSize / 2 - 9, color = 'red', lineWidth = 3;
-            Utilities.drawRect({
-                x: x3,
-                y: y3,
-                width: serverSize,
-                height: serverSize,
-                color: '#DDDDDD',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawRect({
-                x: queueX,
-                y: queueY,
-                width: 6,
-                height: serverSize - 10,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: 'salmon',
-                borderColor: 'red'
-            }, context);
-            Utilities.drawLine({
-                x1: starX,
-                y1: starY - 8,
-                x2: starX,
-                y2: starY - 21,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: starX - 1,
-                y1: starY - 21,
-                x2: starX + 5,
-                y2: starY - 14,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: starX + 1,
-                y1: starY - 21,
-                x2: starX - 5,
-                y2: starY - 14,
-                color,
-                width: lineWidth
-            }, context);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text: 'Improve speed at one location',
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        }));
-        this.extraButtons = buttons;
+        const w = canvas.width, h = canvas.height, y = h / 2 + 150;
+        this.extraButtons = [
+            new ServerUpgradeButton(250, y, () => { }),
+            new CapacityUpgradeButton(w / 2, y, () => { }),
+            new SpeedUpgradeButton(w - 250, y, () => {
+                this.game.servers[0].speed += Defaults.serversSpeed;
+                this.advance = true;
+            })
+        ];
     }
     setup() {
         this.fader.removeFromPermanentQueue('upgradeTut');
@@ -2526,182 +2381,17 @@ class TutorialStep12 extends TutorialStep {
         this.canvas = canvas;
         this.game = game;
         this.fader = fader;
-        const context = canvas.getContext('2d'), w = canvas.width, h = canvas.height, buttons = [], serverSize = Defaults.serverSize;
-        const x1 = 250, y1 = h / 2 + 150;
-        buttons.push(new SpecialButton(x1, y1, 100, 100, '#333333', 'white', 2, () => {
-            const server = new Server(w / 2, h / 4);
-            server.capacity = 20;
-            this.game.servers.push(server);
-            this.advance = true;
-        }, (hovered) => {
-            Utilities.drawText({
-                x: x1 - 25,
-                y: y1,
-                text: '+',
-                font: '45px monospace',
-                align: 'center',
-                color: 'red'
-            }, context);
-            Utilities.drawRect({
-                x: x1 + 15,
-                y: y1,
-                width: serverSize,
-                height: serverSize,
-                color: '#DDDDDD',
-                borderColor: 'red'
-            }, context);
-            Utilities.drawStar({
-                x: x1 - serverSize / 2 + 22,
-                y: y1 + serverSize / 2 - 9,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawRect({
-                x: x1 + serverSize / 2 + 8,
-                y: y1 + 1,
-                width: 6,
-                height: serverSize - 10,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text: 'Buy new datacenter',
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        }));
-        const x2 = w / 2, y2 = y1;
-        buttons.push(new SpecialButton(x2, y2, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
-            const queueX = x2 + serverSize / 2 - 7, queueY = y2 + 1, starX = x2 - serverSize / 2 + 7, starY = y2 + serverSize / 2 - 9, color = 'red', lineWidth = 3;
-            Utilities.drawRect({
-                x: x2,
-                y: y2,
-                width: serverSize,
-                height: serverSize,
-                color: '#DDDDDD',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawRect({
-                x: queueX,
-                y: queueY,
-                width: 6,
-                height: serverSize - 10,
-                color: 'salmon',
-                borderColor: 'red'
-            }, context);
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawLine({
-                x1: queueX,
-                y1: queueY - serverSize / 2 + 2,
-                x2: queueX,
-                y2: queueY - serverSize / 2 - 13,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: queueX - 1,
-                y1: queueY - serverSize / 2 - 13,
-                x2: queueX + 5,
-                y2: queueY - serverSize / 2 - 6,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: queueX + 1,
-                y1: queueY - serverSize / 2 - 13,
-                x2: queueX - 5,
-                y2: queueY - serverSize / 2 - 6,
-                color,
-                width: lineWidth
-            }, context);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text: 'Scale off at one location',
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        }));
-        const x3 = w - 250, y3 = y1;
-        buttons.push(new SpecialButton(x3, y3, 100, 100, '#333333', 'white', 2, () => { }, (hovered) => {
-            const queueX = x3 + serverSize / 2 - 7, queueY = y3 + 1, starX = x3 - serverSize / 2 + 7, starY = y3 + serverSize / 2 - 9, color = 'red', lineWidth = 3;
-            Utilities.drawRect({
-                x: x3,
-                y: y3,
-                width: serverSize,
-                height: serverSize,
-                color: '#DDDDDD',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawRect({
-                x: queueX,
-                y: queueY,
-                width: 6,
-                height: serverSize - 10,
-                color: '#BBBBBB',
-                borderColor: '#999999'
-            }, context);
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: 'salmon',
-                borderColor: 'red'
-            }, context);
-            Utilities.drawLine({
-                x1: starX,
-                y1: starY - 8,
-                x2: starX,
-                y2: starY - 21,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: starX - 1,
-                y1: starY - 21,
-                x2: starX + 5,
-                y2: starY - 14,
-                color,
-                width: lineWidth
-            }, context);
-            Utilities.drawLine({
-                x1: starX + 1,
-                y1: starY - 21,
-                x2: starX - 5,
-                y2: starY - 14,
-                color,
-                width: lineWidth
-            }, context);
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text: 'Improve speed at one location',
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        }));
-        this.extraButtons = buttons;
+        const w = canvas.width, h = canvas.height, y = h / 2 + 150;
+        this.extraButtons = [
+            new ServerUpgradeButton(250, y, () => {
+                const server = new Server(w / 2, h / 4);
+                server.capacity = 20;
+                this.game.servers.push(server);
+                this.advance = true;
+            }),
+            new CapacityUpgradeButton(w / 2, y, () => { }),
+            new SpeedUpgradeButton(w - 250, y, () => { })
+        ];
     }
     setup() {
         this.fader.removeFromPermanentQueue('upgradeTut');

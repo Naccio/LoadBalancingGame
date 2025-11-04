@@ -1,3 +1,6 @@
+/// <reference path='../Utilities.ts' />
+/// <reference path='Button.ts' />
+
 class SpecialButton extends Button {
     constructor(
         x: number,
@@ -8,7 +11,7 @@ class SpecialButton extends Button {
         public hoverColor: string,
         public borderWidth: number,
         onClick: () => void,
-        private specialDraw: (h: boolean) => void) {
+        private specialDraw: (h: boolean, c: CanvasRenderingContext2D) => void) {
         super(x, y, width, height, '', color, onClick)
     }
 
@@ -22,6 +25,6 @@ class SpecialButton extends Button {
             borderColor: hovered ? this.hoverColor : undefined
         }, context);
 
-        this.specialDraw(hovered);
+        this.specialDraw(hovered, context);
     };
 }

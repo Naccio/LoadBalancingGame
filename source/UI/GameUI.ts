@@ -6,8 +6,7 @@ class GameUI {
     public readonly volumeButton: SpecialButton;
 
     constructor(music: HTMLAudioElement, canvas: HTMLCanvasElement) {
-        const context = canvas.getContext('2d')!,
-            WIDTH = canvas.width,
+        const WIDTH = canvas.width,
             HEIGHT = canvas.height,
             x = WIDTH - 40,
             y = HEIGHT - 40,
@@ -20,7 +19,7 @@ class GameUI {
             } else {
                 music.pause();
             }
-        }, (hovered) => {
+        }, (hovered, context) => {
             var color = hovered ? 'white' : 'rgba(255,255,255,0.8)',
                 status = music.paused ? 'Off' : 'On';
 

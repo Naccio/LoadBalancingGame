@@ -4,7 +4,9 @@
 /// <reference path='../Services/UpgradesTracker.ts' />
 /// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameUI.ts' />
-/// <reference path='../UI/SpecialButton.ts' />
+/// <reference path='../Upgrades/CapacityUpgradeButton.ts' />
+/// <reference path='../Upgrades/ServerUpgradeButton.ts' />
+/// <reference path='../Upgrades/SpeedUpgradeButton.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 
@@ -22,9 +24,9 @@ class Pause implements Scene {
         ui: GameUI,
         newGame: NewGame
     ) {
-        const context = canvas.getContext('2d')!,
-            w = canvas.width,
-            serverSize = Defaults.serverSize;
+        const w = canvas.width,
+            h = this.canvas.height,
+            y = h / 2 + 150;
 
         this.buttons = [
             new Button(w / 2, 150, 120, 40, 'Continue', '#FFFFFF', () => game.switchMode(Defaults.gameModes.GAME)),
@@ -33,154 +35,10 @@ class Pause implements Scene {
             ui.volumeButton
         ];
 
-        //TODO: Unify upgrade buttons code with tutorial step 9 and 12
         this.upgradeButtons = [
-            this.createUpgradeButton(250, 'server', 'Buy new datacenter', (x: number, y: number) => {
-                Utilities.drawText({
-                    x: x - 25,
-                    y,
-                    text: "+",
-                    font: '45px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-                Utilities.drawRect({
-                    x: x + 15,
-                    y,
-                    width: serverSize,
-                    height: serverSize,
-                    color: '#DDDDDD',
-                    borderColor: 'red'
-                }, context);
-                Utilities.drawStar({
-                    x: x - serverSize / 2 + 22,
-                    y: y + serverSize / 2 - 9,
-                    outerRadius: 4,
-                    innerRadius: 2,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawRect({
-                    x: x + serverSize / 2 + 8,
-                    y: y + 1,
-                    width: 6,
-                    height: serverSize - 10,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-            }),
-            this.createUpgradeButton(w / 2, 'capacity', 'Scale off at one location', (x: number, y: number) => {
-                var queueX = x + serverSize / 2 - 7,
-                    queueY = y + 1,
-                    starX = x - serverSize / 2 + 7,
-                    starY = y + serverSize / 2 - 9,
-                    color = 'red',
-                    lineWidth = 3;
-                Utilities.drawRect({
-                    x,
-                    y,
-                    width: serverSize,
-                    height: serverSize,
-                    color: "#DDDDDD",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawRect({
-                    x: queueX,
-                    y: queueY,
-                    width: 6,
-                    height: serverSize - 10,
-                    color: "salmon",
-                    borderColor: "red"
-                }, context);
-                Utilities.drawStar({
-                    x: starX,
-                    y: starY,
-                    outerRadius: 4,
-                    innerRadius: 2,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawLine({
-                    x1: queueX,
-                    y1: queueY - serverSize / 2 + 2,
-                    x2: queueX,
-                    y2: queueY - serverSize / 2 - 13,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: queueX - 1,
-                    y1: queueY - serverSize / 2 - 13,
-                    x2: queueX + 5,
-                    y2: queueY - serverSize / 2 - 6,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: queueX + 1,
-                    y1: queueY - serverSize / 2 - 13,
-                    x2: queueX - 5,
-                    y2: queueY - serverSize / 2 - 6,
-                    color,
-                    width: lineWidth
-                }, context);
-            }),
-            this.createUpgradeButton(w - 250, 'speed', 'Improve speed at one location', (x: number, y: number) => {
-                var queueX = x + serverSize / 2 - 7,
-                    queueY = y + 1,
-                    starX = x - serverSize / 2 + 7,
-                    starY = y + serverSize / 2 - 9,
-                    color = "red",
-                    lineWidth = 3;
-                Utilities.drawRect({
-                    x,
-                    y,
-                    width: serverSize,
-                    height: serverSize,
-                    color: "#DDDDDD",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawRect({
-                    x: queueX,
-                    y: queueY,
-                    width: 6,
-                    height: serverSize - 10,
-                    color: "#BBBBBB",
-                    borderColor: "#999999"
-                }, context);
-                Utilities.drawStar({
-                    x: starX,
-                    y: starY,
-                    outerRadius: 4,
-                    innerRadius: 2,
-                    color: "salmon",
-                    borderColor: "red"
-                }, context);
-                Utilities.drawLine({
-                    x1: starX,
-                    y1: starY - 8,
-                    x2: starX,
-                    y2: starY - 21,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: starX - 1,
-                    y1: starY - 21,
-                    x2: starX + 5,
-                    y2: starY - 14,
-                    color,
-                    width: lineWidth
-                }, context);
-                Utilities.drawLine({
-                    x1: starX + 1,
-                    y1: starY - 21,
-                    x2: starX - 5,
-                    y2: starY - 14,
-                    color,
-                    width: lineWidth
-                }, context);
-            })
+            new ServerUpgradeButton(250, y, () => this.selectUpgrade('server')),
+            new CapacityUpgradeButton(w / 2, y, () => this.selectUpgrade('capacity')),
+            new SpeedUpgradeButton(w - 250, y, () => this.selectUpgrade('speed'))
         ];
     }
 
@@ -234,28 +92,8 @@ class Pause implements Scene {
         }, context);
     }
 
-    private createUpgradeButton(x: number, id: string, text: string, draw: (x: number, y: number) => void) {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height,
-            y = h / 2 + 150;
-
-        return new SpecialButton(x, y, 100, 100, '#333333', 'white', 2, () => {
-            this.upgradesTracker.selectedUpgrade = id;
-            this.game.switchMode(Defaults.gameModes.UPGRADE);
-        }, (hovered) => {
-            draw(x, y);
-
-            if (hovered) {
-                Utilities.drawText({
-                    x: w / 2,
-                    y: h - 50,
-                    text,
-                    font: '20px monospace',
-                    align: 'center',
-                    color: 'red'
-                }, context);
-            }
-        });
+    private selectUpgrade(id: string) {
+        this.upgradesTracker.selectedUpgrade = id;
+        this.game.switchMode(Defaults.gameModes.UPGRADE);
     }
 }
