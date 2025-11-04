@@ -72,7 +72,13 @@ class GameOver implements Scene {
             color: this.color
         }, context);
 
-        Utilities.drawLine(w / 2 - 130, h / 2 + 20, w / 2 + 130, h / 2 + 20, 'red', 1, context);
+        Utilities.drawLine({
+            x1: w / 2 - 130,
+            y1: h / 2 + 20,
+            x2: w / 2 + 130,
+            y2: h / 2 + 20,
+            color: 'red'
+        }, context);
     }
 
     private drawStat(y: number, text: string, value: number) {

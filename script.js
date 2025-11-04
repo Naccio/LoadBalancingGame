@@ -276,15 +276,12 @@ class Utilities {
         Utilities.drawCircle(innerCircle, context);
         Utilities.drawCircle(outerCircle, context);
     }
-    static drawLine(x1, y1, x2, y2, c, w, context) {
-        if (!w) {
-            w = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = w;
+    static drawLine(line, context) {
+        context.strokeStyle = line?.color ?? Defaults.defaultColor;
+        context.lineWidth = line?.width ?? 1;
         context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
+        context.moveTo(line.x1, line.y1);
+        context.lineTo(line.x2, line.y2);
         context.stroke();
     }
     static drawRect(rectangle, context) {
@@ -597,8 +594,15 @@ class GameUI {
             context.fillStyle = color;
             context.fill(path);
             if (music.paused) {
-                Utilities.drawLine(x - w / 2, y + h / 2, x + w / 2, y - h / 2, "red", 2, context);
-                status = "Off";
+                Utilities.drawLine({
+                    x1: x - w / 2,
+                    y1: y + h / 2,
+                    x2: x + w / 2,
+                    y2: y - h / 2,
+                    color: 'red',
+                    width: 2
+                }, context);
+                status = 'Off';
             }
             if (hovered) {
                 Utilities.drawText({
@@ -1115,7 +1119,14 @@ class GameArea {
     draw() {
         const context = this.canvas.getContext('2d'), sc = this.game.selectedClient;
         if (sc !== undefined) {
-            Utilities.drawLine(sc.x, sc.y, this.cursor.mouseX, this.cursor.mouseY, 'lightBlue', 3, context);
+            Utilities.drawLine({
+                x1: sc.x,
+                y1: sc.y,
+                x2: this.cursor.mouseX,
+                y2: this.cursor.mouseY,
+                color: 'lightBlue',
+                width: 3
+            }, context);
             Utilities.drawCircle({
                 x: sc.x,
                 y: sc.y,
@@ -1255,7 +1266,13 @@ class GameArea {
     drawConnection(t, color) {
         if (t.connectedTo) {
             const context = this.canvas.getContext('2d');
-            Utilities.drawLine(t.x, t.y, t.connectedTo.x, t.connectedTo.y, color, 1, context);
+            Utilities.drawLine({
+                x1: t.x,
+                y1: t.y,
+                x2: t.connectedTo.x,
+                y2: t.connectedTo.y,
+                color
+            }, context);
         }
     }
     drawMessage(message) {
@@ -1426,7 +1443,13 @@ class GameOver {
             align: 'start',
             color: this.color
         }, context);
-        Utilities.drawLine(w / 2 - 130, h / 2 + 20, w / 2 + 130, h / 2 + 20, 'red', 1, context);
+        Utilities.drawLine({
+            x1: w / 2 - 130,
+            y1: h / 2 + 20,
+            x2: w / 2 + 130,
+            y2: h / 2 + 20,
+            color: 'red'
+        }, context);
     }
     drawStat(y, text, value) {
         this.drawStatTitle(y, text);
@@ -1602,7 +1625,14 @@ class Menu {
             align,
             color
         }, context);
-        Utilities.drawLine(120, 160, w - 118, 160, 'red', 2, context);
+        Utilities.drawLine({
+            x1: 120,
+            y1: 160,
+            x2: w - 118,
+            y2: 160,
+            color: 'red',
+            width: 2
+        }, context);
     }
 }
 class SpecialButton extends Button {
@@ -1709,9 +1739,30 @@ class Pause {
                     color: "#BBBBBB",
                     borderColor: "#999999"
                 }, context);
-                Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
-                Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
-                Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
+                Utilities.drawLine({
+                    x1: queueX,
+                    y1: queueY - serverSize / 2 + 2,
+                    x2: queueX,
+                    y2: queueY - serverSize / 2 - 13,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: queueX - 1,
+                    y1: queueY - serverSize / 2 - 13,
+                    x2: queueX + 5,
+                    y2: queueY - serverSize / 2 - 6,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: queueX + 1,
+                    y1: queueY - serverSize / 2 - 13,
+                    x2: queueX - 5,
+                    y2: queueY - serverSize / 2 - 6,
+                    color,
+                    width: lineWidth
+                }, context);
             }),
             this.createUpgradeButton(w - 250, 'speed', 'Improve speed at one location', (x, y) => {
                 var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = "red", lineWidth = 3;
@@ -1739,9 +1790,30 @@ class Pause {
                     color: "salmon",
                     borderColor: "red"
                 }, context);
-                Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
-                Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
-                Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
+                Utilities.drawLine({
+                    x1: starX,
+                    y1: starY - 8,
+                    x2: starX,
+                    y2: starY - 21,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: starX - 1,
+                    y1: starY - 21,
+                    x2: starX + 5,
+                    y2: starY - 14,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: starX + 1,
+                    y1: starY - 21,
+                    x2: starX - 5,
+                    y2: starY - 14,
+                    color,
+                    width: lineWidth
+                }, context);
             })
         ];
     }
@@ -2200,9 +2272,30 @@ class TutorialStep9 extends TutorialStep {
                 color: '#BBBBBB',
                 borderColor: '#999999'
             }, context);
-            Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
-            Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
-            Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
+            Utilities.drawLine({
+                x1: queueX,
+                y1: queueY - serverSize / 2 + 2,
+                x2: queueX,
+                y2: queueY - serverSize / 2 - 13,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: queueX - 1,
+                y1: queueY - serverSize / 2 - 13,
+                x2: queueX + 5,
+                y2: queueY - serverSize / 2 - 6,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: queueX + 1,
+                y1: queueY - serverSize / 2 - 13,
+                x2: queueX - 5,
+                y2: queueY - serverSize / 2 - 6,
+                color,
+                width: lineWidth
+            }, context);
             if (hovered) {
                 Utilities.drawText({
                     x: w / 2,
@@ -2244,9 +2337,30 @@ class TutorialStep9 extends TutorialStep {
                 color: 'salmon',
                 borderColor: 'red'
             }, context);
-            Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
-            Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
-            Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
+            Utilities.drawLine({
+                x1: starX,
+                y1: starY - 8,
+                x2: starX,
+                y2: starY - 21,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: starX - 1,
+                y1: starY - 21,
+                x2: starX + 5,
+                y2: starY - 14,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: starX + 1,
+                y1: starY - 21,
+                x2: starX - 5,
+                y2: starY - 14,
+                color,
+                width: lineWidth
+            }, context);
             if (hovered) {
                 Utilities.drawText({
                     x: w / 2,
@@ -2494,9 +2608,30 @@ class TutorialStep12 extends TutorialStep {
                 color: '#BBBBBB',
                 borderColor: '#999999'
             }, context);
-            Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
-            Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
-            Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
+            Utilities.drawLine({
+                x1: queueX,
+                y1: queueY - serverSize / 2 + 2,
+                x2: queueX,
+                y2: queueY - serverSize / 2 - 13,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: queueX - 1,
+                y1: queueY - serverSize / 2 - 13,
+                x2: queueX + 5,
+                y2: queueY - serverSize / 2 - 6,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: queueX + 1,
+                y1: queueY - serverSize / 2 - 13,
+                x2: queueX - 5,
+                y2: queueY - serverSize / 2 - 6,
+                color,
+                width: lineWidth
+            }, context);
             if (hovered) {
                 Utilities.drawText({
                     x: w / 2,
@@ -2535,9 +2670,30 @@ class TutorialStep12 extends TutorialStep {
                 color: 'salmon',
                 borderColor: 'red'
             }, context);
-            Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
-            Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
-            Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
+            Utilities.drawLine({
+                x1: starX,
+                y1: starY - 8,
+                x2: starX,
+                y2: starY - 21,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: starX - 1,
+                y1: starY - 21,
+                x2: starX + 5,
+                y2: starY - 14,
+                color,
+                width: lineWidth
+            }, context);
+            Utilities.drawLine({
+                x1: starX + 1,
+                y1: starY - 21,
+                x2: starX - 5,
+                y2: starY - 14,
+                color,
+                width: lineWidth
+            }, context);
             if (hovered) {
                 Utilities.drawText({
                     x: w / 2,

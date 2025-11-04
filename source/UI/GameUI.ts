@@ -41,8 +41,15 @@ class GameUI {
             context.fill(path);
 
             if (music.paused) {
-                Utilities.drawLine(x - w / 2, y + h / 2, x + w / 2, y - h / 2, "red", 2, context);
-                status = "Off";
+                Utilities.drawLine({
+                    x1: x - w / 2,
+                    y1: y + h / 2,
+                    x2: x + w / 2,
+                    y2: y - h / 2,
+                    color: 'red',
+                    width: 2
+                }, context);
+                status = 'Off';
             }
 
             if (hovered) {

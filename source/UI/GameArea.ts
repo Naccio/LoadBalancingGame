@@ -28,7 +28,14 @@ class GameArea {
 
         //draw a line connecting the selected client to the mouse pointer
         if (sc !== undefined) {
-            Utilities.drawLine(sc.x, sc.y, this.cursor.mouseX, this.cursor.mouseY, 'lightBlue', 3, context);
+            Utilities.drawLine({
+                x1: sc.x,
+                y1: sc.y,
+                x2: this.cursor.mouseX,
+                y2: this.cursor.mouseY,
+                color: 'lightBlue',
+                width: 3
+            }, context);
             Utilities.drawCircle({
                 x: sc.x,
                 y: sc.y,
@@ -200,7 +207,13 @@ class GameArea {
     private drawConnection(t: MessageTransmitter, color: string) {
         if (t.connectedTo) {
             const context = this.canvas.getContext('2d')!;
-            Utilities.drawLine(t.x, t.y, t.connectedTo.x, t.connectedTo.y, color, 1, context);
+            Utilities.drawLine({
+                x1: t.x,
+                y1: t.y,
+                x2: t.connectedTo.x,
+                y2: t.connectedTo.y,
+                color
+            }, context);
         }
     }
 

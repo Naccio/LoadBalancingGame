@@ -1,4 +1,5 @@
 /// <reference path='UI/Circle.ts' />
+/// <reference path='UI/Line.ts' />
 /// <reference path='UI/Rectangle.ts' />
 /// <reference path='UI/Star.ts' />
 /// <reference path='UI/Triangle.ts' />
@@ -31,15 +32,12 @@ class Utilities {
         Utilities.drawCircle(outerCircle, context);
     }
 
-    public static drawLine(x1: number, y1: number, x2: number, y2: number, c: string, w: number, context: CanvasRenderingContext2D) {
-        if (!w) {
-            w = 1;
-        }
-        context.strokeStyle = c;
-        context.lineWidth = w;
+    public static drawLine(line: Line, context: CanvasRenderingContext2D) {
+        context.strokeStyle = line?.color ?? Defaults.defaultColor;
+        context.lineWidth = line?.width ?? 1;
         context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
+        context.moveTo(line.x1, line.y1);
+        context.lineTo(line.x2, line.y2);
         context.stroke();
     }
 

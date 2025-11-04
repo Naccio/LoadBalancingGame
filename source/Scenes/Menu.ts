@@ -67,6 +67,13 @@ class Menu implements Scene {
             color
         }, context);
 
-        Utilities.drawLine(120, 160, w - 118, 160, 'red', 2, context);
+        Utilities.drawLine({
+            x1: 120,
+            y1: 160,
+            x2: w - 118,
+            y2: 160,
+            color: 'red',
+            width: 2
+        }, context);
     }
 }

@@ -100,9 +100,30 @@ class Pause implements Scene {
                     color: "#BBBBBB",
                     borderColor: "#999999"
                 }, context);
-                Utilities.drawLine(queueX, queueY - serverSize / 2 + 2, queueX, queueY - serverSize / 2 - 13, color, lineWidth, context);
-                Utilities.drawLine(queueX - 1, queueY - serverSize / 2 - 13, queueX + 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
-                Utilities.drawLine(queueX + 1, queueY - serverSize / 2 - 13, queueX - 5, queueY - serverSize / 2 - 6, color, lineWidth, context);
+                Utilities.drawLine({
+                    x1: queueX,
+                    y1: queueY - serverSize / 2 + 2,
+                    x2: queueX,
+                    y2: queueY - serverSize / 2 - 13,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: queueX - 1,
+                    y1: queueY - serverSize / 2 - 13,
+                    x2: queueX + 5,
+                    y2: queueY - serverSize / 2 - 6,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: queueX + 1,
+                    y1: queueY - serverSize / 2 - 13,
+                    x2: queueX - 5,
+                    y2: queueY - serverSize / 2 - 6,
+                    color,
+                    width: lineWidth
+                }, context);
             }),
             this.createUpgradeButton(w - 250, 'speed', 'Improve speed at one location', (x: number, y: number) => {
                 var queueX = x + serverSize / 2 - 7,
@@ -135,9 +156,30 @@ class Pause implements Scene {
                     color: "salmon",
                     borderColor: "red"
                 }, context);
-                Utilities.drawLine(starX, starY - 8, starX, starY - 21, color, lineWidth, context);
-                Utilities.drawLine(starX - 1, starY - 21, starX + 5, starY - 14, color, lineWidth, context);
-                Utilities.drawLine(starX + 1, starY - 21, starX - 5, starY - 14, color, lineWidth, context);
+                Utilities.drawLine({
+                    x1: starX,
+                    y1: starY - 8,
+                    x2: starX,
+                    y2: starY - 21,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: starX - 1,
+                    y1: starY - 21,
+                    x2: starX + 5,
+                    y2: starY - 14,
+                    color,
+                    width: lineWidth
+                }, context);
+                Utilities.drawLine({
+                    x1: starX + 1,
+                    y1: starY - 21,
+                    x2: starX - 5,
+                    y2: starY - 14,
+                    color,
+                    width: lineWidth
+                }, context);
             })
         ];
     }
