@@ -338,6 +338,9 @@ class Utilities {
         color = '#' + color;
         return color;
     }
+    static random(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
     static draw(shape, context) {
         if (shape.color) {
             context.fillStyle = shape.color;
@@ -745,8 +748,7 @@ class Scheduler {
         this.game = game;
     }
     schedule() {
-        const popularity = this.popularityTracker.popularity, elapsedTime = this.game.elapsedTime;
-        var remaining = Defaults.gameLength * 60 - elapsedTime;
+        const popularity = this.popularityTracker.popularity, elapsedTime = this.game.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
         if (remaining > Defaults.maxClientWaitTime) {
             if (elapsedTime - this.timeLastClient > Math.max(this.spawnRate - Math.cbrt(popularity / 40), 1.6) && Math.random() > 0.3) {
                 this.createClient();
@@ -823,45 +825,39 @@ class Scheduler {
             default:
                 throw `Invalid zone: ${zone}.`;
         }
-        x = Math.floor(Math.random() * (maxX - minX) + minX);
-        y = Math.floor(Math.random() * (maxY - minY) + minY);
+        x = Utilities.random(minX, maxX);
+        y = Utilities.random(minY, maxY);
         while (this.checkCollisions(x, y)) {
-            x = Math.floor(Math.random() * (maxX - minX) + minX);
-            y = Math.floor(Math.random() * (maxY - minY) + minY);
+            x = Utilities.random(minX, maxX);
+            y = Utilities.random(minY, maxY);
         }
         this.game.servers.push(new Server(x, y));
     }
     ;
     createClient() {
-        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize;
-        let x, y, msgNr;
-        x = Math.floor(Math.random() * (width - 2 * clientSize) + clientSize);
-        y = Math.floor(Math.random() * (height - 2 * clientSize) + clientSize);
+        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100);
+        let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
         while (this.checkCollisions(x, y)) {
-            x = Math.floor(Math.random() * (width - 2 * clientSize) + clientSize);
-            y = Math.floor(Math.random() * (height - 2 * clientSize) + clientSize);
+            x = Utilities.random(minX, maxX);
+            y = Utilities.random(minY, maxY);
         }
-        msgNr = Math.floor(Math.random() * (this.maxClientMessages - this.minClientMessages)) +
-            this.minClientMessages + Math.floor(this.popularityTracker.popularity / 100);
-        this.game.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, msgNr));
+        this.game.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, messages));
         this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
         this.timeLastClient = elapsedTime;
     }
     ;
     initiateDDoS() {
-        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize;
-        var i, x, y, a, mod = Math.floor(this.popularityTracker.popularity / 400), n = this.attackersNumber + mod;
-        for (i = 0; i < n; i += 1) {
-            x = Math.floor(Math.random() * (width - 2 * clientSize) + clientSize);
-            y = Math.floor(Math.random() * (height - 2 * clientSize) + clientSize);
+        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, modifier = Math.floor(this.popularityTracker.popularity / 400), messages = this.attackersMessages + modifier, number = this.attackersNumber + modifier;
+        for (let i = 0; i < number; i += 1) {
+            let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
             while (this.checkCollisions(x, y)) {
-                x = Math.floor(Math.random() * (width - 2 * clientSize) + clientSize);
-                y = Math.floor(Math.random() * (height - 2 * clientSize) + clientSize);
+                x = Utilities.random(minX, maxX);
+                y = Utilities.random(minY, maxY);
             }
             const server = this.findClosestServer(x, y);
             if (server) {
-                a = new Attacker(this.orchestrator, x, y, this.attackersMessages + mod, server);
-                this.game.attackers.push(a);
+                const attacker = new Attacker(this.orchestrator, x, y, messages, server);
+                this.game.attackers.push(attacker);
             }
         }
         this.timeLastDDoS = elapsedTime;
@@ -3041,11 +3037,8 @@ class Application {
         }
     }
     createCloud(x, y) {
-        const w = this.getRandomInt(350, 500), h = this.getRandomInt(w, 700), circles = this.getRandomInt(15, 30), n = this.getRandomInt(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = this.getRandomInt(100, 200);
+        const w = Utilities.random(350, 500), h = Utilities.random(w, 700), circles = Utilities.random(15, 30), n = Utilities.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = Utilities.random(100, 200);
         this.clouds.add(x, y, w, h, circles, color, speed);
-    }
-    getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     drawButtons() {
         const context = this.canvas.getContext('2d'), mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;

@@ -123,6 +123,10 @@ class Utilities {
         return color;
     }
 
+    public static random(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
     private static draw(shape: Shape, context: CanvasRenderingContext2D) {
         if (shape.color) {
             context.fillStyle = shape.color;

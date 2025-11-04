@@ -16,8 +16,6 @@ class Server implements MessageTransmitter {
     }
 
     sendMessage(elapsedTime: number) {
-        //var index = Math.floor(Math.random() * this.queue.length);
-        //var msg = this.queue.splice(index, 1)[0];
         const msg = this.queue.shift();
 
         if (msg) {

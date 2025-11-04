@@ -151,18 +151,14 @@ class Application {
     }
 
     private createCloud(x: number, y: number) {
-        const w = this.getRandomInt(350, 500),
-            h = this.getRandomInt(w, 700),
-            circles = this.getRandomInt(15, 30),
-            n = this.getRandomInt(180, 255),
+        const w = Utilities.random(350, 500),
+            h = Utilities.random(w, 700),
+            circles = Utilities.random(15, 30),
+            n = Utilities.random(180, 255),
             color = { r: n, g: n, b: n, a: .1 },
-            speed = this.getRandomInt(100, 200);
+            speed = Utilities.random(100, 200);
 
         this.clouds.add(x, y, w, h, circles, color, speed);
-    }
-
-    private getRandomInt(min: number, max: number) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     private drawButtons() {
