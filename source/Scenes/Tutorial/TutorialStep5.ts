@@ -1,6 +1,5 @@
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
-/// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialHelper.ts' />
@@ -11,7 +10,6 @@ class TutorialStep5 extends TutorialStep {
     constructor(
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
-        private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker
     ) {
         super(4, [
@@ -28,7 +26,6 @@ class TutorialStep5 extends TutorialStep {
     }
 
     run() {
-        this.orchestrator.updateMessages();
         this.game.update();
     }
 

@@ -44,7 +44,6 @@ class TutorialStep10 extends TutorialStep {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }
-        this.orchestrator.updateMessages();
         this.game.update();
     }
 

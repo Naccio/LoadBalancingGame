@@ -15,7 +15,11 @@ class GameTracker {
     public clients: Client[] = [];
     public attackers: Attacker[] = [];
 
-    constructor(private popularityTracker: PopularityTracker, private ui: GameUI) { }
+    constructor(
+        private popularityTracker: PopularityTracker,
+        private ui: GameUI,
+        private orchestrator: MessageOrchestrator
+    ) { }
 
     switchMode(gameMode: number) {
         this.ui.buttons = [];
@@ -36,6 +40,7 @@ class GameTracker {
 
     update() {
         this.elapsedTime += 1 / Defaults.frameRate;
+        this.orchestrator.updateMessages();
         this.updateClients();
         this.updateServers();
         this.updateAttackers();

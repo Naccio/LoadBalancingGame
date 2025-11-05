@@ -81,7 +81,7 @@ class Application {
         const upgradesTracker = new UpgradesTracker();
         const popularityTracker = new PopularityTracker(fader, upgradesTracker, canvas);
         const ui = new GameUI(music, canvas);
-        const game = new GameTracker(popularityTracker, ui);
+        const game = new GameTracker(popularityTracker, ui, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
         const cursor = new CursorTracker(game, canvas, ui);
         const scheduler = new Scheduler(popularityTracker, orchestrator, canvas, game, clientFactory);
@@ -93,22 +93,22 @@ class Application {
         const gameOver = new GameOver(canvas, clouds, game, orchestrator, popularityTracker, newGame);
         const pause = new Pause(canvas, clouds, game, upgradesTracker, ui, newGame);
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
-        const gameScene = new Game(canvas, game, scheduler, orchestrator, gameArea, fader);
+        const gameScene = new Game(canvas, game, scheduler, gameArea, fader);
         const tutorial = new Tutorial([
             new TutorialStep1(canvas, game),
             new TutorialStep2(canvas),
             new TutorialStep3(canvas, game, clientFactory),
             new TutorialStep4(game),
-            new TutorialStep5(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep6(canvas, game, orchestrator, popularityTracker, clientFactory),
-            new TutorialStep7(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
+            new TutorialStep5(canvas, game, popularityTracker),
+            new TutorialStep6(canvas, game, popularityTracker, clientFactory),
+            new TutorialStep7(canvas, game, popularityTracker),
+            new TutorialStep8(canvas, game, popularityTracker, fader),
             new TutorialStep9(canvas, game, fader),
             new TutorialStep10(canvas, game, orchestrator, popularityTracker),
             new TutorialStep11(canvas, game, orchestrator, fader, clientFactory),
             new TutorialStep12(canvas, game, fader),
-            new TutorialStep13(canvas, game, orchestrator, popularityTracker, clientFactory),
-            new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
+            new TutorialStep13(canvas, game, popularityTracker, clientFactory),
+            new TutorialStep14(canvas, game, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
         const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);
 

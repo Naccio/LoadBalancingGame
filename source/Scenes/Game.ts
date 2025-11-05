@@ -14,7 +14,6 @@ class Game implements Scene {
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
         private scheduler: Scheduler,
-        private orchestrator: MessageOrchestrator,
         private gameArea: GameArea,
         private fader: TextFader
     ) { }
@@ -27,7 +26,6 @@ class Game implements Scene {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
         }
-        this.orchestrator.updateMessages();
         this.game.update();
         this.fader.update(1 / Defaults.frameRate);
         this.scheduler.schedule();

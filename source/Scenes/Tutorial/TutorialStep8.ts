@@ -1,6 +1,5 @@
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
-/// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../UI/TextFader.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -12,7 +11,6 @@ class TutorialStep8 extends TutorialStep {
     constructor(
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
-        private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker,
         private fader: TextFader
     ) {
@@ -44,7 +42,6 @@ class TutorialStep8 extends TutorialStep {
     }
 
     run() {
-        this.orchestrator.updateMessages();
         this.game.update();
     }
 

@@ -55,7 +55,6 @@ class TutorialStep11 extends TutorialStep {
         if (this.game.clients.length === 0) {
             this.spawnClients();
         }
-        this.orchestrator.updateMessages();
         this.game.update();
     }
 

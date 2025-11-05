@@ -1,6 +1,5 @@
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
-/// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialHelper.ts' />
@@ -11,7 +10,6 @@ class TutorialStep13 extends TutorialStep {
     constructor(
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
-        private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory
     ) {
@@ -43,7 +41,6 @@ class TutorialStep13 extends TutorialStep {
         if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
             this.advance = true;
         }
-        this.orchestrator.updateMessages();
         this.game.update();
     }
 
