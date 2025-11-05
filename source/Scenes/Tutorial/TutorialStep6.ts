@@ -58,7 +58,5 @@ class TutorialStep6 extends TutorialStep {
 
         client1.life = - 21;
         client2.life = - 21;
-
-        this.game.clients.push(client1, client2);
     }
 }

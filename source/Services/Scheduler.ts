@@ -1,9 +1,7 @@
-/// <reference path='../Model/Attacker.ts' />
-/// <reference path='../Model/Client.ts' />
 /// <reference path='../Model/Server.ts' />
+/// <reference path='AttackerFactory.ts' />
 /// <reference path='ClientFactory.ts' />
 /// <reference path='GameTracker.ts' />
-/// <reference path='MessageOrchestrator.ts' />
 /// <reference path='PopularityTracker.ts' />
 
 class Scheduler {
@@ -18,10 +16,10 @@ class Scheduler {
 
     constructor(
         private popularityTracker: PopularityTracker,
-        private orchestrator: MessageOrchestrator,
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
-        private clientFactory: ClientFactory
+        private clientFactory: ClientFactory,
+        private attackerFactory: AttackerFactory
     ) { }
 
     schedule() {
@@ -168,8 +166,7 @@ class Scheduler {
             const server = this.findClosestServer(x, y);
 
             if (server) {
-                const attacker = new Attacker(this.orchestrator, x, y, messages, server);
-                this.game.attackers.push(attacker);
+                this.attackerFactory.create(x, y, messages, server);
             }
         }
 

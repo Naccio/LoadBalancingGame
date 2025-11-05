@@ -35,8 +35,6 @@ class TutorialStep13 extends TutorialStep {
 
             client0.life = - 21;
             client1.life = - 21;
-
-            this.game.clients.push(client0, client1);
         }
         if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
             this.advance = true;

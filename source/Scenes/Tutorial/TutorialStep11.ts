@@ -1,7 +1,6 @@
-/// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Services/AttackerFactory.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
-/// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
@@ -11,9 +10,9 @@ class TutorialStep11 extends TutorialStep {
     constructor(
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
-        private orchestrator: MessageOrchestrator,
         private fader: TextFader,
-        private clientFactory: ClientFactory
+        private clientFactory: ClientFactory,
+        private attackerFactory: AttackerFactory
     ) {
         super(10, [
             'Oh snap! Your datacenter is under a DDOS ATTACK! And more clients need serving!',
@@ -28,9 +27,6 @@ class TutorialStep11 extends TutorialStep {
         const w = this.canvas.width,
             h = this.canvas.height,
             server = this.game.servers[0],
-            attacker0 = new Attacker(this.orchestrator, w / 2, h * 3 / 4, 10000, server),
-            attacker1 = new Attacker(this.orchestrator, w / 3, h * 2 / 3, 10000, server),
-            attacker2 = new Attacker(this.orchestrator, w * 2 / 3, h * 2 / 3, 10000, server),
             text = {
                 x: w / 2,
                 y: h - 116,
@@ -43,8 +39,11 @@ class TutorialStep11 extends TutorialStep {
                 delta: 0
             };
 
+        this.attackerFactory.create(w / 2, h * 3 / 4, 10000, server);
+        this.attackerFactory.create(w / 3, h * 2 / 3, 10000, server);
+        this.attackerFactory.create(w * 2 / 3, h * 2 / 3, 10000, server);
+
         this.spawnClients();
-        this.game.attackers.push(attacker0, attacker1, attacker2);
         this.fader.addPermanentText(text);
     }
 
@@ -84,7 +83,5 @@ class TutorialStep11 extends TutorialStep {
 
         client0.life = - 21;
         client1.life = - 21;
-
-        this.game.clients.push(client0, client1);
     }
 }

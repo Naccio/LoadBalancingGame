@@ -1,7 +1,5 @@
 /// <reference path='../../Defaults.ts' />
-/// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
-/// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
 
@@ -9,7 +7,6 @@ class TutorialStep3 extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,
-        private game: GameTracker,
         private clientFactory: ClientFactory
     ) {
         super(2, [
@@ -27,8 +24,6 @@ class TutorialStep3 extends TutorialStep {
             client = this.clientFactory.create(w * 3 / 4, h / 2, 10000);
 
         client.life = -31;
-
-        this.game.clients.push(client);
     }
 
     draw() {
