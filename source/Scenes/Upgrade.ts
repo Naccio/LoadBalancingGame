@@ -23,10 +23,12 @@ class Upgrade implements Scene {
 
     getButtons() {
         const w = this.canvas.width,
-            h = this.canvas.height;
-        let buttons = [
-            Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE))
-        ];
+            h = this.canvas.height,
+            button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
+
+        button.color = '#333333';
+
+        let buttons = [button];
 
         switch (this.upgradesTracker.selectedUpgrade) {
             case 'speed':
