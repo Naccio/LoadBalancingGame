@@ -87,7 +87,8 @@ class GameArea {
             x: w / 2,
             y: h - 14,
             text: 'Press space to pause',
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'center',
             baseline: 'alphabetic',
             color: 'darkGray'
@@ -98,9 +99,7 @@ class GameArea {
                 x: w / 2,
                 y: h - 35,
                 fontSize: 20,
-                fontWeight: '',
-                font: '20px sans-serif',
-                color: { r: 255, g: 0, b: 0 },
+                rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgrade',
                 text: '- Upgrade available! -',
                 life: 400,
@@ -136,7 +135,8 @@ class GameArea {
             x: w - 10,
             y: h - 14,
             text,
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'end',
             baseline: 'alphabetic', color
         }, context);
@@ -161,7 +161,9 @@ class GameArea {
             x,
             y: y + 8,
             text: 'DoS',
-            font: 'bold 9px Arial',
+            fontWeight: 'bold',
+            fontSize: 9,
+            fontFamily: 'Arial',
             align: 'center',
             color: 'white'
         }, context);
@@ -194,7 +196,9 @@ class GameArea {
                 x,
                 y,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
-                font: 'bold 15px Arial',
+                fontWeight: 'bold',
+                fontSize: 15,
+                fontFamily: 'Arial',
                 align: 'center',
                 color: 'white'
             }, context);

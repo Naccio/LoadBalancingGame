@@ -16,7 +16,7 @@ class ServerUpgradeButton extends UpgradeButton {
             x: x - 25,
             y,
             text: '+',
-            font: '45px monospace',
+            fontSize: 45,
             align: 'center',
             color: 'red'
         }, context);

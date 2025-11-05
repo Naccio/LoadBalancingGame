@@ -50,46 +50,41 @@ class Pause implements Scene {
     }
 
     update() {
-        var context = this.canvas.getContext('2d')!,
+        const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
             x = w / 2,
-            font = '25px monospace',
-            color;
+            fontSize = 25;
 
         this.clouds.draw();
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            color = 'black';
             Utilities.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'Choose an upgrade:',
-                font,
+                fontSize,
                 align: 'center',
-                color
+                color: 'black'
             }, context);
         } else {
-            color = '#DDDDDD';
             Utilities.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'No upgrades available',
-                font,
+                fontSize,
                 align: 'center',
-                color
+                color: '#DDDDDD'
             }, context);
         }
 
-        color = 'red';
-        font = '50px monospace';
         Utilities.drawText({
             x,
             y: 60,
             text: '~ Paused ~',
-            font,
+            fontSize: 50,
             align: 'center',
-            color
+            color: 'red'
         }, context);
     }
 

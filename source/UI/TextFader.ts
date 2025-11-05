@@ -94,7 +94,6 @@ class TextFader {
             text.alpha = 1;
         }
         text.delta = 0;
-        text.font = text.fontWeight + ' ' + text.fontSize + 'px Arial';
         this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
     };
 
@@ -137,15 +136,15 @@ class TextFader {
 
     private drawText(text: FadingText, x: number, y: number) {
         const delta = text.delta ?? 0,
-            { r, g, b } = text.color,
+            { r, g, b } = text.rgbColor,
             a = text.alpha,
             color = `rgba(${r}, ${g}, ${b}, ${a})`;
 
         Utilities.drawText({
+            ...text,
             x,
             y: y - delta,
-            text: text.text,
-            font: text.font,
+            fontFamily: 'Arial',
             align: 'center',
             color
         }, this.context);

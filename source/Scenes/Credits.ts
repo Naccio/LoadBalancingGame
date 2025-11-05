@@ -51,18 +51,18 @@ class Credits implements Scene {
     }
 
     private drawHeading(y: number, text: string) {
-        this.drawText(y, text, 'bold 20px monospace', 'red');
+        this.drawText(y, text, 20, 'red', 'bold');
     }
 
     private drawMainText(y: number, text: string) {
-        this.drawText(y, text, '30px monospace', 'white');
+        this.drawText(y, text, 30, 'white');
     }
 
     private drawSubText(y: number, text: string) {
-        this.drawText(y, text, '15px monospace', '#ddd');
+        this.drawText(y, text, 15, '#ddd');
     }
 
-    private drawText(y: number, text: string, font: string, color: string) {
+    private drawText(y: number, text: string, fontSize: number, color: string, fontWeight?: 'bold') {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width;
 
@@ -70,7 +70,8 @@ class Credits implements Scene {
             x: w / 2,
             y,
             text,
-            font,
+            fontSize,
+            fontWeight,
             align: 'center',
             color
         }, context)

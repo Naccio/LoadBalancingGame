@@ -51,7 +51,7 @@ class VolumeButton implements Button {
                 x,
                 y: y + w / 2 + 2,
                 text: 'Music: ' + status,
-                font: '10px monospace',
+                fontSize: 10,
                 align: 'center',
                 baseline: 'top',
                 color: '#fff'

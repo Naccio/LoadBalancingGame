@@ -55,7 +55,9 @@ class Menu implements Scene {
             x: w / 2,
             y: 110,
             text: 'Load Balancing',
-            font: 'small-caps bold 110px monospace',
+            fontVariant: 'small-caps',
+            fontWeight: 'bold',
+            fontSize: 110,
             align,
             color
         }, context);
@@ -63,7 +65,7 @@ class Menu implements Scene {
             x: w / 2,
             y: 185,
             text: 'The Game',
-            font: '45px monospace',
+            fontSize: 45,
             align,
             color
         }, context);

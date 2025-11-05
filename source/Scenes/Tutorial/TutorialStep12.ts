@@ -54,14 +54,14 @@ class TutorialStep12 extends TutorialStep {
             x: w / 2,
             y: h / 2 + 60,
             text: 'Choose an upgrade:',
-            font: '25px monospace',
+            fontSize: 25,
             align: 'center',
         }, context);
         Utilities.drawText({
             x: w / 2,
             y: h / 3,
             text: '~ Paused ~',
-            font: '50px monospace',
+            fontSize: 50,
             align: 'center',
             color: 'red'
         }, context);

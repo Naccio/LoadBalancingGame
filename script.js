@@ -201,7 +201,6 @@ class TextFader {
             text.alpha = 1;
         }
         text.delta = 0;
-        text.font = text.fontWeight + ' ' + text.fontSize + 'px Arial';
         this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
     }
     ;
@@ -243,12 +242,12 @@ class TextFader {
     }
     ;
     drawText(text, x, y) {
-        const delta = text.delta ?? 0, { r, g, b } = text.color, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
+        const delta = text.delta ?? 0, { r, g, b } = text.rgbColor, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
         Utilities.drawText({
+            ...text,
             x,
             y: y - delta,
-            text: text.text,
-            font: text.font,
+            fontFamily: 'Arial',
             align: 'center',
             color
         }, this.context);
@@ -314,7 +313,15 @@ class Utilities {
         Utilities.draw(star, context);
     }
     static drawText(text, context) {
-        context.font = text.font;
+        const fontFamily = text.fontFamily ?? 'monospace';
+        let font = `${text.fontSize}px ${fontFamily}`;
+        if (text.fontVariant) {
+            font = `${text.fontVariant} ${font}`;
+        }
+        if (text.fontWeight) {
+            font = `${text.fontWeight} ${font}`;
+        }
+        context.font = font;
         context.textAlign = text.align ?? 'start';
         context.textBaseline = text.baseline ?? 'middle';
         context.fillStyle = text.color ?? Defaults.defaultColor;
@@ -395,35 +402,31 @@ class PopularityTracker {
             x: 10,
             y,
             text: 'Popularity: ' + this.popularity,
-            font: '18px sans-serif'
+            fontSize: 18,
+            fontFamily: 'sans-serif'
         }, context);
     }
     reset() {
         this.popularity = 0;
     }
     updatePopularity(amount, x, y) {
-        let fontSize = 12, color = { r: 0, g: 150, b: 0 }, borderColor = { r: 150, g: 250, b: 150 }, borderWidth = 1;
+        let fontSize = 12, color = { r: 0, g: 150, b: 0 };
         if (amount < 0) {
             color = { r: 150, g: 0, b: 0 };
-            borderColor = { r: 250, g: 150, b: 150 };
         }
         if (Math.abs(amount) >= 5) {
             fontSize = 16;
-            borderWidth = 2;
         }
-        const text = {
+        this.fader.addText({
             text: amount.toString(),
-            color: color,
+            rgbColor: color,
             fontSize: fontSize,
             fontWeight: 'bold',
-            border: true,
-            borderColor: borderColor,
-            borderWidth: borderWidth,
             alpha: 1,
-            font: '',
-            delta: 0
-        };
-        this.fader.addText(text, x.toString() + y.toString());
+            delta: 0,
+            x,
+            y
+        }, x.toString() + y.toString());
         this.popularity += amount;
         if (this.popularity >= this.upgrades.nextUpgrade) {
             this.upgrades.increaseUpgrades();
@@ -577,7 +580,7 @@ class VolumeButton {
                 x,
                 y: y + w / 2 + 2,
                 text: 'Music: ' + status,
-                font: '10px monospace',
+                fontSize: 10,
                 align: 'center',
                 baseline: 'top',
                 color: '#fff'
@@ -932,7 +935,7 @@ class SimpleButton {
             x: this.x,
             y: this.y,
             text: this.text,
-            font: '15px monospace',
+            fontSize: 15,
             align: 'center',
             color
         }, context);
@@ -979,21 +982,22 @@ class Credits {
         }, context);
     }
     drawHeading(y, text) {
-        this.drawText(y, text, 'bold 20px monospace', 'red');
+        this.drawText(y, text, 20, 'red', 'bold');
     }
     drawMainText(y, text) {
-        this.drawText(y, text, '30px monospace', 'white');
+        this.drawText(y, text, 30, 'white');
     }
     drawSubText(y, text) {
-        this.drawText(y, text, '15px monospace', '#ddd');
+        this.drawText(y, text, 15, '#ddd');
     }
-    drawText(y, text, font, color) {
+    drawText(y, text, fontSize, color, fontWeight) {
         const context = this.canvas.getContext('2d'), w = this.canvas.width;
         Utilities.drawText({
             x: w / 2,
             y,
             text,
-            font,
+            fontSize,
+            fontWeight,
             align: 'center',
             color
         }, context);
@@ -1180,7 +1184,8 @@ class GameArea {
             x: w / 2,
             y: h - 14,
             text: 'Press space to pause',
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'center',
             baseline: 'alphabetic',
             color: 'darkGray'
@@ -1190,9 +1195,7 @@ class GameArea {
                 x: w / 2,
                 y: h - 35,
                 fontSize: 20,
-                fontWeight: '',
-                font: '20px sans-serif',
-                color: { r: 255, g: 0, b: 0 },
+                rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgrade',
                 text: '- Upgrade available! -',
                 life: 400,
@@ -1222,7 +1225,8 @@ class GameArea {
             x: w - 10,
             y: h - 14,
             text,
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'end',
             baseline: 'alphabetic', color
         }, context);
@@ -1242,7 +1246,9 @@ class GameArea {
             x,
             y: y + 8,
             text: 'DoS',
-            font: 'bold 9px Arial',
+            fontWeight: 'bold',
+            fontSize: 9,
+            fontFamily: 'Arial',
             align: 'center',
             color: 'white'
         }, context);
@@ -1269,7 +1275,9 @@ class GameArea {
                 x,
                 y,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
-                font: 'bold 15px Arial',
+                fontWeight: 'bold',
+                fontSize: 15,
+                fontFamily: 'Arial',
                 align: 'center',
                 color: 'white'
             }, context);
@@ -1433,7 +1441,8 @@ class GameOver {
             x: w / 2,
             y: 100,
             text: 'Game Over',
-            font: 'small-caps 60px monospace',
+            fontSize: 60,
+            fontVariant: 'small-caps',
             align: 'center',
             color: 'red'
         }, context);
@@ -1441,12 +1450,12 @@ class GameOver {
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
-        const font = '30px monospace';
+        const fontSize = 30;
         Utilities.drawText({
             x: w / 2 + 68,
             y: h / 2 + 50,
             text: 'Popularity:',
-            font,
+            fontSize,
             align: 'end',
             color: this.color
         }, context);
@@ -1454,7 +1463,7 @@ class GameOver {
             x: w / 2 + 75,
             y: h / 2 + 50,
             text: this.popularity.popularity.toString(),
-            font,
+            fontSize,
             align: 'start',
             color: this.color
         }, context);
@@ -1476,7 +1485,7 @@ class GameOver {
             x,
             y,
             text: text + ':',
-            font: '15px monospace',
+            fontSize: 15,
             align: 'end',
             color: this.color
         }, context);
@@ -1487,7 +1496,7 @@ class GameOver {
             x,
             y,
             text: value.toString(),
-            font: '15px monospace',
+            fontSize: 15,
             align: 'start',
             color: this.color
         }, context);
@@ -1568,7 +1577,8 @@ class Tutorial {
                 x: w / 2,
                 y: 18 + 20 * i,
                 text,
-                font: 'bold 18px monospace',
+                fontWeight: 'bold',
+                fontSize: 18,
                 align: 'center',
                 color: 'white'
             }, context);
@@ -1628,7 +1638,9 @@ class Menu {
             x: w / 2,
             y: 110,
             text: 'Load Balancing',
-            font: 'small-caps bold 110px monospace',
+            fontVariant: 'small-caps',
+            fontWeight: 'bold',
+            fontSize: 110,
             align,
             color
         }, context);
@@ -1636,7 +1648,7 @@ class Menu {
             x: w / 2,
             y: 185,
             text: 'The Game',
-            font: '45px monospace',
+            fontSize: 45,
             align,
             color
         }, context);
@@ -1683,7 +1695,7 @@ class UpgradeButton {
                 x: context.canvas.width / 2,
                 y: context.canvas.height - 50,
                 text: this.text,
-                font: '20px monospace',
+                fontSize: 20,
                 align: 'center',
                 color: 'red'
             }, context);
@@ -1757,7 +1769,7 @@ class ServerUpgradeButton extends UpgradeButton {
             x: x - 25,
             y,
             text: '+',
-            font: '45px monospace',
+            fontSize: 45,
             align: 'center',
             color: 'red'
         }, context);
@@ -1876,39 +1888,35 @@ class Pause {
             : [...this.buttons];
     }
     update() {
-        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, font = '25px monospace', color;
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, fontSize = 25;
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            color = 'black';
             Utilities.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'Choose an upgrade:',
-                font,
+                fontSize,
                 align: 'center',
-                color
+                color: 'black'
             }, context);
         }
         else {
-            color = '#DDDDDD';
             Utilities.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'No upgrades available',
-                font,
+                fontSize,
                 align: 'center',
-                color
+                color: '#DDDDDD'
             }, context);
         }
-        color = 'red';
-        font = '50px monospace';
         Utilities.drawText({
             x,
             y: 60,
             text: '~ Paused ~',
-            font,
+            fontSize: 50,
             align: 'center',
-            color
+            color: 'red'
         }, context);
     }
     selectUpgrade(id) {
@@ -2016,15 +2024,15 @@ class TutorialStep4 extends TutorialStep {
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, font = '10px sans-serif', circle = {
+        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, circle = {
             x,
             y,
             radius: iconRadius
         }, text = {
             x: x + textSpacing + iconRadius,
             y,
-            text: '',
-            font
+            fontSize: 10,
+            fontFamily: 'sans-serif'
         };
         Utilities.drawCircle({
             ...circle,
@@ -2194,10 +2202,8 @@ class TutorialStep8 extends TutorialStep {
         const w = this.canvas.width, h = this.canvas.height, text = {
             x: w / 2,
             y: h - 116,
-            font: '20px sans-serif',
             fontSize: 20,
-            fontWeight: '',
-            color: { r: 255, g: 0, b: 0 },
+            rgbColor: { r: 255, g: 0, b: 0 },
             id: 'upgradeTut',
             text: '- Upgrade available! -',
             life: 1000,
@@ -2218,7 +2224,8 @@ class TutorialStep8 extends TutorialStep {
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'center',
             color: 'darkGray'
         }, context);
@@ -2263,14 +2270,14 @@ class TutorialStep9 extends TutorialStep {
             x: w / 2,
             y: h / 2 + 60,
             text: 'Choose an upgrade:',
-            font: '25px monospace',
+            fontSize: 25,
             align: 'center',
         }, context);
         Utilities.drawText({
             x: w / 2,
             y: h / 3,
             text: '~ Paused ~',
-            font: '50px monospace',
+            fontSize: 50,
             align: 'center',
             color: 'red'
         }, context);
@@ -2347,10 +2354,8 @@ class TutorialStep11 extends TutorialStep {
         const w = this.canvas.width, h = this.canvas.height, server = this.game.servers[0], attacker0 = new Attacker(this.orchestrator, w / 2, h * 3 / 4, 10000, server), attacker1 = new Attacker(this.orchestrator, w / 3, h * 2 / 3, 10000, server), attacker2 = new Attacker(this.orchestrator, w * 2 / 3, h * 2 / 3, 10000, server), text = {
             x: w / 2,
             y: h - 116,
-            font: '20px sans-serif',
             fontSize: 20,
-            fontWeight: '',
-            color: { r: 255, g: 0, b: 0 },
+            rgbColor: { r: 255, g: 0, b: 0 },
             id: 'upgradeTut',
             text: '- Upgrade available! -',
             life: 1000,
@@ -2378,7 +2383,8 @@ class TutorialStep11 extends TutorialStep {
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'center',
             color: 'darkGray'
         }, context);
@@ -2431,14 +2437,14 @@ class TutorialStep12 extends TutorialStep {
             x: w / 2,
             y: h / 2 + 60,
             text: 'Choose an upgrade:',
-            font: '25px monospace',
+            fontSize: 25,
             align: 'center',
         }, context);
         Utilities.drawText({
             x: w / 2,
             y: h / 3,
             text: '~ Paused ~',
-            font: '50px monospace',
+            fontSize: 50,
             align: 'center',
             color: 'red'
         }, context);
@@ -2537,7 +2543,7 @@ class BorderButton extends SimpleButton {
             x: this.x,
             y: this.y,
             text: this.text,
-            font: '15px monospace',
+            fontSize: 15,
             align: 'center',
             color
         }, context);
@@ -2605,7 +2611,7 @@ class Upgrade {
             x: w / 2,
             y: 60,
             text: `~ Select ${text} ~`,
-            font: '30px monospace',
+            fontSize: 30,
             align: 'center',
             color: 'red'
         }, context);

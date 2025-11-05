@@ -27,7 +27,7 @@ class SimpleButton implements Button {
             x: this.x,
             y: this.y,
             text: this.text,
-            font: '15px monospace',
+            fontSize: 15,
             align: 'center',
             color
         }, context);

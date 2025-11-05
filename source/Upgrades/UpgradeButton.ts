@@ -36,7 +36,7 @@ abstract class UpgradeButton implements Button {
                 x: context.canvas.width / 2,
                 y: context.canvas.height - 50,
                 text: this.text,
-                font: '20px monospace',
+                fontSize: 20,
                 align: 'center',
                 color: 'red'
             }, context);

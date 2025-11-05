@@ -76,7 +76,7 @@ class Upgrade implements Scene {
             x: w / 2,
             y: 60,
             text: `~ Select ${text} ~`,
-            font: '30px monospace',
+            fontSize: 30,
             align: 'center',
             color: 'red'
         }, context);

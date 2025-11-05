@@ -31,10 +31,8 @@ class TutorialStep8 extends TutorialStep {
             text = {
                 x: w / 2,
                 y: h - 116,
-                font: '20px sans-serif',
                 fontSize: 20,
-                fontWeight: '',
-                color: { r: 255, g: 0, b: 0 },
+                rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgradeTut',
                 text: '- Upgrade available! -',
                 life: 1000,
@@ -62,7 +60,8 @@ class TutorialStep8 extends TutorialStep {
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
-            font: '18px sans-serif',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
             align: 'center',
             color: 'darkGray'
         }, context);

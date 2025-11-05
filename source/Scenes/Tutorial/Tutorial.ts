@@ -79,7 +79,8 @@ class Tutorial implements Scene {
                 x: w / 2,
                 y: 18 + 20 * i,
                 text,
-                font: 'bold 18px monospace',
+                fontWeight: 'bold',
+                fontSize: 18,
                 align: 'center',
                 color: 'white'
             }, context);

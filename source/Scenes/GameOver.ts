@@ -44,7 +44,8 @@ class GameOver implements Scene {
             x: w / 2,
             y: 100,
             text: 'Game Over',
-            font: 'small-caps 60px monospace',
+            fontSize: 60,
+            fontVariant: 'small-caps',
             align: 'center',
             color: 'red'
         }, context);
@@ -54,12 +55,12 @@ class GameOver implements Scene {
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
 
-        const font = '30px monospace';
+        const fontSize = 30;
         Utilities.drawText({
             x: w / 2 + 68,
             y: h / 2 + 50,
             text: 'Popularity:',
-            font,
+            fontSize,
             align: 'end',
             color: this.color
         }, context);
@@ -67,7 +68,7 @@ class GameOver implements Scene {
             x: w / 2 + 75,
             y: h / 2 + 50,
             text: this.popularity.popularity.toString(),
-            font,
+            fontSize,
             align: 'start',
             color: this.color
         }, context);
@@ -94,7 +95,7 @@ class GameOver implements Scene {
             x,
             y,
             text: text + ':',
-            font: '15px monospace',
+            fontSize: 15,
             align: 'end',
             color: this.color
         }, context);
@@ -108,7 +109,7 @@ class GameOver implements Scene {
             x,
             y,
             text: value.toString(),
-            font: '15px monospace',
+            fontSize: 15,
             align: 'start',
             color: this.color
         }, context);

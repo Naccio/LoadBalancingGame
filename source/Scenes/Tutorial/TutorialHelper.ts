@@ -10,7 +10,6 @@ class TutorialHelper {
             iconRadius = 3,
             textSpacing = 2,
             lineSpacing = iconRadius + 5,
-            font = '10px sans-serif',
             circle = {
                 x,
                 y,
@@ -19,8 +18,8 @@ class TutorialHelper {
             text = {
                 x: x + textSpacing + iconRadius,
                 y,
-                text: '',
-                font
+                fontSize: 10,
+                fontFamily: 'sans-serif'
             };
 
         Utilities.drawCircle({

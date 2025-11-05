@@ -89,7 +89,19 @@ class Utilities {
     }
 
     public static drawText(text: UIText, context: CanvasRenderingContext2D) {
-        context.font = text.font;
+        const fontFamily = text.fontFamily ?? 'monospace';
+
+        let font = `${text.fontSize}px ${fontFamily}`;
+
+        if (text.fontVariant) {
+            font = `${text.fontVariant} ${font}`;
+        }
+
+        if (text.fontWeight) {
+            font = `${text.fontWeight} ${font}`;
+        }
+
+        context.font = font;
         context.textAlign = text.align ?? 'start';
         context.textBaseline = text.baseline ?? 'middle';
         context.fillStyle = text.color ?? Defaults.defaultColor;
