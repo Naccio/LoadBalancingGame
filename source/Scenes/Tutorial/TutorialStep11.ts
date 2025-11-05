@@ -1,7 +1,7 @@
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
-/// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
@@ -12,8 +12,8 @@ class TutorialStep11 extends TutorialStep {
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
-        private popularityTracker: PopularityTracker,
-        private fader: TextFader
+        private fader: TextFader,
+        private clientFactory: ClientFactory
     ) {
         super(10, [
             'Oh snap! Your datacenter is under a DDOS ATTACK! And more clients need serving!',
@@ -80,8 +80,8 @@ class TutorialStep11 extends TutorialStep {
     private spawnClients() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            client0 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 3, 10000),
-            client1 = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 3, 10000);
+            client0 = this.clientFactory.create(w / 4, h / 3, 10000),
+            client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
 
         client0.life = - 21;
         client1.life = - 21;

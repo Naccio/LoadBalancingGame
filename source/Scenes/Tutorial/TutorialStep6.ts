@@ -1,5 +1,6 @@
 /// <reference path='../../Defaults.ts' />
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -13,7 +14,8 @@ class TutorialStep6 extends TutorialStep {
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
-        private popularityTracker: PopularityTracker
+        private popularityTracker: PopularityTracker,
+        private clientFactory: ClientFactory
     ) {
         super(5, [
             'Cool! Two new clients want to use your service!',
@@ -54,8 +56,8 @@ class TutorialStep6 extends TutorialStep {
     private spawnClients() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            client1 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 4, 10000),
-            client2 = new Client(this.orchestrator, this.popularityTracker, w / 4, h * 3 / 4, 10000);
+            client1 = this.clientFactory.create(w / 4, h / 4, 10000),
+            client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
 
         client1.life = - 21;
         client2.life = - 21;

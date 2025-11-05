@@ -26,16 +26,10 @@ class PopularityTracker {
     }
 
     updatePopularity(amount: number, x: number, y: number) {
-        let fontSize = 12,
-            color = { r: 0, g: 150, b: 0 };
-
-        if (amount < 0) {
-            color = { r: 150, g: 0, b: 0 };
-        }
-
-        if (Math.abs(amount) >= 5) {
-            fontSize = 16;
-        }
+        let fontSize = amount >= 5 ? 16 : 12,
+            color = amount < 0
+                ? { r: 150, g: 0, b: 0 }
+                : { r: 0, g: 150, b: 0 };
 
         this.fader.addText({
             text: amount.toString(),

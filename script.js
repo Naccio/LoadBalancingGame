@@ -410,13 +410,9 @@ class PopularityTracker {
         this.popularity = 0;
     }
     updatePopularity(amount, x, y) {
-        let fontSize = 12, color = { r: 0, g: 150, b: 0 };
-        if (amount < 0) {
-            color = { r: 150, g: 0, b: 0 };
-        }
-        if (Math.abs(amount) >= 5) {
-            fontSize = 16;
-        }
+        let fontSize = amount >= 5 ? 16 : 12, color = amount < 0
+            ? { r: 150, g: 0, b: 0 }
+            : { r: 0, g: 150, b: 0 };
         this.fader.addText({
             text: amount.toString(),
             rgbColor: color,
@@ -709,12 +705,44 @@ class GameTracker {
         }
     }
 }
-class Scheduler {
+class Defaults {
+    static clientSize = 30;
+    static clientsSpeed = 2;
+    static defaultColor = 'black';
+    static frameRate = 60;
+    static gameLength = 5;
+    static maxClientWaitTime = 9;
+    static messageSize = 6;
+    static messageVelocity = 200;
+    static serversCapacity = 80;
+    static serverSize = 40;
+    static serversSpeed = 3.5;
+    static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
+}
+class ClientFactory {
+    game;
+    orchestrator;
     popularityTracker;
     fader;
+    constructor(game, orchestrator, popularityTracker, fader) {
+        this.game = game;
+        this.orchestrator = orchestrator;
+        this.popularityTracker = popularityTracker;
+        this.fader = fader;
+    }
+    create(x, y, messages) {
+        const clientSize = Defaults.clientSize, client = new Client(this.orchestrator, this.popularityTracker, x, y, messages);
+        this.game.clients.push(client);
+        this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
+        return client;
+    }
+}
+class Scheduler {
+    popularityTracker;
     orchestrator;
     canvas;
     game;
+    clientFactory;
     timeLastDDoS = 0;
     minClientMessages = 25;
     maxClientMessages = 35;
@@ -723,12 +751,12 @@ class Scheduler {
     spawnRate = 6;
     attackRate = 80;
     timeLastClient = 1 - this.spawnRate;
-    constructor(popularityTracker, fader, orchestrator, canvas, game) {
+    constructor(popularityTracker, orchestrator, canvas, game, clientFactory) {
         this.popularityTracker = popularityTracker;
-        this.fader = fader;
         this.orchestrator = orchestrator;
         this.canvas = canvas;
         this.game = game;
+        this.clientFactory = clientFactory;
     }
     schedule() {
         const popularity = this.popularityTracker.popularity, elapsedTime = this.game.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
@@ -824,8 +852,7 @@ class Scheduler {
             x = Utilities.random(minX, maxX);
             y = Utilities.random(minY, maxY);
         }
-        this.game.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, messages));
-        this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
+        this.clientFactory.create(x, y, messages);
         this.timeLastClient = elapsedTime;
     }
     ;
@@ -1002,20 +1029,6 @@ class Credits {
             color
         }, context);
     }
-}
-class Defaults {
-    static clientSize = 30;
-    static clientsSpeed = 2;
-    static defaultColor = 'black';
-    static frameRate = 60;
-    static gameLength = 5;
-    static maxClientWaitTime = 9;
-    static messageSize = 6;
-    static messageVelocity = 200;
-    static serversCapacity = 80;
-    static serverSize = 40;
-    static serversSpeed = 3.5;
-    static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
 }
 class CursorTracker {
     game;
@@ -1964,9 +1977,8 @@ class TutorialStep2 extends TutorialStep {
 class TutorialStep3 extends TutorialStep {
     canvas;
     game;
-    orchestrator;
-    popularityTracker;
-    constructor(canvas, game, orchestrator, popularityTracker) {
+    clientFactory;
+    constructor(canvas, game, clientFactory) {
         super(2, [
             'This is a CLIENT.',
             'It wants to exchange data with your datacenter.',
@@ -1974,13 +1986,12 @@ class TutorialStep3 extends TutorialStep {
         ]);
         this.canvas = canvas;
         this.game = game;
-        this.orchestrator = orchestrator;
-        this.popularityTracker = popularityTracker;
+        this.clientFactory = clientFactory;
         this.hasNext = true;
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height, client = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 2, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client = this.clientFactory.create(w * 3 / 4, h / 2, 10000);
         client.life = -31;
         this.game.clients.push(client);
     }
@@ -2106,7 +2117,8 @@ class TutorialStep6 extends TutorialStep {
     game;
     orchestrator;
     popularityTracker;
-    constructor(canvas, game, orchestrator, popularityTracker) {
+    clientFactory;
+    constructor(canvas, game, orchestrator, popularityTracker, clientFactory) {
         super(5, [
             'Cool! Two new clients want to use your service!',
             'Connect them as well to start gaining some more popularity.',
@@ -2116,6 +2128,7 @@ class TutorialStep6 extends TutorialStep {
         this.game = game;
         this.orchestrator = orchestrator;
         this.popularityTracker = popularityTracker;
+        this.clientFactory = clientFactory;
         this.hasHome = true;
     }
     setup() {
@@ -2143,7 +2156,7 @@ class TutorialStep6 extends TutorialStep {
         TutorialHelper.drawLegend(this.canvas, false);
     }
     spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client1 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 4, 10000), client2 = new Client(this.orchestrator, this.popularityTracker, w / 4, h * 3 / 4, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create(w / 4, h / 4, 10000), client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
         client1.life = -21;
         client2.life = -21;
         this.game.clients.push(client1, client2);
@@ -2334,9 +2347,9 @@ class TutorialStep11 extends TutorialStep {
     canvas;
     game;
     orchestrator;
-    popularityTracker;
     fader;
-    constructor(canvas, game, orchestrator, popularityTracker, fader) {
+    clientFactory;
+    constructor(canvas, game, orchestrator, fader, clientFactory) {
         super(10, [
             'Oh snap! Your datacenter is under a DDOS ATTACK! And more clients need serving!',
             'This is likely to happen as you get more and more popular.',
@@ -2345,8 +2358,8 @@ class TutorialStep11 extends TutorialStep {
         this.canvas = canvas;
         this.game = game;
         this.orchestrator = orchestrator;
-        this.popularityTracker = popularityTracker;
         this.fader = fader;
+        this.clientFactory = clientFactory;
         this.hasHome = true;
         this.advanceOnSpace = true;
     }
@@ -2390,7 +2403,7 @@ class TutorialStep11 extends TutorialStep {
         }, context);
     }
     spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client0 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 3, 10000), client1 = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 3, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
         client0.life = -21;
         client1.life = -21;
         this.game.clients.push(client0, client1);
@@ -2455,7 +2468,8 @@ class TutorialStep13 extends TutorialStep {
     game;
     orchestrator;
     popularityTracker;
-    constructor(canvas, game, orchestrator, popularityTracker) {
+    clientFactory;
+    constructor(canvas, game, orchestrator, popularityTracker, clientFactory) {
         super(12, [
             'Perfect! Now you have a new datacenter at your disposal.',
             'This is when a good load balancing strategy will start to matter.',
@@ -2465,6 +2479,7 @@ class TutorialStep13 extends TutorialStep {
         this.game = game;
         this.orchestrator = orchestrator;
         this.popularityTracker = popularityTracker;
+        this.clientFactory = clientFactory;
         this.hasHome = true;
     }
     setup() {
@@ -2473,7 +2488,7 @@ class TutorialStep13 extends TutorialStep {
     }
     run() {
         if (this.game.clients.length === 0) {
-            const w = this.canvas.width, h = this.canvas.height, client0 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 3, 10000), client1 = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 3, 10000);
+            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
             client0.life = -21;
             client1.life = -21;
             this.game.clients.push(client0, client1);
@@ -2702,8 +2717,9 @@ class Application {
         const popularityTracker = new PopularityTracker(fader, upgradesTracker, canvas);
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui);
+        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
         const cursor = new CursorTracker(game, canvas, ui);
-        const scheduler = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+        const scheduler = new Scheduler(popularityTracker, orchestrator, canvas, game, clientFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
         const credits = new Credits(canvas, clouds, game);
@@ -2714,17 +2730,17 @@ class Application {
         const tutorial = new Tutorial([
             new TutorialStep1(canvas, game),
             new TutorialStep2(canvas),
-            new TutorialStep3(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep3(canvas, game, clientFactory),
             new TutorialStep4(game),
             new TutorialStep5(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep6(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep6(canvas, game, orchestrator, popularityTracker, clientFactory),
             new TutorialStep7(canvas, game, orchestrator, popularityTracker),
             new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
             new TutorialStep9(canvas, game, fader),
             new TutorialStep10(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep11(canvas, game, orchestrator, popularityTracker, fader),
+            new TutorialStep11(canvas, game, orchestrator, fader, clientFactory),
             new TutorialStep12(canvas, game, fader),
-            new TutorialStep13(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep13(canvas, game, orchestrator, popularityTracker, clientFactory),
             new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
         const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);

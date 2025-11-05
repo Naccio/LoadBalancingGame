@@ -1,7 +1,7 @@
 /// <reference path='../Model/Attacker.ts' />
 /// <reference path='../Model/Client.ts' />
 /// <reference path='../Model/Server.ts' />
-/// <reference path='../UI/TextFader.ts' />
+/// <reference path='ClientFactory.ts' />
 /// <reference path='GameTracker.ts' />
 /// <reference path='MessageOrchestrator.ts' />
 /// <reference path='PopularityTracker.ts' />
@@ -18,10 +18,10 @@ class Scheduler {
 
     constructor(
         private popularityTracker: PopularityTracker,
-        private fader: TextFader,
         private orchestrator: MessageOrchestrator,
         private canvas: HTMLCanvasElement,
-        private game: GameTracker
+        private game: GameTracker,
+        private clientFactory: ClientFactory
     ) { }
 
     schedule() {
@@ -140,8 +140,7 @@ class Scheduler {
             y = Utilities.random(minY, maxY);
         }
 
-        this.game.clients.push(new Client(this.orchestrator, this.popularityTracker, x, y, messages));
-        this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
+        this.clientFactory.create(x, y, messages);
         this.timeLastClient = elapsedTime;
     };
 

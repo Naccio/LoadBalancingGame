@@ -12,7 +12,8 @@ class TutorialStep13 extends TutorialStep {
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
-        private popularityTracker: PopularityTracker
+        private popularityTracker: PopularityTracker,
+        private clientFactory: ClientFactory
     ) {
         super(12, [
             'Perfect! Now you have a new datacenter at your disposal.',
@@ -31,8 +32,8 @@ class TutorialStep13 extends TutorialStep {
         if (this.game.clients.length === 0) {
             const w = this.canvas.width,
                 h = this.canvas.height,
-                client0 = new Client(this.orchestrator, this.popularityTracker, w / 4, h / 3, 10000),
-                client1 = new Client(this.orchestrator, this.popularityTracker, w * 3 / 4, h / 3, 10000);
+                client0 = this.clientFactory.create(w / 4, h / 3, 10000),
+                client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
 
             client0.life = - 21;
             client1.life = - 21;

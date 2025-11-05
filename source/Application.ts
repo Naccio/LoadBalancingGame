@@ -20,7 +20,10 @@
 /// <reference path='Scenes/Tutorial/TutorialStep13.ts' />
 /// <reference path='Scenes/Tutorial/TutorialStep14.ts' />
 /// <reference path='Scenes/Upgrade.ts' />
+/// <reference path='Services/ClientFactory.ts' />
 /// <reference path='Services/GameTracker.ts' />
+/// <reference path='Services/MessageOrchestrator.ts' />
+/// <reference path='Services/PopularityTracker.ts' />
 /// <reference path='Services/Scheduler.ts' />
 /// <reference path='UI/CursorTracker.ts' />
 /// <reference path='UI/FpsCounter.ts' />
@@ -79,8 +82,9 @@ class Application {
         const popularityTracker = new PopularityTracker(fader, upgradesTracker, canvas);
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui);
+        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
         const cursor = new CursorTracker(game, canvas, ui);
-        const scheduler = new Scheduler(popularityTracker, fader, orchestrator, canvas, game);
+        const scheduler = new Scheduler(popularityTracker, orchestrator, canvas, game, clientFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
 
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
@@ -93,17 +97,17 @@ class Application {
         const tutorial = new Tutorial([
             new TutorialStep1(canvas, game),
             new TutorialStep2(canvas),
-            new TutorialStep3(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep3(canvas, game, clientFactory),
             new TutorialStep4(game),
             new TutorialStep5(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep6(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep6(canvas, game, orchestrator, popularityTracker, clientFactory),
             new TutorialStep7(canvas, game, orchestrator, popularityTracker),
             new TutorialStep8(canvas, game, orchestrator, popularityTracker, fader),
             new TutorialStep9(canvas, game, fader),
             new TutorialStep10(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep11(canvas, game, orchestrator, popularityTracker, fader),
+            new TutorialStep11(canvas, game, orchestrator, fader, clientFactory),
             new TutorialStep12(canvas, game, fader),
-            new TutorialStep13(canvas, game, orchestrator, popularityTracker),
+            new TutorialStep13(canvas, game, orchestrator, popularityTracker, clientFactory),
             new TutorialStep14(canvas, game, orchestrator, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
         const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);
