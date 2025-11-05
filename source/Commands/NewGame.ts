@@ -2,7 +2,7 @@
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/PopularityTracker.ts' />
 /// <reference path='../Services/Scheduler.ts' />
-/// <reference path='../Services/UpgradesTracker.ts' />
+/// <reference path='../Upgrades/UpgradesTracker.ts' />
 /// <reference path='../UI/TextFader.ts' />
 
 class NewGame {

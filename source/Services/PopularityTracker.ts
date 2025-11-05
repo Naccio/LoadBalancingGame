@@ -1,6 +1,6 @@
 /// <reference path='../UI/TextFader.ts' />
 /// <reference path='../Utilities.ts' />
-/// <reference path='UpgradesTracker.ts' />
+/// <reference path='../Upgrades/UpgradesTracker.ts' />
 
 class PopularityTracker {
     public popularity: number;
