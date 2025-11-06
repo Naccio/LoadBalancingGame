@@ -13,7 +13,7 @@ class TutorialStep7 extends TutorialStep {
         private game: GameTracker,
         private popularityTracker: PopularityTracker
     ) {
-        super(6, [
+        super([
             'Oh no! Looks like your datacenter can\'t handle all this traffic!',
             'Clients will not be pleased if your datacenter is too busy to reply.',
             'You can see how busy a datacenter is by looking at its status bar.']);

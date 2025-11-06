@@ -13,7 +13,7 @@ class TutorialStep12 extends TutorialStep {
         serverFactory: ServerFactory,
         private fader: TextFader
     ) {
-        super(11, [
+        super([
             'This time let\'s buy a new datacenter.',
             'This way you can connect the clients to it while your first one is under attack.',
             'Select the first upgrade (Buy new datacenter).']);

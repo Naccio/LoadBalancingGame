@@ -14,7 +14,7 @@ class TutorialStep8 extends TutorialStep {
         private popularityTracker: PopularityTracker,
         private fader: TextFader
     ) {
-        super(7, [
+        super([
             'Thankfully, you are popular enough to afford to UPGRADE your datacenter.',
             'As your popularity grows, you will be able to upgrade it even more.',
             'Press SPACE to pause the game and select an upgrade.']);

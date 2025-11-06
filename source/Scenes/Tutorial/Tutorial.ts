@@ -13,6 +13,7 @@ class Tutorial implements Scene {
     private readonly homeButton: SimpleButton;
 
     private currentStep: TutorialStep;
+    private currentStepIndex: number;
 
     public id = Defaults.gameModes.TUTORIAL;
 
@@ -28,6 +29,7 @@ class Tutorial implements Scene {
             h = canvas.height;
 
         this.currentStep = steps[0];
+        this.currentStepIndex = 0;
         this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
         this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
 
@@ -99,7 +101,8 @@ class Tutorial implements Scene {
     }
 
     private advance() {
-        this.currentStep = this.steps[this.currentStep.id + 1];
+        this.currentStepIndex += 1;
+        this.currentStep = this.steps[this.currentStepIndex];
         this.currentStep.setup();
     }
 

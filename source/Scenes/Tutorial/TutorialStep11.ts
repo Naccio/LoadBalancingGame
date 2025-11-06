@@ -14,7 +14,7 @@ class TutorialStep11 extends TutorialStep {
         private clientFactory: ClientFactory,
         private attackerFactory: AttackerFactory
     ) {
-        super(10, [
+        super([
             'Oh snap! Your datacenter is under a DDOS ATTACK! And more clients need serving!',
             'This is likely to happen as you get more and more popular.',
             'You\'d better upgrade once again to cope with this situation.']);

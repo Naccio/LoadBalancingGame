@@ -14,7 +14,7 @@ class TutorialStep9 extends TutorialStep {
         private game: GameTracker,
         private fader: TextFader
     ) {
-        super(8, [
+        super([
             'Let\'s improve your datacenter\'s speed.',
             'This way it will process the clients\' requests faster.',
             'Select the third upgrade (Improve speed at one location).']);

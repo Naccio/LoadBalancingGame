@@ -5,7 +5,7 @@
 class TutorialStep2 extends TutorialStep {
 
     constructor(private canvas: HTMLCanvasElement) {
-        super(1, [
+        super([
             'This is a DATACENTER.',
             'Its role is to send data to your clients.',
             'Click "Next" to continue.']);

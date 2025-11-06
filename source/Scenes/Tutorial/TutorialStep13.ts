@@ -13,7 +13,7 @@ class TutorialStep13 extends TutorialStep {
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory
     ) {
-        super(12, [
+        super([
             'Perfect! Now you have a new datacenter at your disposal.',
             'This is when a good load balancing strategy will start to matter.',
             'Indeed you would be wiser to connect the clients to the new datacenter.']);

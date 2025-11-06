@@ -1530,15 +1530,13 @@ class GameOver {
     }
 }
 class TutorialStep {
-    id;
     texts;
     hasNext = false;
     hasHome = false;
     advance = false;
     advanceOnSpace = false;
     extraButtons = [];
-    constructor(id, texts) {
-        this.id = id;
+    constructor(texts) {
         this.texts = texts;
     }
     setup() { }
@@ -1555,6 +1553,7 @@ class Tutorial {
     nextButton;
     homeButton;
     currentStep;
+    currentStepIndex;
     id = Defaults.gameModes.TUTORIAL;
     constructor(steps, canvas, gameArea, fader, game, orchestrator) {
         this.steps = steps;
@@ -1565,6 +1564,7 @@ class Tutorial {
         this.orchestrator = orchestrator;
         const w = canvas.width, h = canvas.height;
         this.currentStep = steps[0];
+        this.currentStepIndex = 0;
         this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
         this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
         this.currentStep.setup();
@@ -1622,7 +1622,8 @@ class Tutorial {
         this.game.switchMode(Defaults.gameModes.TUTORIAL);
     }
     advance() {
-        this.currentStep = this.steps[this.currentStep.id + 1];
+        this.currentStepIndex += 1;
+        this.currentStep = this.steps[this.currentStepIndex];
         this.currentStep.setup();
     }
     listener(event) {
@@ -1966,7 +1967,7 @@ class TutorialStep1 extends TutorialStep {
     canvas;
     serverFactory;
     constructor(canvas, serverFactory) {
-        super(0, [
+        super([
             'Welcome to Load Balancing: The Game!',
             'Here you will take the role of -you guessed it- a LOAD BALANCER.',
             'Click "Next" to start the tutorial.'
@@ -1984,7 +1985,7 @@ class TutorialStep1 extends TutorialStep {
 class TutorialStep2 extends TutorialStep {
     canvas;
     constructor(canvas) {
-        super(1, [
+        super([
             'This is a DATACENTER.',
             'Its role is to send data to your clients.',
             'Click "Next" to continue.'
@@ -2002,7 +2003,7 @@ class TutorialStep3 extends TutorialStep {
     canvas;
     clientFactory;
     constructor(canvas, clientFactory) {
-        super(2, [
+        super([
             'This is a CLIENT.',
             'It wants to exchange data with your datacenter.',
             'Your job will be to connect the clients to a datacenter.'
@@ -2030,7 +2031,7 @@ class TutorialStep3 extends TutorialStep {
 class TutorialStep4 extends TutorialStep {
     game;
     constructor(game) {
-        super(3, [
+        super([
             'To create a connection, click on the client and then on the datacenter.',
             'Be quick though! Clients don\'t like waiting!',
             'Create a CONNECTION to continue.'
@@ -2106,7 +2107,7 @@ class TutorialStep5 extends TutorialStep {
     game;
     popularityTracker;
     constructor(canvas, game, popularityTracker) {
-        super(4, [
+        super([
             'Good job! Now your very first client is being served.',
             'You can see the REQUESTS and RESPONSES traveling along the connection.',
             'The POPULARITY measures how successful your service is being.'
@@ -2136,7 +2137,7 @@ class TutorialStep6 extends TutorialStep {
     popularityTracker;
     clientFactory;
     constructor(canvas, game, popularityTracker, clientFactory) {
-        super(5, [
+        super([
             'Cool! Two new clients want to use your service!',
             'Connect them as well to start gaining some more popularity.',
             'Remember, if you wait too much, you will lose popularity!'
@@ -2181,7 +2182,7 @@ class TutorialStep7 extends TutorialStep {
     game;
     popularityTracker;
     constructor(canvas, game, popularityTracker) {
-        super(6, [
+        super([
             'Oh no! Looks like your datacenter can\'t handle all this traffic!',
             'Clients will not be pleased if your datacenter is too busy to reply.',
             'You can see how busy a datacenter is by looking at its status bar.'
@@ -2208,7 +2209,7 @@ class TutorialStep8 extends TutorialStep {
     popularityTracker;
     fader;
     constructor(canvas, game, popularityTracker, fader) {
-        super(7, [
+        super([
             'Thankfully, you are popular enough to afford to UPGRADE your datacenter.',
             'As your popularity grows, you will be able to upgrade it even more.',
             'Press SPACE to pause the game and select an upgrade.'
@@ -2257,7 +2258,7 @@ class TutorialStep9 extends TutorialStep {
     game;
     fader;
     constructor(canvas, game, fader) {
-        super(8, [
+        super([
             'Let\'s improve your datacenter\'s speed.',
             'This way it will process the clients\' requests faster.',
             'Select the third upgrade (Improve speed at one location).'
@@ -2310,7 +2311,7 @@ class TutorialStep10 extends TutorialStep {
     orchestrator;
     popularityTracker;
     constructor(canvas, game, orchestrator, popularityTracker) {
-        super(9, [
+        super([
             'Nice! You can see your datacenter\'s speed in the bottom left of it.',
             'Now the clients can finish their data exchange without any more problems.',
             'When a client is served successfully you will gain some more popularity.'
@@ -2357,7 +2358,7 @@ class TutorialStep11 extends TutorialStep {
     clientFactory;
     attackerFactory;
     constructor(canvas, game, fader, clientFactory, attackerFactory) {
-        super(10, [
+        super([
             'Oh snap! Your datacenter is under a DDOS ATTACK! And more clients need serving!',
             'This is likely to happen as you get more and more popular.',
             'You\'d better upgrade once again to cope with this situation.'
@@ -2420,7 +2421,7 @@ class TutorialStep12 extends TutorialStep {
     canvas;
     fader;
     constructor(canvas, serverFactory, fader) {
-        super(11, [
+        super([
             'This time let\'s buy a new datacenter.',
             'This way you can connect the clients to it while your first one is under attack.',
             'Select the first upgrade (Buy new datacenter).'
@@ -2473,7 +2474,7 @@ class TutorialStep13 extends TutorialStep {
     popularityTracker;
     clientFactory;
     constructor(canvas, game, popularityTracker, clientFactory) {
-        super(12, [
+        super([
             'Perfect! Now you have a new datacenter at your disposal.',
             'This is when a good load balancing strategy will start to matter.',
             'Indeed you would be wiser to connect the clients to the new datacenter.'
@@ -2510,7 +2511,7 @@ class TutorialStep14 extends TutorialStep {
     game;
     popularityTracker;
     constructor(canvas, game, popularityTracker, newGame) {
-        super(13, [
+        super([
             'Excellent! By now you should know all the basics.',
             'This tutorial is finished.',
             'You can start a new game or go back to the main menu.'

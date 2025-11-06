@@ -12,7 +12,7 @@ class TutorialStep5 extends TutorialStep {
         private game: GameTracker,
         private popularityTracker: PopularityTracker
     ) {
-        super(4, [
+        super([
             'Good job! Now your very first client is being served.',
             'You can see the REQUESTS and RESPONSES traveling along the connection.',
             'The POPULARITY measures how successful your service is being.']);

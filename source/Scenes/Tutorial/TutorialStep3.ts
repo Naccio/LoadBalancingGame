@@ -9,7 +9,7 @@ class TutorialStep3 extends TutorialStep {
         private canvas: HTMLCanvasElement,
         private clientFactory: ClientFactory
     ) {
-        super(2, [
+        super([
             'This is a CLIENT.',
             'It wants to exchange data with your datacenter.',
             'Your job will be to connect the clients to a datacenter.']);

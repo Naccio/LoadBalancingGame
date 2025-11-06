@@ -15,7 +15,7 @@ class TutorialStep6 extends TutorialStep {
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory
     ) {
-        super(5, [
+        super([
             'Cool! Two new clients want to use your service!',
             'Connect them as well to start gaining some more popularity.',
             'Remember, if you wait too much, you will lose popularity!']);

@@ -6,7 +6,7 @@
 class TutorialStep4 extends TutorialStep {
 
     constructor(private game: GameTracker) {
-        super(3, [
+        super([
             'To create a connection, click on the client and then on the datacenter.',
             'Be quick though! Clients don\'t like waiting!',
             'Create a CONNECTION to continue.']);

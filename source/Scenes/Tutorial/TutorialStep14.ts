@@ -13,7 +13,7 @@ class TutorialStep14 extends TutorialStep {
         private popularityTracker: PopularityTracker,
         newGame: NewGame
     ) {
-        super(13, [
+        super([
             'Excellent! By now you should know all the basics.',
             'This tutorial is finished.',
             'You can start a new game or go back to the main menu.']);

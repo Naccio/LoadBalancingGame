@@ -7,7 +7,7 @@ class TutorialStep1 extends TutorialStep {
         private canvas: HTMLCanvasElement,
         private serverFactory: ServerFactory
     ) {
-        super(0, [
+        super([
             'Welcome to Load Balancing: The Game!',
             'Here you will take the role of -you guessed it- a LOAD BALANCER.',
             'Click "Next" to start the tutorial.']);

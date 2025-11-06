@@ -15,7 +15,7 @@ class TutorialStep10 extends TutorialStep {
         private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker
     ) {
-        super(9, [
+        super([
             'Nice! You can see your datacenter\'s speed in the bottom left of it.',
             'Now the clients can finish their data exchange without any more problems.',
             'When a client is served successfully you will gain some more popularity.']);
