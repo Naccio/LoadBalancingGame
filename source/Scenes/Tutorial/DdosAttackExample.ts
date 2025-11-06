@@ -5,7 +5,7 @@
 /// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep11 extends TutorialStep {
+class DdosAttackExample extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,

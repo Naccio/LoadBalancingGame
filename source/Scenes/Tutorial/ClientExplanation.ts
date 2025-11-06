@@ -3,7 +3,7 @@
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep3 extends TutorialStep {
+class ClientExplanation extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,

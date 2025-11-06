@@ -4,21 +4,21 @@
 /// <reference path='Scenes/GameOver.ts' />
 /// <reference path='Scenes/Menu.ts' />
 /// <reference path='Scenes/Pause.ts' />
+/// <reference path='Scenes/Tutorial/ClientExplanation.ts' />
+/// <reference path='Scenes/Tutorial/ClientSuccessExplanation.ts' />
+/// <reference path='Scenes/Tutorial/ConnectionExplanation.ts' />
+/// <reference path='Scenes/Tutorial/ConnectMoreClients.ts' />
+/// <reference path='Scenes/Tutorial/ConnectToNewServer.ts' />
+/// <reference path='Scenes/Tutorial/DdosAttackExample.ts' />
+/// <reference path='Scenes/Tutorial/NewServerUpgradeExample.ts' />
+/// <reference path='Scenes/Tutorial/PopularityExplanation.ts' />
+/// <reference path='Scenes/Tutorial/ServerBusyExample.ts' />
+/// <reference path='Scenes/Tutorial/ServerExplanation.ts' />
+/// <reference path='Scenes/Tutorial/SpeedUpgradeExample.ts' />
 /// <reference path='Scenes/Tutorial/Tutorial.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep1.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep2.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep3.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep4.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep5.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep6.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep7.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep8.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep9.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep10.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep11.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep12.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep13.ts' />
-/// <reference path='Scenes/Tutorial/TutorialStep14.ts' />
+/// <reference path='Scenes/Tutorial/TutorialFinished.ts' />
+/// <reference path='Scenes/Tutorial/UpgradesIntroduction.ts' />
+/// <reference path='Scenes/Tutorial/Welcome.ts' />
 /// <reference path='Scenes/Upgrade.ts' />
 /// <reference path='Services/AttackerFactory.ts' />
 /// <reference path='Services/ClientFactory.ts' />
@@ -98,20 +98,20 @@ class Application {
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
         const gameScene = new Game(canvas, game, scheduler, gameArea, fader);
         const tutorial = new Tutorial([
-            new TutorialStep1(canvas, serverFactory),
-            new TutorialStep2(canvas),
-            new TutorialStep3(canvas, clientFactory),
-            new TutorialStep4(game),
-            new TutorialStep5(canvas, game, popularityTracker),
-            new TutorialStep6(canvas, game, popularityTracker, clientFactory),
-            new TutorialStep7(canvas, game, popularityTracker),
-            new TutorialStep8(canvas, game, popularityTracker, fader),
-            new TutorialStep9(canvas, game, fader),
-            new TutorialStep10(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep11(canvas, game, fader, clientFactory, attackerFactory),
-            new TutorialStep12(canvas, serverFactory, fader),
-            new TutorialStep13(canvas, game, popularityTracker, clientFactory),
-            new TutorialStep14(canvas, game, popularityTracker, newGame)
+            new Welcome(canvas, serverFactory),
+            new ServerExplanation(canvas),
+            new ClientExplanation(canvas, clientFactory),
+            new ConnectionExplanation(game),
+            new PopularityExplanation(canvas, game, popularityTracker),
+            new ConnectMoreClients(canvas, game, popularityTracker, clientFactory),
+            new ServerBusyExample(canvas, game, popularityTracker),
+            new UpgradesIntroduction(canvas, game, popularityTracker, fader),
+            new SpeedUpgradeExample(canvas, game, fader),
+            new ClientSuccessExplanation(canvas, game, orchestrator, popularityTracker),
+            new DdosAttackExample(canvas, game, fader, clientFactory, attackerFactory),
+            new NewServerUpgradeExample(canvas, serverFactory, fader),
+            new ConnectToNewServer(canvas, game, popularityTracker, clientFactory),
+            new TutorialFinished(canvas, game, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
         const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);
 

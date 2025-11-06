@@ -1,3 +1,4 @@
+/// <reference path='../../Defaults.ts' />
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -5,7 +6,7 @@
 /// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep5 extends TutorialStep {
+class ServerBusyExample extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,
@@ -13,16 +14,12 @@ class TutorialStep5 extends TutorialStep {
         private popularityTracker: PopularityTracker
     ) {
         super([
-            'Good job! Now your very first client is being served.',
-            'You can see the REQUESTS and RESPONSES traveling along the connection.',
-            'The POPULARITY measures how successful your service is being.']);
+            'Oh no! Looks like your datacenter can\'t handle all this traffic!',
+            'Clients will not be pleased if your datacenter is too busy to reply.',
+            'You can see how busy a datacenter is by looking at its status bar.']);
 
         this.hasNext = true;
         this.hasHome = true;
-    }
-
-    setup() {
-        this.popularityTracker.popularity = 0;
     }
 
     run() {
@@ -31,11 +28,13 @@ class TutorialStep5 extends TutorialStep {
 
     draw() {
         const context = this.canvas.getContext('2d')!,
-            h = this.canvas.height;
+            w = this.canvas.width,
+            h = this.canvas.height,
+            serverSize = Defaults.serverSize;
 
         this.popularityTracker.draw(h - 95);
-        TutorialHelper.drawLegend(this.canvas, false);
+        TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawCircleHighlight(70, h - 95, 67, context);
+        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
     }
 }

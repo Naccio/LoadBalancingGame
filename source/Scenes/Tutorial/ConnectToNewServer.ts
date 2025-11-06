@@ -5,7 +5,7 @@
 /// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep13 extends TutorialStep {
+class ConnectToNewServer extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,

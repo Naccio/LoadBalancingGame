@@ -7,7 +7,7 @@
 /// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep10 extends TutorialStep {
+class ClientSuccessExplanation extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,

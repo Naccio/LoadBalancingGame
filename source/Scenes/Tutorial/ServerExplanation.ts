@@ -2,7 +2,7 @@
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep2 extends TutorialStep {
+class ServerExplanation extends TutorialStep {
 
     constructor(private canvas: HTMLCanvasElement) {
         super([

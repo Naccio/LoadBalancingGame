@@ -3,7 +3,7 @@
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep4 extends TutorialStep {
+class ConnectionExplanation extends TutorialStep {
 
     constructor(private game: GameTracker) {
         super([

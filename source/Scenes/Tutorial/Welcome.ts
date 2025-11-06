@@ -1,7 +1,7 @@
 /// <reference path='../../Services/ServerFactory.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep1 extends TutorialStep {
+class Welcome extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,

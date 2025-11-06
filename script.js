@@ -753,6 +753,17 @@ class ClientFactory {
         return client;
     }
 }
+class ServerFactory {
+    game;
+    constructor(game) {
+        this.game = game;
+    }
+    create(x, y) {
+        const server = new Server(x, y);
+        this.game.servers.push(server);
+        return server;
+    }
+}
 class Scheduler {
     popularityTracker;
     canvas;
@@ -1952,54 +1963,7 @@ class Pause {
         this.game.switchMode(Defaults.gameModes.UPGRADE);
     }
 }
-class ServerFactory {
-    game;
-    constructor(game) {
-        this.game = game;
-    }
-    create(x, y) {
-        const server = new Server(x, y);
-        this.game.servers.push(server);
-        return server;
-    }
-}
-class TutorialStep1 extends TutorialStep {
-    canvas;
-    serverFactory;
-    constructor(canvas, serverFactory) {
-        super([
-            'Welcome to Load Balancing: The Game!',
-            'Here you will take the role of -you guessed it- a LOAD BALANCER.',
-            'Click "Next" to start the tutorial.'
-        ]);
-        this.canvas = canvas;
-        this.serverFactory = serverFactory;
-        this.hasNext = true;
-        this.hasHome = true;
-    }
-    setup() {
-        const w = this.canvas.width, h = this.canvas.height, server = this.serverFactory.create(w / 2, h / 2);
-        server.capacity = 20;
-    }
-}
-class TutorialStep2 extends TutorialStep {
-    canvas;
-    constructor(canvas) {
-        super([
-            'This is a DATACENTER.',
-            'Its role is to send data to your clients.',
-            'Click "Next" to continue.'
-        ]);
-        this.canvas = canvas;
-        this.hasNext = true;
-        this.hasHome = true;
-    }
-    draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, context);
-    }
-}
-class TutorialStep3 extends TutorialStep {
+class ClientExplanation extends TutorialStep {
     canvas;
     clientFactory;
     constructor(canvas, clientFactory) {
@@ -2026,33 +1990,6 @@ class TutorialStep3 extends TutorialStep {
             radius: Defaults.clientSize / 2,
             color: 'gray'
         }, context);
-    }
-}
-class TutorialStep4 extends TutorialStep {
-    game;
-    constructor(game) {
-        super([
-            'To create a connection, click on the client and then on the datacenter.',
-            'Be quick though! Clients don\'t like waiting!',
-            'Create a CONNECTION to continue.'
-        ]);
-        this.game = game;
-        this.hasHome = true;
-    }
-    run() {
-        const client = this.game.clients[0];
-        if (client.connectedTo !== undefined) {
-            this.advance = true;
-        }
-        if (client.life >= Defaults.maxClientWaitTime - 1) {
-            this.texts = [
-                'Snap! You let too much time pass!',
-                'Normally this would be bad for you, but this time you\'ll get a little help.',
-                'Create a CONNECTION to continue.'
-            ];
-            client.life = -31;
-        }
-        this.game.updateClients();
     }
 }
 class TutorialHelper {
@@ -2102,210 +2039,7 @@ class TutorialHelper {
         }
     }
 }
-class TutorialStep5 extends TutorialStep {
-    canvas;
-    game;
-    popularityTracker;
-    constructor(canvas, game, popularityTracker) {
-        super([
-            'Good job! Now your very first client is being served.',
-            'You can see the REQUESTS and RESPONSES traveling along the connection.',
-            'The POPULARITY measures how successful your service is being.'
-        ]);
-        this.canvas = canvas;
-        this.game = game;
-        this.popularityTracker = popularityTracker;
-        this.hasNext = true;
-        this.hasHome = true;
-    }
-    setup() {
-        this.popularityTracker.popularity = 0;
-    }
-    run() {
-        this.game.update();
-    }
-    draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height;
-        this.popularityTracker.draw(h - 95);
-        TutorialHelper.drawLegend(this.canvas, false);
-        Utilities.drawCircleHighlight(70, h - 95, 67, context);
-    }
-}
-class TutorialStep6 extends TutorialStep {
-    canvas;
-    game;
-    popularityTracker;
-    clientFactory;
-    constructor(canvas, game, popularityTracker, clientFactory) {
-        super([
-            'Cool! Two new clients want to use your service!',
-            'Connect them as well to start gaining some more popularity.',
-            'Remember, if you wait too much, you will lose popularity!'
-        ]);
-        this.canvas = canvas;
-        this.game = game;
-        this.popularityTracker = popularityTracker;
-        this.clientFactory = clientFactory;
-        this.hasHome = true;
-    }
-    setup() {
-        this.spawnClients();
-    }
-    run() {
-        const server = this.game.servers[0];
-        if (server.queue.length > server.capacity / 2) {
-            this.advance = true;
-        }
-        if (this.game.clients.length === 1) {
-            this.texts = [
-                'Oh snap! You let too much time pass!',
-                'As you can see you lost 10 popularity each.',
-                'Connect the two clients to continue.'
-            ];
-            this.spawnClients();
-        }
-        this.game.update();
-    }
-    draw() {
-        const h = this.canvas.height;
-        this.popularityTracker.draw(h - 95);
-        TutorialHelper.drawLegend(this.canvas, false);
-    }
-    spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create(w / 4, h / 4, 10000), client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
-        client1.life = -21;
-        client2.life = -21;
-    }
-}
-class TutorialStep7 extends TutorialStep {
-    canvas;
-    game;
-    popularityTracker;
-    constructor(canvas, game, popularityTracker) {
-        super([
-            'Oh no! Looks like your datacenter can\'t handle all this traffic!',
-            'Clients will not be pleased if your datacenter is too busy to reply.',
-            'You can see how busy a datacenter is by looking at its status bar.'
-        ]);
-        this.canvas = canvas;
-        this.game = game;
-        this.popularityTracker = popularityTracker;
-        this.hasNext = true;
-        this.hasHome = true;
-    }
-    run() {
-        this.game.update();
-    }
-    draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
-        this.popularityTracker.draw(h - 95);
-        TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
-    }
-}
-class TutorialStep8 extends TutorialStep {
-    canvas;
-    game;
-    popularityTracker;
-    fader;
-    constructor(canvas, game, popularityTracker, fader) {
-        super([
-            'Thankfully, you are popular enough to afford to UPGRADE your datacenter.',
-            'As your popularity grows, you will be able to upgrade it even more.',
-            'Press SPACE to pause the game and select an upgrade.'
-        ]);
-        this.canvas = canvas;
-        this.game = game;
-        this.popularityTracker = popularityTracker;
-        this.fader = fader;
-        this.hasHome = true;
-        this.advanceOnSpace = true;
-    }
-    setup() {
-        const w = this.canvas.width, h = this.canvas.height, text = {
-            x: w / 2,
-            y: h - 116,
-            fontSize: 20,
-            rgbColor: { r: 255, g: 0, b: 0 },
-            id: 'upgradeTut',
-            text: '- Upgrade available! -',
-            life: 1000,
-            alpha: 0,
-            delta: 0
-        };
-        this.fader.addPermanentText(text);
-    }
-    run() {
-        this.game.update();
-    }
-    draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        this.popularityTracker.draw(h - 95);
-        TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 95,
-            text: 'Press space to pause',
-            fontSize: 18,
-            fontFamily: 'sans-serif',
-            align: 'center',
-            color: 'darkGray'
-        }, context);
-    }
-}
-class TutorialStep9 extends TutorialStep {
-    canvas;
-    game;
-    fader;
-    constructor(canvas, game, fader) {
-        super([
-            'Let\'s improve your datacenter\'s speed.',
-            'This way it will process the clients\' requests faster.',
-            'Select the third upgrade (Improve speed at one location).'
-        ]);
-        this.canvas = canvas;
-        this.game = game;
-        this.fader = fader;
-        const w = canvas.width, h = canvas.height, y = h / 2 + 150;
-        this.extraButtons = [
-            new ServerUpgradeButton(250, y),
-            new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y, () => {
-                this.game.servers[0].speed += Defaults.serversSpeed;
-                this.advance = true;
-            })
-        ];
-    }
-    setup() {
-        this.fader.removeFromPermanentQueue('upgradeTut');
-    }
-    draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawRect({
-            x: w / 2,
-            y: h / 2,
-            width: w,
-            height: h - 158,
-            color: '#0360AE'
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: h / 2 + 60,
-            text: 'Choose an upgrade:',
-            fontSize: 25,
-            align: 'center',
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: h / 3,
-            text: '~ Paused ~',
-            fontSize: 50,
-            align: 'center',
-            color: 'red'
-        }, context);
-    }
-}
-class TutorialStep10 extends TutorialStep {
+class ClientSuccessExplanation extends TutorialStep {
     canvas;
     game;
     orchestrator;
@@ -2351,7 +2085,118 @@ class TutorialStep10 extends TutorialStep {
         Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
     }
 }
-class TutorialStep11 extends TutorialStep {
+class ConnectionExplanation extends TutorialStep {
+    game;
+    constructor(game) {
+        super([
+            'To create a connection, click on the client and then on the datacenter.',
+            'Be quick though! Clients don\'t like waiting!',
+            'Create a CONNECTION to continue.'
+        ]);
+        this.game = game;
+        this.hasHome = true;
+    }
+    run() {
+        const client = this.game.clients[0];
+        if (client.connectedTo !== undefined) {
+            this.advance = true;
+        }
+        if (client.life >= Defaults.maxClientWaitTime - 1) {
+            this.texts = [
+                'Snap! You let too much time pass!',
+                'Normally this would be bad for you, but this time you\'ll get a little help.',
+                'Create a CONNECTION to continue.'
+            ];
+            client.life = -31;
+        }
+        this.game.updateClients();
+    }
+}
+class ConnectMoreClients extends TutorialStep {
+    canvas;
+    game;
+    popularityTracker;
+    clientFactory;
+    constructor(canvas, game, popularityTracker, clientFactory) {
+        super([
+            'Cool! Two new clients want to use your service!',
+            'Connect them as well to start gaining some more popularity.',
+            'Remember, if you wait too much, you will lose popularity!'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.popularityTracker = popularityTracker;
+        this.clientFactory = clientFactory;
+        this.hasHome = true;
+    }
+    setup() {
+        this.spawnClients();
+    }
+    run() {
+        const server = this.game.servers[0];
+        if (server.queue.length > server.capacity / 2) {
+            this.advance = true;
+        }
+        if (this.game.clients.length === 1) {
+            this.texts = [
+                'Oh snap! You let too much time pass!',
+                'As you can see you lost 10 popularity each.',
+                'Connect the two clients to continue.'
+            ];
+            this.spawnClients();
+        }
+        this.game.update();
+    }
+    draw() {
+        const h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
+        TutorialHelper.drawLegend(this.canvas, false);
+    }
+    spawnClients() {
+        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create(w / 4, h / 4, 10000), client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
+        client1.life = -21;
+        client2.life = -21;
+    }
+}
+class ConnectToNewServer extends TutorialStep {
+    canvas;
+    game;
+    popularityTracker;
+    clientFactory;
+    constructor(canvas, game, popularityTracker, clientFactory) {
+        super([
+            'Perfect! Now you have a new datacenter at your disposal.',
+            'This is when a good load balancing strategy will start to matter.',
+            'Indeed you would be wiser to connect the clients to the new datacenter.'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.popularityTracker = popularityTracker;
+        this.clientFactory = clientFactory;
+        this.hasHome = true;
+    }
+    setup() {
+        this.game.clients[0].life = -21;
+        this.game.clients[1].life = -21;
+    }
+    run() {
+        if (this.game.clients.length === 0) {
+            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+            client0.life = -21;
+            client1.life = -21;
+        }
+        if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
+            this.advance = true;
+        }
+        this.game.update();
+    }
+    draw() {
+        const h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
+        TutorialHelper.drawLegend(this.canvas, true);
+    }
+}
+class DdosAttackExample extends TutorialStep {
     canvas;
     game;
     fader;
@@ -2417,7 +2262,7 @@ class TutorialStep11 extends TutorialStep {
         client1.life = -21;
     }
 }
-class TutorialStep12 extends TutorialStep {
+class NewServerUpgradeExample extends TutorialStep {
     canvas;
     fader;
     constructor(canvas, serverFactory, fader) {
@@ -2468,45 +2313,131 @@ class TutorialStep12 extends TutorialStep {
         }, context);
     }
 }
-class TutorialStep13 extends TutorialStep {
+class PopularityExplanation extends TutorialStep {
     canvas;
     game;
     popularityTracker;
-    clientFactory;
-    constructor(canvas, game, popularityTracker, clientFactory) {
+    constructor(canvas, game, popularityTracker) {
         super([
-            'Perfect! Now you have a new datacenter at your disposal.',
-            'This is when a good load balancing strategy will start to matter.',
-            'Indeed you would be wiser to connect the clients to the new datacenter.'
+            'Good job! Now your very first client is being served.',
+            'You can see the REQUESTS and RESPONSES traveling along the connection.',
+            'The POPULARITY measures how successful your service is being.'
         ]);
         this.canvas = canvas;
         this.game = game;
         this.popularityTracker = popularityTracker;
-        this.clientFactory = clientFactory;
+        this.hasNext = true;
         this.hasHome = true;
     }
     setup() {
-        this.game.clients[0].life = -21;
-        this.game.clients[1].life = -21;
+        this.popularityTracker.popularity = 0;
     }
     run() {
-        if (this.game.clients.length === 0) {
-            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
-            client0.life = -21;
-            client1.life = -21;
-        }
-        if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
-            this.advance = true;
-        }
         this.game.update();
     }
     draw() {
-        const h = this.canvas.height;
+        const context = this.canvas.getContext('2d'), h = this.canvas.height;
         this.popularityTracker.draw(h - 95);
-        TutorialHelper.drawLegend(this.canvas, true);
+        TutorialHelper.drawLegend(this.canvas, false);
+        Utilities.drawCircleHighlight(70, h - 95, 67, context);
     }
 }
-class TutorialStep14 extends TutorialStep {
+class ServerBusyExample extends TutorialStep {
+    canvas;
+    game;
+    popularityTracker;
+    constructor(canvas, game, popularityTracker) {
+        super([
+            'Oh no! Looks like your datacenter can\'t handle all this traffic!',
+            'Clients will not be pleased if your datacenter is too busy to reply.',
+            'You can see how busy a datacenter is by looking at its status bar.'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.popularityTracker = popularityTracker;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    run() {
+        this.game.update();
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        this.popularityTracker.draw(h - 95);
+        TutorialHelper.drawLegend(this.canvas, true);
+        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
+    }
+}
+class ServerExplanation extends TutorialStep {
+    canvas;
+    constructor(canvas) {
+        super([
+            'This is a DATACENTER.',
+            'Its role is to send data to your clients.',
+            'Click "Next" to continue.'
+        ]);
+        this.canvas = canvas;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, context);
+    }
+}
+class SpeedUpgradeExample extends TutorialStep {
+    canvas;
+    game;
+    fader;
+    constructor(canvas, game, fader) {
+        super([
+            'Let\'s improve your datacenter\'s speed.',
+            'This way it will process the clients\' requests faster.',
+            'Select the third upgrade (Improve speed at one location).'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.fader = fader;
+        const w = canvas.width, h = canvas.height, y = h / 2 + 150;
+        this.extraButtons = [
+            new ServerUpgradeButton(250, y),
+            new CapacityUpgradeButton(w / 2, y),
+            new SpeedUpgradeButton(w - 250, y, () => {
+                this.game.servers[0].speed += Defaults.serversSpeed;
+                this.advance = true;
+            })
+        ];
+    }
+    setup() {
+        this.fader.removeFromPermanentQueue('upgradeTut');
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        Utilities.drawRect({
+            x: w / 2,
+            y: h / 2,
+            width: w,
+            height: h - 158,
+            color: '#0360AE'
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 2 + 60,
+            text: 'Choose an upgrade:',
+            fontSize: 25,
+            align: 'center',
+        }, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h / 3,
+            text: '~ Paused ~',
+            fontSize: 50,
+            align: 'center',
+            color: 'red'
+        }, context);
+    }
+}
+class TutorialFinished extends TutorialStep {
     canvas;
     game;
     popularityTracker;
@@ -2532,6 +2463,75 @@ class TutorialStep14 extends TutorialStep {
         const h = this.canvas.height;
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
+    }
+}
+class UpgradesIntroduction extends TutorialStep {
+    canvas;
+    game;
+    popularityTracker;
+    fader;
+    constructor(canvas, game, popularityTracker, fader) {
+        super([
+            'Thankfully, you are popular enough to afford to UPGRADE your datacenter.',
+            'As your popularity grows, you will be able to upgrade it even more.',
+            'Press SPACE to pause the game and select an upgrade.'
+        ]);
+        this.canvas = canvas;
+        this.game = game;
+        this.popularityTracker = popularityTracker;
+        this.fader = fader;
+        this.hasHome = true;
+        this.advanceOnSpace = true;
+    }
+    setup() {
+        const w = this.canvas.width, h = this.canvas.height, text = {
+            x: w / 2,
+            y: h - 116,
+            fontSize: 20,
+            rgbColor: { r: 255, g: 0, b: 0 },
+            id: 'upgradeTut',
+            text: '- Upgrade available! -',
+            life: 1000,
+            alpha: 0,
+            delta: 0
+        };
+        this.fader.addPermanentText(text);
+    }
+    run() {
+        this.game.update();
+    }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        this.popularityTracker.draw(h - 95);
+        TutorialHelper.drawLegend(this.canvas, true);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 95,
+            text: 'Press space to pause',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
+            align: 'center',
+            color: 'darkGray'
+        }, context);
+    }
+}
+class Welcome extends TutorialStep {
+    canvas;
+    serverFactory;
+    constructor(canvas, serverFactory) {
+        super([
+            'Welcome to Load Balancing: The Game!',
+            'Here you will take the role of -you guessed it- a LOAD BALANCER.',
+            'Click "Next" to start the tutorial.'
+        ]);
+        this.canvas = canvas;
+        this.serverFactory = serverFactory;
+        this.hasNext = true;
+        this.hasHome = true;
+    }
+    setup() {
+        const w = this.canvas.width, h = this.canvas.height, server = this.serverFactory.create(w / 2, h / 2);
+        server.capacity = 20;
     }
 }
 class BorderButton {
@@ -2731,20 +2731,20 @@ class Application {
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
         const gameScene = new Game(canvas, game, scheduler, gameArea, fader);
         const tutorial = new Tutorial([
-            new TutorialStep1(canvas, serverFactory),
-            new TutorialStep2(canvas),
-            new TutorialStep3(canvas, clientFactory),
-            new TutorialStep4(game),
-            new TutorialStep5(canvas, game, popularityTracker),
-            new TutorialStep6(canvas, game, popularityTracker, clientFactory),
-            new TutorialStep7(canvas, game, popularityTracker),
-            new TutorialStep8(canvas, game, popularityTracker, fader),
-            new TutorialStep9(canvas, game, fader),
-            new TutorialStep10(canvas, game, orchestrator, popularityTracker),
-            new TutorialStep11(canvas, game, fader, clientFactory, attackerFactory),
-            new TutorialStep12(canvas, serverFactory, fader),
-            new TutorialStep13(canvas, game, popularityTracker, clientFactory),
-            new TutorialStep14(canvas, game, popularityTracker, newGame)
+            new Welcome(canvas, serverFactory),
+            new ServerExplanation(canvas),
+            new ClientExplanation(canvas, clientFactory),
+            new ConnectionExplanation(game),
+            new PopularityExplanation(canvas, game, popularityTracker),
+            new ConnectMoreClients(canvas, game, popularityTracker, clientFactory),
+            new ServerBusyExample(canvas, game, popularityTracker),
+            new UpgradesIntroduction(canvas, game, popularityTracker, fader),
+            new SpeedUpgradeExample(canvas, game, fader),
+            new ClientSuccessExplanation(canvas, game, orchestrator, popularityTracker),
+            new DdosAttackExample(canvas, game, fader, clientFactory, attackerFactory),
+            new NewServerUpgradeExample(canvas, serverFactory, fader),
+            new ConnectToNewServer(canvas, game, popularityTracker, clientFactory),
+            new TutorialFinished(canvas, game, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);
         const menu = new Menu(canvas, clouds, game, ui, tutorial, newGame);
         cursor.bind();

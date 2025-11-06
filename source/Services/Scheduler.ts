@@ -3,6 +3,7 @@
 /// <reference path='ClientFactory.ts' />
 /// <reference path='GameTracker.ts' />
 /// <reference path='PopularityTracker.ts' />
+/// <reference path='ServerFactory.ts' />
 
 class Scheduler {
     public timeLastDDoS = 0;

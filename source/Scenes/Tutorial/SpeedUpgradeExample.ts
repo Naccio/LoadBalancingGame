@@ -1,4 +1,5 @@
-/// <reference path='../../Services/ServerFactory.ts' />
+/// <reference path='../../Defaults.ts' />
+/// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../UI/TextFader.ts' />
 /// <reference path='../../Upgrades/CapacityUpgradeButton.ts' />
 /// <reference path='../../Upgrades/ServerUpgradeButton.ts' />
@@ -6,30 +7,29 @@
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep12 extends TutorialStep {
+class SpeedUpgradeExample extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,
-        serverFactory: ServerFactory,
+        private game: GameTracker,
         private fader: TextFader
     ) {
         super([
-            'This time let\'s buy a new datacenter.',
-            'This way you can connect the clients to it while your first one is under attack.',
-            'Select the first upgrade (Buy new datacenter).']);
+            'Let\'s improve your datacenter\'s speed.',
+            'This way it will process the clients\' requests faster.',
+            'Select the third upgrade (Improve speed at one location).']);
 
         const w = canvas.width,
             h = canvas.height,
             y = h / 2 + 150;
 
         this.extraButtons = [
-            new ServerUpgradeButton(250, y, () => {
-                const server = serverFactory.create(w / 2, h / 4);
-                server.capacity = 20;
-                this.advance = true;
-            }),
+            new ServerUpgradeButton(250, y),
             new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y)
+            new SpeedUpgradeButton(w - 250, y, () => {
+                this.game.servers[0].speed += Defaults.serversSpeed;
+                this.advance = true;
+            })
         ];
     }
 
