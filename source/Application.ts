@@ -35,6 +35,7 @@
 declare class Clouds {
     add(x: number, y: number, w: number, h: number, circles: number, color: { r: number, g: number, b: number, a: number }, speed: number): void;
     draw(): void;
+    setSkyColor(color: string): void;
     update(elapsed: number): void;
 }
 
@@ -50,7 +51,7 @@ class Application {
         private cursor: CursorTracker,
         private canvas: HTMLCanvasElement,
         private fpsCounter: FpsCounter,
-        private clouds: any
+        private clouds: Clouds
     ) {
         const w = canvas.width,
             h = canvas.height;
