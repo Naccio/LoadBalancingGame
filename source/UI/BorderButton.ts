@@ -1,17 +1,16 @@
-class BorderButton extends SimpleButton {
+/// <reference path='Button.ts' />
+
+class BorderButton implements Button {
     constructor(
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        text: string,
-        color: string,
-        public hoverColor: string,
-        public borderWidth: number,
-        onClick: () => void
-    ) {
-        super(x, y, width, height, text, color, onClick);
-    }
+        public x: number,
+        public y: number,
+        public width: number,
+        public height: number,
+        private color: string,
+        private hoverColor: string,
+        private borderWidth: number,
+        public onClick: () => void
+    ) { }
 
     public draw(hovered: boolean, context: CanvasRenderingContext2D) {
         const color = hovered ? this.hoverColor : this.color;
@@ -23,14 +22,6 @@ class BorderButton extends SimpleButton {
             height: this.height,
             borderColor: color,
             borderWidth: this.borderWidth
-        }, context);
-        Utilities.drawText({
-            x: this.x,
-            y: this.y,
-            text: this.text,
-            fontSize: 15,
-            align: 'center',
-            color
         }, context);
     }
 }

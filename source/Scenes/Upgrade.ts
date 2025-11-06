@@ -4,7 +4,7 @@
 /// <reference path='../Services/Scheduler.ts' />
 /// <reference path='../Upgrades/UpgradesTracker.ts' />
 /// <reference path='../UI/BorderButton.ts' />
-/// <reference path='../UI/SimpleButton.ts' />
+/// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameArea.ts' />
 /// <reference path='../UI/TextFader.ts' />
 /// <reference path='Scene.ts' />
@@ -28,7 +28,7 @@ class Upgrade implements Scene {
 
         button.color = '#333333';
 
-        let buttons = [button];
+        let buttons: Button[] = [button];
 
         switch (this.upgradesTracker.selectedUpgrade) {
             case 'speed':
@@ -88,14 +88,14 @@ class Upgrade implements Scene {
         const w = this.canvas.width,
             h = this.canvas.height;
 
-        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '', '#CCCCCC', 'limeGreen', 1, () => {
+        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '#CCCCCC', 'limeGreen', 1, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
 
     private createServerButton(server: Server, action: () => void) {
-        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, '', 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
+        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
             action();
             this.selectUpgrade();
         });

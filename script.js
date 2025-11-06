@@ -2524,13 +2524,24 @@ class TutorialStep14 extends TutorialStep {
         TutorialHelper.drawLegend(this.canvas, true);
     }
 }
-class BorderButton extends SimpleButton {
+class BorderButton {
+    x;
+    y;
+    width;
+    height;
+    color;
     hoverColor;
     borderWidth;
-    constructor(x, y, width, height, text, color, hoverColor, borderWidth, onClick) {
-        super(x, y, width, height, text, color, onClick);
+    onClick;
+    constructor(x, y, width, height, color, hoverColor, borderWidth, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.color = color;
         this.hoverColor = hoverColor;
         this.borderWidth = borderWidth;
+        this.onClick = onClick;
     }
     draw(hovered, context) {
         const color = hovered ? this.hoverColor : this.color;
@@ -2541,14 +2552,6 @@ class BorderButton extends SimpleButton {
             height: this.height,
             borderColor: color,
             borderWidth: this.borderWidth
-        }, context);
-        Utilities.drawText({
-            x: this.x,
-            y: this.y,
-            text: this.text,
-            fontSize: 15,
-            align: 'center',
-            color
         }, context);
     }
 }
@@ -2620,13 +2623,13 @@ class Upgrade {
     }
     createAreaButton(x, y, area) {
         const w = this.canvas.width, h = this.canvas.height;
-        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '', '#CCCCCC', 'limeGreen', 1, () => {
+        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '#CCCCCC', 'limeGreen', 1, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
     createServerButton(server, action) {
-        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, '', 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
+        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
             action();
             this.selectUpgrade();
         });
