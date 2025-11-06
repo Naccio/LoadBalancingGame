@@ -24,8 +24,8 @@ class TutorialHelper {
 
         Utilities.drawCircle({
             ...circle,
-            color: 'lightBlue',
-            borderColor: 'skyBlue'
+            color: Defaults.messageReqColor,
+            borderColor: Defaults.messageReqBorderColor
         }, context);
         Utilities.drawText({
             ...text,
@@ -34,8 +34,8 @@ class TutorialHelper {
         Utilities.drawCircle({
             ...circle,
             y: y + lineSpacing,
-            color: 'lime',
-            borderColor: 'limeGreen'
+            color: Defaults.messageAckColor,
+            borderColor: Defaults.messageAckBorderColor
         }, context);
         Utilities.drawText({
             ...text,
@@ -46,8 +46,8 @@ class TutorialHelper {
             Utilities.drawCircle({
                 ...circle,
                 y: y + lineSpacing * 2,
-                color: 'tomato',
-                borderColor: 'indianRed'
+                color: Defaults.messageNackColor,
+                borderColor: Defaults.messageNackBorderColor
             }, context);
             Utilities.drawText({
                 ...text,

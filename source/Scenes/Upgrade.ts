@@ -26,7 +26,7 @@ class Upgrade implements Scene {
             h = this.canvas.height,
             button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
 
-        button.color = '#333333';
+        button.color = Defaults.secondaryColor;
 
         let buttons: Button[] = [button];
 
@@ -35,7 +35,7 @@ class Upgrade implements Scene {
                 buttons = [...buttons, ...this.createServerButtons(s => s.speed += 2)];
                 break;
             case 'capacity':
-                buttons = [...buttons, ...this.createServerButtons(s => s.capacity += Defaults.serversCapacity)];
+                buttons = [...buttons, ...this.createServerButtons(s => s.capacity += Defaults.serverCapacity)];
                 break;
             case 'server':
                 buttons = [...buttons,
@@ -80,24 +80,26 @@ class Upgrade implements Scene {
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 
     private createAreaButton(x: number, y: number, area: string) {
         const w = this.canvas.width,
-            h = this.canvas.height;
+            h = this.canvas.height,
+            borderWidth = Defaults.highlightWidth;
 
-        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '#CCCCCC', 'limeGreen', 1, () => {
+        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
 
     private createServerButton(server: Server, action: () => void) {
-        const size = Defaults.serverSize + 2;
+        const borderWidth = Defaults.highlightWidth,
+            size = Defaults.serverSize + borderWidth;
 
-        return new BorderButton(server.x, server.y, size, size, 'transparent', 'limeGreen', 2, () => {
+        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });

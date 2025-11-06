@@ -60,7 +60,7 @@ class UpgradesIntroduction extends TutorialStep {
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
-            color: 'darkGray'
+            color: Defaults.secondaryColorMuted
         }, context);
     }
 }

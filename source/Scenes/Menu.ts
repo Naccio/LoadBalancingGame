@@ -39,7 +39,7 @@ class Menu implements Scene {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             align = 'center',
-            color = 'rgba(255,255,255,0.6)';
+            color = Defaults.primaryColorTransparent;
 
         this.clouds.draw();
 
@@ -48,8 +48,8 @@ class Menu implements Scene {
             y: 140,
             width: w,
             height: 180,
-            color: 'rgba(0,0,0,0.1)',
-            borderColor: 'rgba(200,200,200,0.5)'
+            color: Defaults.secondaryColorTransparent,
+            borderColor: Defaults.primaryColorMutedTransparent
         }, context);
         Utilities.drawText({
             x: w / 2,
@@ -75,7 +75,7 @@ class Menu implements Scene {
             y1: 160,
             x2: w - 118,
             y2: 160,
-            color: 'red',
+            color: Defaults.accentColor,
             width: 2
         }, context);
     }

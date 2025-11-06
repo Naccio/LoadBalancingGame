@@ -11,8 +11,8 @@ class Server implements MessageTransmitter {
         this.y = y;
         this.queue = [];
         this.lastMessageTime = 0;
-        this.capacity = Defaults.serversCapacity;
-        this.speed = Defaults.serversSpeed;
+        this.capacity = Defaults.serverCapacity;
+        this.speed = Defaults.serverSpeed;
     }
 
     sendMessage(elapsedTime: number) {

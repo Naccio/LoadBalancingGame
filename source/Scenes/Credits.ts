@@ -45,21 +45,21 @@ class Credits implements Scene {
             y,
             width: this.canvas.width,
             height: 100,
-            color: 'rgba(0,0,0,0.1)',
-            borderColor: 'rgba(200,200,200,0.5)'
+            color: Defaults.secondaryColorTransparent,
+            borderColor: Defaults.primaryColorMutedTransparent
         }, context);
     }
 
     private drawHeading(y: number, text: string) {
-        this.drawText(y, text, 20, 'red', 'bold');
+        this.drawText(y, text, 20, Defaults.accentColor, 'bold');
     }
 
     private drawMainText(y: number, text: string) {
-        this.drawText(y, text, 30, 'white');
+        this.drawText(y, text, 30, Defaults.primaryColor);
     }
 
     private drawSubText(y: number, text: string) {
-        this.drawText(y, text, 15, '#ddd');
+        this.drawText(y, text, 15, Defaults.primaryColorMuted);
     }
 
     private drawText(y: number, text: string, fontSize: number, color: string, fontWeight?: 'bold') {

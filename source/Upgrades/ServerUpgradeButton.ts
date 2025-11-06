@@ -18,7 +18,7 @@ class ServerUpgradeButton extends UpgradeButton {
             text: '+',
             fontSize: 45,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
         Utilities.drawRect({
             x: x + 15,
@@ -26,7 +26,7 @@ class ServerUpgradeButton extends UpgradeButton {
             width: serverSize,
             height: serverSize,
             color: '#DDDDDD',
-            borderColor: 'red'
+            borderColor: Defaults.accentColor
         }, context);
         Utilities.drawStar({
             x: x - serverSize / 2 + 22,

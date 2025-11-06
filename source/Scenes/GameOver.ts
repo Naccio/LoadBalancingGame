@@ -8,7 +8,8 @@
 /// <reference path='Scene.ts' />
 
 class GameOver implements Scene {
-    private readonly color = 'white';
+    private readonly color = Defaults.primaryColor;
+
     private buttons: SimpleButton[];
 
     public id = Defaults.gameModes.GAME_OVER;
@@ -47,7 +48,7 @@ class GameOver implements Scene {
             fontSize: 60,
             fontVariant: 'small-caps',
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
 
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
@@ -78,7 +79,7 @@ class GameOver implements Scene {
             y1: h / 2 + 20,
             x2: w / 2 + 130,
             y2: h / 2 + 20,
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 

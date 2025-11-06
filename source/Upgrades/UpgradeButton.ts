@@ -24,8 +24,8 @@ abstract class UpgradeButton implements Button {
             y: this.y,
             width: this.width,
             height: this.height,
-            color: '#333333',
-            borderColor: hovered ? 'white' : undefined,
+            color: Defaults.secondaryColor,
+            borderColor: hovered ? Defaults.primaryColor : undefined,
             borderWidth: 2
         }, context);
 
@@ -38,7 +38,7 @@ abstract class UpgradeButton implements Button {
                 text: this.text,
                 fontSize: 20,
                 align: 'center',
-                color: 'red'
+                color: Defaults.accentColor
             }, context);
         }
     }

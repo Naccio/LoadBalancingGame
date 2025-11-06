@@ -27,7 +27,7 @@ class SpeedUpgradeExample extends TutorialStep {
             new ServerUpgradeButton(250, y),
             new CapacityUpgradeButton(w / 2, y),
             new SpeedUpgradeButton(w - 250, y, () => {
-                this.game.servers[0].speed += Defaults.serversSpeed;
+                this.game.servers[0].speed += Defaults.serverSpeed;
                 this.advance = true;
             })
         ];
@@ -47,7 +47,7 @@ class SpeedUpgradeExample extends TutorialStep {
             y: h / 2,
             width: w,
             height: h - 158,
-            color: '#0360AE'
+            color: Defaults.backgroundColor
         }, context);
         Utilities.drawText({
             x: w / 2,
@@ -62,7 +62,7 @@ class SpeedUpgradeExample extends TutorialStep {
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 }

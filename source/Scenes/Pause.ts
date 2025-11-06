@@ -65,7 +65,7 @@ class Pause implements Scene {
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
-                color: 'black'
+                color: Defaults.secondaryColor
             }, context);
         } else {
             Utilities.drawText({
@@ -74,7 +74,7 @@ class Pause implements Scene {
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
-                color: '#DDDDDD'
+                color: Defaults.primaryColorMuted
             }, context);
         }
 
@@ -84,7 +84,7 @@ class Pause implements Scene {
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 

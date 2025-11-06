@@ -58,7 +58,7 @@ class Application {
 
         this.activeScene = scenes[0];
 
-        clouds.setSkyColor('#0360AE');
+        clouds.setSkyColor(Defaults.backgroundColor);
         this.createCloud(w / 4, h / 4);
         this.createCloud(0 - w / 4, h / 3);
         this.createCloud(w / 2, h / 2);

@@ -16,7 +16,7 @@ class CapacityUpgradeButton extends UpgradeButton {
             queueY = y + 1,
             starX = x - serverSize / 2 + 7,
             starY = y + serverSize / 2 - 9,
-            color = 'red',
+            color = Defaults.accentColor,
             lineWidth = 3;
         Utilities.drawRect({
             x,
@@ -31,8 +31,8 @@ class CapacityUpgradeButton extends UpgradeButton {
             y: queueY,
             width: 6,
             height: serverSize - 10,
-            color: 'salmon',
-            borderColor: 'red'
+            color: Defaults.accentColorMuted,
+            borderColor: Defaults.accentColor
         }, context);
         Utilities.drawStar({
             x: starX,

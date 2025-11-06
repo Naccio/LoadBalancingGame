@@ -8,7 +8,7 @@
 class Utilities {
 
     public static defaultButton(x: number, y: number, text: string, onClick: () => void) {
-        return new SimpleButton(x, y, 120, 40, text, '#FFFFFF', onClick);
+        return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
     }
 
     public static drawCircle(circle: Circle, context: CanvasRenderingContext2D) {

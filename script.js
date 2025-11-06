@@ -255,7 +255,7 @@ class TextFader {
 }
 class Utilities {
     static defaultButton(x, y, text, onClick) {
-        return new SimpleButton(x, y, 120, 40, text, '#FFFFFF', onClick);
+        return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
     }
     static drawCircle(circle, context) {
         context.beginPath();
@@ -504,8 +504,8 @@ class Server {
         this.y = y;
         this.queue = [];
         this.lastMessageTime = 0;
-        this.capacity = Defaults.serversCapacity;
-        this.speed = Defaults.serversSpeed;
+        this.capacity = Defaults.serverCapacity;
+        this.speed = Defaults.serverSpeed;
     }
     sendMessage(elapsedTime) {
         const msg = this.queue.shift();
@@ -545,7 +545,7 @@ class VolumeButton {
         this.height = size;
     }
     draw(hovered, context) {
-        const x = this.x, y = this.y, w = this.width, h = this.height, color = hovered ? 'white' : 'rgba(255,255,255,0.8)', status = this.isOn ? 'On' : 'Off';
+        const x = this.x, y = this.y, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent, status = this.isOn ? 'On' : 'Off';
         Utilities.drawRect({
             x: x - w / 4 + 1,
             y,
@@ -567,7 +567,7 @@ class VolumeButton {
                 y1: y + h / 2,
                 x2: x + w / 2,
                 y2: y - h / 2,
-                color: 'red',
+                color: Defaults.accentColor,
                 width: 2
             }, context);
         }
@@ -579,7 +579,7 @@ class VolumeButton {
                 fontSize: 10,
                 align: 'center',
                 baseline: 'top',
-                color: '#fff'
+                color: Defaults.primaryColor
             }, context);
         }
     }
@@ -688,7 +688,7 @@ class GameTracker {
                 }
             }
             else {
-                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientsSpeed) {
+                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {
                     c.sendMessage(elapsedTime);
                 }
             }
@@ -702,7 +702,7 @@ class GameTracker {
                 this.attackers.splice(i--, 1);
                 continue;
             }
-            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientsSpeed) {
+            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientSpeed) {
                 a.sendMessage(elapsedTime);
             }
         }
@@ -722,17 +722,50 @@ class AttackerFactory {
     }
 }
 class Defaults {
+    static accentColor = '#ff0000';
+    static accentColorMuted = '#fa8072';
+    static attackerBorderColor = '#000000';
+    static attackerColor = '#333333';
+    static attackerConnectionColor = '#696969';
+    static attackerTextColor = '#ffffff';
+    static backgroundBorderColor = '#02467f';
+    static backgroundColor = '#0360ae';
+    static clientBorderColor = '#696969';
+    static clientColor = '#808080';
+    static clientConnectionColor = '#a9a9a9';
     static clientSize = 30;
-    static clientsSpeed = 2;
-    static defaultColor = 'black';
+    static clientSpeed = 2;
+    static clientTextColor = '#ffffff';
+    static dangerColor = '#ff0000';
+    static dangerColorDark = '#b22222';
+    static dangerColorMuted = '#ff6347';
+    static dangerColorMutedDark = '#cd5c5c';
+    static defaultColor = '#000000';
     static frameRate = 60;
     static gameLength = 5;
+    static highlightColor = '#add8e6';
+    static highlightWidth = 3;
     static maxClientWaitTime = 9;
+    static messageAckBorderColor = '#32cd32';
+    static messageAckColor = '#00ff00';
+    static messageNackBorderColor = Defaults.dangerColorMutedDark;
+    static messageNackColor = Defaults.dangerColorMuted;
+    static messageReqBorderColor = '#87ceeb';
+    static messageReqColor = '#add8e6';
     static messageSize = 6;
     static messageVelocity = 200;
-    static serversCapacity = 80;
+    static primaryColor = '#ffffff';
+    static primaryColorMuted = '#dddddd';
+    static primaryColorMutedTransparent = 'rgba(200,200,200,.5)';
+    static primaryColorTransparent = 'rgba(255,255,255,.6)';
+    static secondaryColor = '#333333';
+    static secondaryColorTransparent = 'rgba(0,0,0,.1)';
+    static secondaryColorMuted = '#a9a9a9';
+    static serverCapacity = 80;
+    static serverBorderColor = '#004500';
     static serverSize = 40;
-    static serversSpeed = 3.5;
+    static serverSpeed = 3.5;
+    static successColor = '#00ff00';
     static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
 }
 class ClientFactory {
@@ -1032,18 +1065,18 @@ class Credits {
             y,
             width: this.canvas.width,
             height: 100,
-            color: 'rgba(0,0,0,0.1)',
-            borderColor: 'rgba(200,200,200,0.5)'
+            color: Defaults.secondaryColorTransparent,
+            borderColor: Defaults.primaryColorMutedTransparent
         }, context);
     }
     drawHeading(y, text) {
-        this.drawText(y, text, 20, 'red', 'bold');
+        this.drawText(y, text, 20, Defaults.accentColor, 'bold');
     }
     drawMainText(y, text) {
-        this.drawText(y, text, 30, 'white');
+        this.drawText(y, text, 30, Defaults.primaryColor);
     }
     drawSubText(y, text) {
-        this.drawText(y, text, 15, '#ddd');
+        this.drawText(y, text, 15, Defaults.primaryColorMuted);
     }
     drawText(y, text, fontSize, color, fontWeight) {
         const context = this.canvas.getContext('2d'), w = this.canvas.width;
@@ -1184,14 +1217,14 @@ class GameArea {
                 y1: sc.y,
                 x2: this.cursor.mouseX,
                 y2: this.cursor.mouseY,
-                color: 'lightBlue',
-                width: 3
+                color: Defaults.highlightColor,
+                width: Defaults.highlightWidth
             }, context);
             Utilities.drawCircle({
                 x: sc.x,
                 y: sc.y,
-                radius: Defaults.clientSize / 2 + 3,
-                color: 'lightBlue'
+                radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
+                color: Defaults.highlightColor
             }, context);
         }
         this.drawConnections();
@@ -1208,8 +1241,8 @@ class GameArea {
         this.game.clients.forEach(c => this.drawClient(c));
     }
     drawConnections() {
-        this.game.clients.forEach(c => this.drawConnection(c, 'darkGray'));
-        this.game.attackers.forEach(a => this.drawConnection(a, 'dimGray'));
+        this.game.clients.forEach(c => this.drawConnection(c, Defaults.clientConnectionColor));
+        this.game.attackers.forEach(a => this.drawConnection(a, Defaults.attackerConnectionColor));
     }
     drawMessages() {
         this.orchestrator.messages.forEach(m => this.drawMessage(m));
@@ -1229,7 +1262,7 @@ class GameArea {
             fontFamily: 'sans-serif',
             align: 'center',
             baseline: 'alphabetic',
-            color: 'darkGray'
+            color: Defaults.secondaryColorMuted
         }, context);
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
@@ -1255,12 +1288,12 @@ class GameArea {
             text += '0';
         }
         text += s;
-        let color = 'darkGray';
+        let color = Defaults.secondaryColor;
         if (remaining <= 30) {
-            color = 'tomato';
+            color = Defaults.dangerColorMuted;
         }
         if (remaining <= 10) {
-            color = 'red';
+            color = Defaults.dangerColor;
         }
         Utilities.drawText({
             x: w - 10,
@@ -1269,7 +1302,8 @@ class GameArea {
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'end',
-            baseline: 'alphabetic', color
+            baseline: 'alphabetic',
+            color
         }, context);
     }
     drawAttacker(attacker) {
@@ -1279,8 +1313,8 @@ class GameArea {
             y,
             base: size * 2 / Math.sqrt(3),
             height: size,
-            color: '#333333',
-            borderColor: 'black',
+            color: Defaults.attackerColor,
+            borderColor: Defaults.attackerBorderColor,
             borderWidth: 2
         }, context);
         Utilities.drawText({
@@ -1291,7 +1325,7 @@ class GameArea {
             fontSize: 9,
             fontFamily: 'Arial',
             align: 'center',
-            color: 'white'
+            color: Defaults.attackerTextColor
         }, context);
     }
     drawClient(client) {
@@ -1299,15 +1333,23 @@ class GameArea {
             x,
             y,
             radius: clientSize / 2,
-            color: 'gray',
-            borderColor: 'dimGray'
+            color: Defaults.clientColor,
+            borderColor: Defaults.clientBorderColor
         };
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle({ ...circle, color: 'red', borderColor: 'fireBrick' }, context);
+                Utilities.drawCircle({
+                    ...circle,
+                    color: Defaults.dangerColor,
+                    borderColor: Defaults.dangerColorDark
+                }, context);
             }
             else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle({ ...circle, color: 'tomato', borderColor: 'indianRed' }, context);
+                Utilities.drawCircle({
+                    ...circle,
+                    color: Defaults.dangerColorMuted,
+                    borderColor: Defaults.dangerColorMutedDark
+                }, context);
             }
             else {
                 Utilities.drawCircle(circle, context);
@@ -1320,7 +1362,7 @@ class GameArea {
                 fontSize: 15,
                 fontFamily: 'Arial',
                 align: 'center',
-                color: 'white'
+                color: Defaults.clientTextColor
             }, context);
         }
         else {
@@ -1341,22 +1383,22 @@ class GameArea {
     }
     drawMessage(message) {
         const context = this.canvas.getContext('2d');
-        let fill, border;
+        let color, borderColor;
         switch (message.status) {
             case 'queued':
             case 'done':
                 return;
             case 'req':
-                fill = 'lightBlue';
-                border = 'steelBlue';
+                color = Defaults.messageReqColor;
+                borderColor = Defaults.messageReqBorderColor;
                 break;
             case 'ack':
-                fill = 'lime';
-                border = 'limeGreen';
+                color = Defaults.messageAckColor;
+                borderColor = Defaults.messageAckBorderColor;
                 break;
             case 'nack':
-                fill = 'tomato';
-                border = 'indianRed';
+                color = Defaults.messageNackColor;
+                borderColor = Defaults.messageNackBorderColor;
                 break;
             default:
                 throw 'Invalid message status: ' + message.status;
@@ -1365,13 +1407,13 @@ class GameArea {
             x: message.x,
             y: message.y,
             radius: Defaults.messageSize / 2,
-            color: fill,
-            borderColor: border
+            color,
+            borderColor
         }, context);
     }
     drawServer(server) {
         const context = this.canvas.getContext('2d'), serverSize = Defaults.serverSize;
-        let i = Math.max(0, server.capacity / Defaults.serversCapacity - 1);
+        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
         for (; i > -1; i -= 1) {
             const fill = `rgb(0,${128 - 15 * i},0)`, border = `rgb(0,${100 - 15 * i},0)`;
             Utilities.drawRect({
@@ -1383,17 +1425,17 @@ class GameArea {
                 borderColor: border
             }, context);
         }
-        const serversSpeed = Defaults.serversSpeed, queueWidth = 5, queueHeight = serverSize - 10, queueX = server.x + serverSize / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
+        const serversSpeed = Defaults.serverSpeed, queueWidth = 5, queueHeight = serverSize - 10, queueX = server.x + serverSize / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
         Utilities.drawRect({
             x: queueX,
             y: queueY,
             width: queueWidth + 2,
             height: queueHeight + 2,
-            borderColor: '#004500'
+            borderColor: Defaults.serverBorderColor
         }, context);
         const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-        gradient.addColorStop(0.5, 'limeGreen');
-        gradient.addColorStop(1, 'red');
+        gradient.addColorStop(0.5, Defaults.successColor);
+        gradient.addColorStop(1, Defaults.dangerColor);
         Utilities.drawRect({
             x: gradientX,
             y: gradientY,
@@ -1408,8 +1450,8 @@ class GameArea {
                 y: starY,
                 outerRadius: 4,
                 innerRadius: 2,
-                color: 'limeGreen',
-                borderColor: '#004500'
+                color: Defaults.successColor,
+                borderColor: Defaults.serverBorderColor
             }, context);
         }
     }
@@ -1454,7 +1496,7 @@ class GameOver {
     game;
     orchestrator;
     popularity;
-    color = 'white';
+    color = Defaults.primaryColor;
     buttons;
     id = Defaults.gameModes.GAME_OVER;
     constructor(canvas, clouds, game, orchestrator, popularity, newGame) {
@@ -1482,7 +1524,7 @@ class GameOver {
             fontSize: 60,
             fontVariant: 'small-caps',
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
@@ -1510,7 +1552,7 @@ class GameOver {
             y1: h / 2 + 20,
             x2: w / 2 + 130,
             y2: h / 2 + 20,
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
     drawStat(y, text, value) {
@@ -1597,8 +1639,8 @@ class Tutorial {
             y: 0,
             width: w,
             height: 80,
-            color: '#0360AE',
-            borderColor: '#02467F'
+            color: Defaults.backgroundColor,
+            borderColor: Defaults.backgroundBorderColor
         };
         this.currentStep.run();
         this.fader.update(1 / Defaults.frameRate);
@@ -1618,7 +1660,7 @@ class Tutorial {
                 fontWeight: 'bold',
                 fontSize: 18,
                 align: 'center',
-                color: 'white'
+                color: Defaults.primaryColor
             }, context);
         }
         Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
@@ -1663,15 +1705,15 @@ class Menu {
         return this.buttons;
     }
     update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = 'center', color = 'rgba(255,255,255,0.6)';
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
         this.clouds.draw();
         Utilities.drawRect({
             x: w / 2,
             y: 140,
             width: w,
             height: 180,
-            color: 'rgba(0,0,0,0.1)',
-            borderColor: 'rgba(200,200,200,0.5)'
+            color: Defaults.secondaryColorTransparent,
+            borderColor: Defaults.primaryColorMutedTransparent
         }, context);
         Utilities.drawText({
             x: w / 2,
@@ -1696,7 +1738,7 @@ class Menu {
             y1: 160,
             x2: w - 118,
             y2: 160,
-            color: 'red',
+            color: Defaults.accentColor,
             width: 2
         }, context);
     }
@@ -1724,8 +1766,8 @@ class UpgradeButton {
             y: this.y,
             width: this.width,
             height: this.height,
-            color: '#333333',
-            borderColor: hovered ? 'white' : undefined,
+            color: Defaults.secondaryColor,
+            borderColor: hovered ? Defaults.primaryColor : undefined,
             borderWidth: 2
         }, context);
         this.drawIcon(context);
@@ -1736,7 +1778,7 @@ class UpgradeButton {
                 text: this.text,
                 fontSize: 20,
                 align: 'center',
-                color: 'red'
+                color: Defaults.accentColor
             }, context);
         }
     }
@@ -1747,7 +1789,7 @@ class CapacityUpgradeButton extends UpgradeButton {
     }
     drawIcon(context) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = 'red', lineWidth = 3;
+        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
         Utilities.drawRect({
             x,
             y,
@@ -1761,8 +1803,8 @@ class CapacityUpgradeButton extends UpgradeButton {
             y: queueY,
             width: 6,
             height: serverSize - 10,
-            color: 'salmon',
-            borderColor: 'red'
+            color: Defaults.accentColorMuted,
+            borderColor: Defaults.accentColor
         }, context);
         Utilities.drawStar({
             x: starX,
@@ -1810,7 +1852,7 @@ class ServerUpgradeButton extends UpgradeButton {
             text: '+',
             fontSize: 45,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
         Utilities.drawRect({
             x: x + 15,
@@ -1818,7 +1860,7 @@ class ServerUpgradeButton extends UpgradeButton {
             width: serverSize,
             height: serverSize,
             color: '#DDDDDD',
-            borderColor: 'red'
+            borderColor: Defaults.accentColor
         }, context);
         Utilities.drawStar({
             x: x - serverSize / 2 + 22,
@@ -1844,7 +1886,7 @@ class SpeedUpgradeButton extends UpgradeButton {
     }
     drawIcon(context) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = 'red', lineWidth = 3;
+        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
         Utilities.drawRect({
             x,
             y,
@@ -1866,8 +1908,8 @@ class SpeedUpgradeButton extends UpgradeButton {
             y: starY,
             outerRadius: 4,
             innerRadius: 2,
-            color: 'salmon',
-            borderColor: 'red'
+            color: Defaults.accentColorMuted,
+            borderColor: Defaults.accentColor
         }, context);
         Utilities.drawLine({
             x1: starX,
@@ -1936,7 +1978,7 @@ class Pause {
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
-                color: 'black'
+                color: Defaults.secondaryColor
             }, context);
         }
         else {
@@ -1946,7 +1988,7 @@ class Pause {
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
-                color: '#DDDDDD'
+                color: Defaults.primaryColorMuted
             }, context);
         }
         Utilities.drawText({
@@ -1955,7 +1997,7 @@ class Pause {
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
     selectUpgrade(id) {
@@ -2006,8 +2048,8 @@ class TutorialHelper {
         };
         Utilities.drawCircle({
             ...circle,
-            color: 'lightBlue',
-            borderColor: 'skyBlue'
+            color: Defaults.messageReqColor,
+            borderColor: Defaults.messageReqBorderColor
         }, context);
         Utilities.drawText({
             ...text,
@@ -2016,8 +2058,8 @@ class TutorialHelper {
         Utilities.drawCircle({
             ...circle,
             y: y + lineSpacing,
-            color: 'lime',
-            borderColor: 'limeGreen'
+            color: Defaults.messageAckColor,
+            borderColor: Defaults.messageAckBorderColor
         }, context);
         Utilities.drawText({
             ...text,
@@ -2028,8 +2070,8 @@ class TutorialHelper {
             Utilities.drawCircle({
                 ...circle,
                 y: y + lineSpacing * 2,
-                color: 'tomato',
-                borderColor: 'indianRed'
+                color: Defaults.messageNackColor,
+                borderColor: Defaults.messageNackBorderColor
             }, context);
             Utilities.drawText({
                 ...text,
@@ -2253,7 +2295,7 @@ class DdosAttackExample extends TutorialStep {
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
-            color: 'darkGray'
+            color: Defaults.secondaryColorMuted
         }, context);
     }
     spawnClients() {
@@ -2294,7 +2336,7 @@ class NewServerUpgradeExample extends TutorialStep {
             y: h / 2,
             width: w,
             height: h - 158,
-            color: '#0360AE'
+            color: Defaults.backgroundColor
         }, context);
         Utilities.drawText({
             x: w / 2,
@@ -2309,7 +2351,7 @@ class NewServerUpgradeExample extends TutorialStep {
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 }
@@ -2403,7 +2445,7 @@ class SpeedUpgradeExample extends TutorialStep {
             new ServerUpgradeButton(250, y),
             new CapacityUpgradeButton(w / 2, y),
             new SpeedUpgradeButton(w - 250, y, () => {
-                this.game.servers[0].speed += Defaults.serversSpeed;
+                this.game.servers[0].speed += Defaults.serverSpeed;
                 this.advance = true;
             })
         ];
@@ -2418,7 +2460,7 @@ class SpeedUpgradeExample extends TutorialStep {
             y: h / 2,
             width: w,
             height: h - 158,
-            color: '#0360AE'
+            color: Defaults.backgroundColor
         }, context);
         Utilities.drawText({
             x: w / 2,
@@ -2433,7 +2475,7 @@ class SpeedUpgradeExample extends TutorialStep {
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 }
@@ -2511,7 +2553,7 @@ class UpgradesIntroduction extends TutorialStep {
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
-            color: 'darkGray'
+            color: Defaults.secondaryColorMuted
         }, context);
     }
 }
@@ -2583,14 +2625,14 @@ class Upgrade {
     }
     getButtons() {
         const w = this.canvas.width, h = this.canvas.height, button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
-        button.color = '#333333';
+        button.color = Defaults.secondaryColor;
         let buttons = [button];
         switch (this.upgradesTracker.selectedUpgrade) {
             case 'speed':
                 buttons = [...buttons, ...this.createServerButtons(s => s.speed += 2)];
                 break;
             case 'capacity':
-                buttons = [...buttons, ...this.createServerButtons(s => s.capacity += Defaults.serversCapacity)];
+                buttons = [...buttons, ...this.createServerButtons(s => s.capacity += Defaults.serverCapacity)];
                 break;
             case 'server':
                 buttons = [...buttons,
@@ -2628,19 +2670,19 @@ class Upgrade {
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
     createAreaButton(x, y, area) {
-        const w = this.canvas.width, h = this.canvas.height;
-        return new BorderButton(x, y, Math.floor(w / 3), Math.floor(h / 3), '#CCCCCC', 'limeGreen', 1, () => {
+        const w = this.canvas.width, h = this.canvas.height, borderWidth = Defaults.highlightWidth;
+        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
     createServerButton(server, action) {
-        const size = Defaults.serverSize + 2;
-        return new BorderButton(server.x, server.y, size, size, 'transparent', 'limeGreen', 2, () => {
+        const borderWidth = Defaults.highlightWidth, size = Defaults.serverSize + borderWidth;
+        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });
@@ -2697,7 +2739,7 @@ class Application {
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.activeScene = scenes[0];
-        clouds.setSkyColor('#0360AE');
+        clouds.setSkyColor(Defaults.backgroundColor);
         this.createCloud(w / 4, h / 4);
         this.createCloud(0 - w / 4, h / 3);
         this.createCloud(w / 2, h / 2);

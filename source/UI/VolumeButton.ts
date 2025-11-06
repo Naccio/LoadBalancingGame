@@ -16,7 +16,7 @@ class VolumeButton implements Button {
             y = this.y,
             w = this.width,
             h = this.height,
-            color = hovered ? 'white' : 'rgba(255,255,255,0.8)',
+            color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent,
             status = this.isOn ? 'On' : 'Off';
 
         Utilities.drawRect({
@@ -41,7 +41,7 @@ class VolumeButton implements Button {
                 y1: y + h / 2,
                 x2: x + w / 2,
                 y2: y - h / 2,
-                color: 'red',
+                color: Defaults.accentColor,
                 width: 2
             }, context);
         }
@@ -54,7 +54,7 @@ class VolumeButton implements Button {
                 fontSize: 10,
                 align: 'center',
                 baseline: 'top',
-                color: '#fff'
+                color: Defaults.primaryColor
             }, context);
         }
     }

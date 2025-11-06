@@ -47,7 +47,7 @@ class NewServerUpgradeExample extends TutorialStep {
             y: h / 2,
             width: w,
             height: h - 158,
-            color: '#0360AE'
+            color: Defaults.backgroundColor
         }, context);
         Utilities.drawText({
             x: w / 2,
@@ -62,7 +62,7 @@ class NewServerUpgradeExample extends TutorialStep {
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
-            color: 'red'
+            color: Defaults.accentColor
         }, context);
     }
 }

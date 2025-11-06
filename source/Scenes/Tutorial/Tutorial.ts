@@ -61,8 +61,8 @@ class Tutorial implements Scene {
                 y: 0,
                 width: w,
                 height: 80,
-                color: '#0360AE',
-                borderColor: '#02467F'
+                color: Defaults.backgroundColor,
+                borderColor: Defaults.backgroundBorderColor
             };
         this.currentStep.run();
         this.fader.update(1 / Defaults.frameRate);
@@ -84,7 +84,7 @@ class Tutorial implements Scene {
                 fontWeight: 'bold',
                 fontSize: 18,
                 align: 'center',
-                color: 'white'
+                color: Defaults.primaryColor
             }, context);
         }
         Utilities.drawRect({ ...rectangle, y: h - 40 }, context);

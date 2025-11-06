@@ -16,7 +16,7 @@ class SpeedUpgradeButton extends UpgradeButton {
             queueY = y + 1,
             starX = x - serverSize / 2 + 7,
             starY = y + serverSize / 2 - 9,
-            color = 'red',
+            color = Defaults.accentColor,
             lineWidth = 3;
         Utilities.drawRect({
             x,
@@ -39,8 +39,8 @@ class SpeedUpgradeButton extends UpgradeButton {
             y: starY,
             outerRadius: 4,
             innerRadius: 2,
-            color: 'salmon',
-            borderColor: 'red'
+            color: Defaults.accentColorMuted,
+            borderColor: Defaults.accentColor
         }, context);
         Utilities.drawLine({
             x1: starX,

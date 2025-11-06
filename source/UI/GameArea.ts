@@ -33,14 +33,14 @@ class GameArea {
                 y1: sc.y,
                 x2: this.cursor.mouseX,
                 y2: this.cursor.mouseY,
-                color: 'lightBlue',
-                width: 3
+                color: Defaults.highlightColor,
+                width: Defaults.highlightWidth
             }, context);
             Utilities.drawCircle({
                 x: sc.x,
                 y: sc.y,
-                radius: Defaults.clientSize / 2 + 3,
-                color: 'lightBlue'
+                radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
+                color: Defaults.highlightColor
             }, context);
         }
 
@@ -61,8 +61,8 @@ class GameArea {
     }
 
     drawConnections() {
-        this.game.clients.forEach(c => this.drawConnection(c, 'darkGray'));
-        this.game.attackers.forEach(a => this.drawConnection(a, 'dimGray'));
+        this.game.clients.forEach(c => this.drawConnection(c, Defaults.clientConnectionColor));
+        this.game.attackers.forEach(a => this.drawConnection(a, Defaults.attackerConnectionColor));
     }
 
     drawMessages() {
@@ -91,7 +91,7 @@ class GameArea {
             fontFamily: 'sans-serif',
             align: 'center',
             baseline: 'alphabetic',
-            color: 'darkGray'
+            color: Defaults.secondaryColorMuted
         }, context);
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
@@ -124,12 +124,12 @@ class GameArea {
         }
         text += s;
 
-        let color = 'darkGray'
+        let color = Defaults.secondaryColor
         if (remaining <= 30) {
-            color = 'tomato';
+            color = Defaults.dangerColorMuted;
         }
         if (remaining <= 10) {
-            color = 'red';
+            color = Defaults.dangerColor;
         }
         Utilities.drawText({
             x: w - 10,
@@ -138,7 +138,8 @@ class GameArea {
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'end',
-            baseline: 'alphabetic', color
+            baseline: 'alphabetic',
+            color
         }, context);
     }
 
@@ -153,8 +154,8 @@ class GameArea {
             y,
             base: size * 2 / Math.sqrt(3),
             height: size,
-            color: '#333333',
-            borderColor: 'black',
+            color: Defaults.attackerColor,
+            borderColor: Defaults.attackerBorderColor,
             borderWidth: 2
         }, context);
         Utilities.drawText({
@@ -165,7 +166,7 @@ class GameArea {
             fontSize: 9,
             fontFamily: 'Arial',
             align: 'center',
-            color: 'white'
+            color: Defaults.attackerTextColor
         }, context);
     }
 
@@ -179,15 +180,23 @@ class GameArea {
                 x,
                 y,
                 radius: clientSize / 2,
-                color: 'gray',
-                borderColor: 'dimGray'
+                color: Defaults.clientColor,
+                borderColor: Defaults.clientBorderColor
             };
 
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle({ ...circle, color: 'red', borderColor: 'fireBrick' }, context);
+                Utilities.drawCircle({
+                    ...circle,
+                    color: Defaults.dangerColor,
+                    borderColor: Defaults.dangerColorDark
+                }, context);
             } else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle({ ...circle, color: 'tomato', borderColor: 'indianRed' }, context);
+                Utilities.drawCircle({
+                    ...circle,
+                    color: Defaults.dangerColorMuted,
+                    borderColor: Defaults.dangerColorMutedDark
+                }, context);
             } else {
                 Utilities.drawCircle(circle, context);
             }
@@ -200,7 +209,7 @@ class GameArea {
                 fontSize: 15,
                 fontFamily: 'Arial',
                 align: 'center',
-                color: 'white'
+                color: Defaults.clientTextColor
             }, context);
         }
         else {
@@ -223,23 +232,23 @@ class GameArea {
 
     private drawMessage(message: Message) {
         const context = this.canvas.getContext('2d')!;
-        let fill, border;
+        let color, borderColor;
 
         switch (message.status) {
             case 'queued':
             case 'done':
                 return;
             case 'req':
-                fill = 'lightBlue';
-                border = 'steelBlue';
+                color = Defaults.messageReqColor;
+                borderColor = Defaults.messageReqBorderColor;
                 break;
             case 'ack':
-                fill = 'lime';
-                border = 'limeGreen';
+                color = Defaults.messageAckColor;
+                borderColor = Defaults.messageAckBorderColor;
                 break;
             case 'nack':
-                fill = 'tomato';
-                border = 'indianRed';
+                color = Defaults.messageNackColor;
+                borderColor = Defaults.messageNackBorderColor;
                 break;
             default:
                 throw 'Invalid message status: ' + message.status;
@@ -249,15 +258,15 @@ class GameArea {
             x: message.x,
             y: message.y,
             radius: Defaults.messageSize / 2,
-            color: fill,
-            borderColor: border
+            color,
+            borderColor
         }, context);
     }
 
     private drawServer(server: Server) {
         const context = this.canvas.getContext('2d')!,
             serverSize = Defaults.serverSize;
-        let i = Math.max(0, server.capacity / Defaults.serversCapacity - 1);
+        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
 
         for (; i > -1; i -= 1) {
             const fill = `rgb(0,${128 - 15 * i},0)`,
@@ -273,7 +282,7 @@ class GameArea {
         }
 
         //draw server's queue
-        const serversSpeed = Defaults.serversSpeed,
+        const serversSpeed = Defaults.serverSpeed,
             queueWidth = 5,
             queueHeight = serverSize - 10,
             queueX = server.x + serverSize / 2 - 7,
@@ -289,12 +298,12 @@ class GameArea {
             y: queueY,
             width: queueWidth + 2,
             height: queueHeight + 2,
-            borderColor: '#004500'
+            borderColor: Defaults.serverBorderColor
         }, context);
 
         const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-        gradient.addColorStop(0.5, 'limeGreen');
-        gradient.addColorStop(1, 'red');
+        gradient.addColorStop(0.5, Defaults.successColor);
+        gradient.addColorStop(1, Defaults.dangerColor);
         Utilities.drawRect({
             x: gradientX,
             y: gradientY,
@@ -312,8 +321,8 @@ class GameArea {
                 y: starY,
                 outerRadius: 4,
                 innerRadius: 2,
-                color: 'limeGreen',
-                borderColor: '#004500'
+                color: Defaults.successColor,
+                borderColor: Defaults.serverBorderColor
             }, context);
         }
     }

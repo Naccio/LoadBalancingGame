@@ -96,7 +96,7 @@ class GameTracker {
                     this.popularityTracker.updatePopularity(-10, c.x, c.y);
                 }
             } else {
-                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientsSpeed) {
+                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {
                     c.sendMessage(elapsedTime);
                 }
             }
@@ -115,7 +115,7 @@ class GameTracker {
                 continue;
             }
 
-            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientsSpeed) {
+            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientSpeed) {
                 a.sendMessage(elapsedTime);
             }
         }
