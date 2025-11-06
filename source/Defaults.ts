@@ -40,8 +40,28 @@ class Defaults {
     public static readonly secondaryColorMuted = '#a9a9a9';
     public static readonly serverCapacity = 80; //messages
     public static readonly serverBorderColor = '#004500';
+    public static readonly serverColor = '#008000';
     public static readonly serverSize = 40;	//pixels (side)
     public static readonly serverSpeed = 3.5; //messages per second
     public static readonly successColor = '#00ff00';
+
     public static readonly gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
+    public static readonly serverDefaults = {
+        size: Defaults.serverSize,
+        color: Defaults.serverColor,
+        borderColor: Defaults.serverBorderColor,
+        queueColor: Defaults.serverColor,
+        queueBorderColor: Defaults.serverBorderColor,
+        speedColor: Defaults.successColor,
+        speedBorderColor: Defaults.serverBorderColor,
+    };
+    public static readonly serverDisabledDefaults = {
+        size: Defaults.serverSize,
+        color: '#DDDDDD',
+        borderColor: '#999999',
+        queueColor: '#BBBBBB',
+        queueBorderColor: '#999999',
+        speedColor: '#BBBBBB',
+        speedBorderColor: '#999999',
+    }
 }

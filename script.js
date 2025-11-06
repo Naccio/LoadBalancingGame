@@ -293,6 +293,54 @@ class Utilities {
         context.closePath();
         Utilities.draw(rectangle, context);
     }
+    static drawServer(server, options, context) {
+        options = {
+            ...Defaults.serverDefaults,
+            ...options
+        };
+        const size = options.size;
+        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
+        for (; i > -1; i -= 1) {
+            Utilities.drawRect({
+                x: server.x + 3 * i,
+                y: server.y - 3 * i,
+                width: size,
+                height: size,
+                color: options.color,
+                borderColor: options.borderColor
+            }, context);
+        }
+        const speed = Defaults.serverSpeed, queueWidth = 5, queueHeight = size - 10, queueX = server.x + size / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
+        Utilities.drawRect({
+            x: queueX,
+            y: queueY,
+            width: queueWidth + 2,
+            height: queueHeight + 2,
+            color: options.queueColor,
+            borderColor: options.queueBorderColor
+        }, context);
+        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
+        gradient.addColorStop(0.5, Defaults.successColor);
+        gradient.addColorStop(1, Defaults.dangerColor);
+        Utilities.drawRect({
+            x: gradientX,
+            y: gradientY,
+            width: gradientWidth,
+            height: gradientHeight,
+            color: gradient
+        }, context);
+        for (i = server.speed; i > 0; i -= speed) {
+            const starX = server.x - size / 2 + 7, starY = server.y + size / 2 - 4 - 5 * (i / speed);
+            Utilities.drawStar({
+                x: starX,
+                y: starY,
+                outerRadius: 4,
+                innerRadius: 2,
+                color: options.speedColor,
+                borderColor: options.speedBorderColor
+            }, context);
+        }
+    }
     static drawStar(star, context) {
         const centerX = star.x, centerY = star.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
         let x, y, rot = Math.PI / 2 * 3;
@@ -763,10 +811,29 @@ class Defaults {
     static secondaryColorMuted = '#a9a9a9';
     static serverCapacity = 80;
     static serverBorderColor = '#004500';
+    static serverColor = '#008000';
     static serverSize = 40;
     static serverSpeed = 3.5;
     static successColor = '#00ff00';
     static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
+    static serverDefaults = {
+        size: Defaults.serverSize,
+        color: Defaults.serverColor,
+        borderColor: Defaults.serverBorderColor,
+        queueColor: Defaults.serverColor,
+        queueBorderColor: Defaults.serverBorderColor,
+        speedColor: Defaults.successColor,
+        speedBorderColor: Defaults.serverBorderColor,
+    };
+    static serverDisabledDefaults = {
+        size: Defaults.serverSize,
+        color: '#DDDDDD',
+        borderColor: '#999999',
+        queueColor: '#BBBBBB',
+        queueBorderColor: '#999999',
+        speedColor: '#BBBBBB',
+        speedBorderColor: '#999999',
+    };
 }
 class ClientFactory {
     game;
@@ -1412,48 +1479,8 @@ class GameArea {
         }, context);
     }
     drawServer(server) {
-        const context = this.canvas.getContext('2d'), serverSize = Defaults.serverSize;
-        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
-        for (; i > -1; i -= 1) {
-            const fill = `rgb(0,${128 - 15 * i},0)`, border = `rgb(0,${100 - 15 * i},0)`;
-            Utilities.drawRect({
-                x: server.x + 3 * i,
-                y: server.y - 3 * i,
-                width: serverSize,
-                height: serverSize,
-                color: fill,
-                borderColor: border
-            }, context);
-        }
-        const serversSpeed = Defaults.serverSpeed, queueWidth = 5, queueHeight = serverSize - 10, queueX = server.x + serverSize / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
-        Utilities.drawRect({
-            x: queueX,
-            y: queueY,
-            width: queueWidth + 2,
-            height: queueHeight + 2,
-            borderColor: Defaults.serverBorderColor
-        }, context);
-        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-        gradient.addColorStop(0.5, Defaults.successColor);
-        gradient.addColorStop(1, Defaults.dangerColor);
-        Utilities.drawRect({
-            x: gradientX,
-            y: gradientY,
-            width: gradientWidth,
-            height: gradientHeight,
-            color: gradient
-        }, context);
-        for (i = server.speed; i > 0; i -= serversSpeed) {
-            const starX = server.x - serverSize / 2 + 7, starY = server.y + serverSize / 2 - 4 - 5 * (i / serversSpeed);
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: Defaults.successColor,
-                borderColor: Defaults.serverBorderColor
-            }, context);
-        }
+        const context = this.canvas.getContext('2d');
+        Utilities.drawServer(server, {}, context);
     }
 }
 class Game {
@@ -1789,30 +1816,11 @@ class CapacityUpgradeButton extends UpgradeButton {
     }
     drawIcon(context) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
-        Utilities.drawRect({
-            x,
-            y,
-            width: serverSize,
-            height: serverSize,
-            color: '#DDDDDD',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawRect({
-            x: queueX,
-            y: queueY,
-            width: 6,
-            height: serverSize - 10,
-            color: Defaults.accentColorMuted,
-            borderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawStar({
-            x: starX,
-            y: starY,
-            outerRadius: 4,
-            innerRadius: 2,
-            color: '#BBBBBB',
-            borderColor: '#999999'
+        var queueX = x + serverSize / 2 - 7, queueY = y + 1, color = Defaults.accentColor, lineWidth = 3;
+        Utilities.drawServer(new Server(x, y), {
+            ...Defaults.serverDisabledDefaults,
+            queueColor: Defaults.accentColorMuted,
+            queueBorderColor: Defaults.accentColor
         }, context);
         Utilities.drawLine({
             x1: queueX,
@@ -1854,29 +1862,9 @@ class ServerUpgradeButton extends UpgradeButton {
             align: 'center',
             color: Defaults.accentColor
         }, context);
-        Utilities.drawRect({
-            x: x + 15,
-            y,
-            width: serverSize,
-            height: serverSize,
-            color: '#DDDDDD',
+        Utilities.drawServer(new Server(x + 15, y), {
+            ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawStar({
-            x: x - serverSize / 2 + 22,
-            y: y + serverSize / 2 - 9,
-            outerRadius: 4,
-            innerRadius: 2,
-            color: '#BBBBBB',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawRect({
-            x: x + serverSize / 2 + 8,
-            y: y + 1,
-            width: 6,
-            height: serverSize - 10,
-            color: '#BBBBBB',
-            borderColor: '#999999'
         }, context);
     }
 }
@@ -1886,30 +1874,11 @@ class SpeedUpgradeButton extends UpgradeButton {
     }
     drawIcon(context) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
-        Utilities.drawRect({
-            x,
-            y,
-            width: serverSize,
-            height: serverSize,
-            color: '#DDDDDD',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawRect({
-            x: queueX,
-            y: queueY,
-            width: 6,
-            height: serverSize - 10,
-            color: '#BBBBBB',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawStar({
-            x: starX,
-            y: starY,
-            outerRadius: 4,
-            innerRadius: 2,
-            color: Defaults.accentColorMuted,
-            borderColor: Defaults.accentColor
+        var starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
+        Utilities.drawServer(new Server(x, y), {
+            ...Defaults.serverDisabledDefaults,
+            speedColor: Defaults.accentColorMuted,
+            speedBorderColor: Defaults.accentColor
         }, context);
         Utilities.drawLine({
             x1: starX,

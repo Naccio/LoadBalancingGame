@@ -264,66 +264,8 @@ class GameArea {
     }
 
     private drawServer(server: Server) {
-        const context = this.canvas.getContext('2d')!,
-            serverSize = Defaults.serverSize;
-        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
+        const context = this.canvas.getContext('2d')!;
 
-        for (; i > -1; i -= 1) {
-            const fill = `rgb(0,${128 - 15 * i},0)`,
-                border = `rgb(0,${100 - 15 * i},0)`;
-            Utilities.drawRect({
-                x: server.x + 3 * i,
-                y: server.y - 3 * i,
-                width: serverSize,
-                height: serverSize,
-                color: fill,
-                borderColor: border
-            }, context);
-        }
-
-        //draw server's queue
-        const serversSpeed = Defaults.serverSpeed,
-            queueWidth = 5,
-            queueHeight = serverSize - 10,
-            queueX = server.x + serverSize / 2 - 7,
-            queueY = server.y + 1,
-            fillPercentage = (server.queue.length / server.capacity) * 100,
-            gradientWidth = 5,
-            gradientHeight = fillPercentage * queueHeight / 100,
-            gradientX = queueX,
-            gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
-
-        Utilities.drawRect({
-            x: queueX,
-            y: queueY,
-            width: queueWidth + 2,
-            height: queueHeight + 2,
-            borderColor: Defaults.serverBorderColor
-        }, context);
-
-        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-        gradient.addColorStop(0.5, Defaults.successColor);
-        gradient.addColorStop(1, Defaults.dangerColor);
-        Utilities.drawRect({
-            x: gradientX,
-            y: gradientY,
-            width: gradientWidth,
-            height: gradientHeight,
-            color: gradient
-        }, context);
-
-        //draw server's speed
-        for (i = server.speed; i > 0; i -= serversSpeed) {
-            const starX = server.x - serverSize / 2 + 7,
-                starY = server.y + serverSize / 2 - 4 - 5 * (i / serversSpeed)
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: Defaults.successColor,
-                borderColor: Defaults.serverBorderColor
-            }, context);
-        }
+        Utilities.drawServer(server, {}, context);
     }
 }

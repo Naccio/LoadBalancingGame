@@ -20,29 +20,9 @@ class ServerUpgradeButton extends UpgradeButton {
             align: 'center',
             color: Defaults.accentColor
         }, context);
-        Utilities.drawRect({
-            x: x + 15,
-            y,
-            width: serverSize,
-            height: serverSize,
-            color: '#DDDDDD',
+        Utilities.drawServer(new Server(x + 15, y), {
+            ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawStar({
-            x: x - serverSize / 2 + 22,
-            y: y + serverSize / 2 - 9,
-            outerRadius: 4,
-            innerRadius: 2,
-            color: '#BBBBBB',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawRect({
-            x: x + serverSize / 2 + 8,
-            y: y + 1,
-            width: 6,
-            height: serverSize - 10,
-            color: '#BBBBBB',
-            borderColor: '#999999'
         }, context);
     }
 }

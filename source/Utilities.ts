@@ -1,3 +1,4 @@
+/// <reference path='Model/ServerOptions.ts' />
 /// <reference path='UI/Circle.ts' />
 /// <reference path='UI/Line.ts' />
 /// <reference path='UI/Rectangle.ts' />
@@ -56,6 +57,73 @@ class Utilities {
         context.rect(x - w / 2, y - h / 2, w, h);
         context.closePath();
         Utilities.draw(rectangle, context);
+    }
+
+    public static drawServer(server: Server, options: ServerOptions, context: CanvasRenderingContext2D) {
+        options = {
+            ...Defaults.serverDefaults,
+            ...options
+        };
+        const size = options.size!;
+
+        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
+
+        for (; i > -1; i -= 1) {
+            Utilities.drawRect({
+                x: server.x + 3 * i,
+                y: server.y - 3 * i,
+                width: size,
+                height: size,
+                color: options.color,
+                borderColor: options.borderColor
+            }, context);
+        }
+
+        //draw server's queue
+        const speed = Defaults.serverSpeed,
+            queueWidth = 5,
+            queueHeight = size - 10,
+            queueX = server.x + size / 2 - 7,
+            queueY = server.y + 1,
+            fillPercentage = (server.queue.length / server.capacity) * 100,
+            gradientWidth = 5,
+            gradientHeight = fillPercentage * queueHeight / 100,
+            gradientX = queueX,
+            gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
+
+        Utilities.drawRect({
+            x: queueX,
+            y: queueY,
+            width: queueWidth + 2,
+            height: queueHeight + 2,
+            color: options.queueColor,
+            borderColor: options.queueBorderColor
+        }, context);
+
+        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
+        gradient.addColorStop(0.5, Defaults.successColor);
+        gradient.addColorStop(1, Defaults.dangerColor);
+        Utilities.drawRect({
+            x: gradientX,
+            y: gradientY,
+            width: gradientWidth,
+            height: gradientHeight,
+            color: gradient
+        }, context);
+
+        //draw server's speed
+        for (i = server.speed; i > 0; i -= speed) {
+            const starX = server.x - size / 2 + 7,
+                starY = server.y + size / 2 - 4 - 5 * (i / speed)
+            Utilities.drawStar({
+                x: starX,
+                y: starY,
+                outerRadius: 4,
+                innerRadius: 2,
+                color: options.speedColor,
+                borderColor: options.speedBorderColor
+            }, context);
+        }
     }
 
     public static drawStar(star: Star, context: CanvasRenderingContext2D) {

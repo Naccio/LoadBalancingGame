@@ -12,35 +12,15 @@ class SpeedUpgradeButton extends UpgradeButton {
             y = this.y,
             serverSize = Defaults.serverSize;
 
-        var queueX = x + serverSize / 2 - 7,
-            queueY = y + 1,
-            starX = x - serverSize / 2 + 7,
+        var starX = x - serverSize / 2 + 7,
             starY = y + serverSize / 2 - 9,
             color = Defaults.accentColor,
             lineWidth = 3;
-        Utilities.drawRect({
-            x,
-            y,
-            width: serverSize,
-            height: serverSize,
-            color: '#DDDDDD',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawRect({
-            x: queueX,
-            y: queueY,
-            width: 6,
-            height: serverSize - 10,
-            color: '#BBBBBB',
-            borderColor: '#999999'
-        }, context);
-        Utilities.drawStar({
-            x: starX,
-            y: starY,
-            outerRadius: 4,
-            innerRadius: 2,
-            color: Defaults.accentColorMuted,
-            borderColor: Defaults.accentColor
+
+        Utilities.drawServer(new Server(x, y), {
+            ...Defaults.serverDisabledDefaults,
+            speedColor: Defaults.accentColorMuted,
+            speedBorderColor: Defaults.accentColor
         }, context);
         Utilities.drawLine({
             x1: starX,
