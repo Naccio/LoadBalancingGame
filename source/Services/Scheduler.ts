@@ -19,7 +19,8 @@ class Scheduler {
         private canvas: HTMLCanvasElement,
         private game: GameTracker,
         private clientFactory: ClientFactory,
-        private attackerFactory: AttackerFactory
+        private attackerFactory: AttackerFactory,
+        private serverFactory: ServerFactory
     ) { }
 
     schedule() {
@@ -117,7 +118,7 @@ class Scheduler {
             y = Utilities.random(minY, maxY);
         }
 
-        this.game.servers.push(new Server(x, y));
+        this.serverFactory.create(x, y);
     };
 
     createClient() {

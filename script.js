@@ -759,6 +759,7 @@ class Scheduler {
     game;
     clientFactory;
     attackerFactory;
+    serverFactory;
     timeLastDDoS = 0;
     minClientMessages = 25;
     maxClientMessages = 35;
@@ -767,12 +768,13 @@ class Scheduler {
     spawnRate = 6;
     attackRate = 80;
     timeLastClient = 1 - this.spawnRate;
-    constructor(popularityTracker, canvas, game, clientFactory, attackerFactory) {
+    constructor(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory) {
         this.popularityTracker = popularityTracker;
         this.canvas = canvas;
         this.game = game;
         this.clientFactory = clientFactory;
         this.attackerFactory = attackerFactory;
+        this.serverFactory = serverFactory;
     }
     schedule() {
         const popularity = this.popularityTracker.popularity, elapsedTime = this.game.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
@@ -858,7 +860,7 @@ class Scheduler {
             x = Utilities.random(minX, maxX);
             y = Utilities.random(minY, maxY);
         }
-        this.game.servers.push(new Server(x, y));
+        this.serverFactory.create(x, y);
     }
     ;
     createClient() {
@@ -1949,24 +1951,34 @@ class Pause {
         this.game.switchMode(Defaults.gameModes.UPGRADE);
     }
 }
+class ServerFactory {
+    game;
+    constructor(game) {
+        this.game = game;
+    }
+    create(x, y) {
+        const server = new Server(x, y);
+        this.game.servers.push(server);
+        return server;
+    }
+}
 class TutorialStep1 extends TutorialStep {
     canvas;
-    game;
-    constructor(canvas, game) {
+    serverFactory;
+    constructor(canvas, serverFactory) {
         super(0, [
             'Welcome to Load Balancing: The Game!',
             'Here you will take the role of -you guessed it- a LOAD BALANCER.',
             'Click "Next" to start the tutorial.'
         ]);
         this.canvas = canvas;
-        this.game = game;
+        this.serverFactory = serverFactory;
         this.hasNext = true;
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height, server = new Server(w / 2, h / 2);
+        const w = this.canvas.width, h = this.canvas.height, server = this.serverFactory.create(w / 2, h / 2);
         server.capacity = 20;
-        this.game.servers.push(server);
     }
 }
 class TutorialStep2 extends TutorialStep {
@@ -2406,23 +2418,20 @@ class TutorialStep11 extends TutorialStep {
 }
 class TutorialStep12 extends TutorialStep {
     canvas;
-    game;
     fader;
-    constructor(canvas, game, fader) {
+    constructor(canvas, serverFactory, fader) {
         super(11, [
             'This time let\'s buy a new datacenter.',
             'This way you can connect the clients to it while your first one is under attack.',
             'Select the first upgrade (Buy new datacenter).'
         ]);
         this.canvas = canvas;
-        this.game = game;
         this.fader = fader;
         const w = canvas.width, h = canvas.height, y = h / 2 + 150;
         this.extraButtons = [
             new ServerUpgradeButton(250, y, () => {
-                const server = new Server(w / 2, h / 4);
+                const server = serverFactory.create(w / 2, h / 4);
                 server.capacity = 20;
-                this.game.servers.push(server);
                 this.advance = true;
             }),
             new CapacityUpgradeButton(w / 2, y),
@@ -2629,7 +2638,8 @@ class Upgrade {
         });
     }
     createServerButton(server, action) {
-        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
+        const size = Defaults.serverSize + 2;
+        return new BorderButton(server.x, server.y, size, size, 'transparent', 'limeGreen', 2, () => {
             action();
             this.selectUpgrade();
         });
@@ -2709,8 +2719,9 @@ class Application {
         const game = new GameTracker(popularityTracker, ui, orchestrator);
         const attackerFactory = new AttackerFactory(game, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
+        const serverFactory = new ServerFactory(game);
         const cursor = new CursorTracker(game, canvas, ui);
-        const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory);
+        const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
         const credits = new Credits(canvas, clouds, game);
@@ -2719,7 +2730,7 @@ class Application {
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
         const gameScene = new Game(canvas, game, scheduler, gameArea, fader);
         const tutorial = new Tutorial([
-            new TutorialStep1(canvas, game),
+            new TutorialStep1(canvas, serverFactory),
             new TutorialStep2(canvas),
             new TutorialStep3(canvas, clientFactory),
             new TutorialStep4(game),
@@ -2730,7 +2741,7 @@ class Application {
             new TutorialStep9(canvas, game, fader),
             new TutorialStep10(canvas, game, orchestrator, popularityTracker),
             new TutorialStep11(canvas, game, fader, clientFactory, attackerFactory),
-            new TutorialStep12(canvas, game, fader),
+            new TutorialStep12(canvas, serverFactory, fader),
             new TutorialStep13(canvas, game, popularityTracker, clientFactory),
             new TutorialStep14(canvas, game, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);

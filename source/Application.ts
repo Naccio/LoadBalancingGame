@@ -85,8 +85,9 @@ class Application {
         const game = new GameTracker(popularityTracker, ui, orchestrator);
         const attackerFactory = new AttackerFactory(game, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
+        const serverFactory = new ServerFactory(game);
         const cursor = new CursorTracker(game, canvas, ui);
-        const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory);
+        const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
 
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
@@ -97,7 +98,7 @@ class Application {
         const upgrade = new Upgrade(canvas, game, upgradesTracker, scheduler, gameArea, fader);
         const gameScene = new Game(canvas, game, scheduler, gameArea, fader);
         const tutorial = new Tutorial([
-            new TutorialStep1(canvas, game),
+            new TutorialStep1(canvas, serverFactory),
             new TutorialStep2(canvas),
             new TutorialStep3(canvas, clientFactory),
             new TutorialStep4(game),
@@ -108,7 +109,7 @@ class Application {
             new TutorialStep9(canvas, game, fader),
             new TutorialStep10(canvas, game, orchestrator, popularityTracker),
             new TutorialStep11(canvas, game, fader, clientFactory, attackerFactory),
-            new TutorialStep12(canvas, game, fader),
+            new TutorialStep12(canvas, serverFactory, fader),
             new TutorialStep13(canvas, game, popularityTracker, clientFactory),
             new TutorialStep14(canvas, game, popularityTracker, newGame)
         ], canvas, gameArea, fader, game, orchestrator);

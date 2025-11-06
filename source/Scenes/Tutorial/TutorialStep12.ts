@@ -1,4 +1,4 @@
-/// <reference path='../../Services/GameTracker.ts' />
+/// <reference path='../../Services/ServerFactory.ts' />
 /// <reference path='../../UI/TextFader.ts' />
 /// <reference path='../../Upgrades/CapacityUpgradeButton.ts' />
 /// <reference path='../../Upgrades/ServerUpgradeButton.ts' />
@@ -10,7 +10,7 @@ class TutorialStep12 extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,
-        private game: GameTracker,
+        serverFactory: ServerFactory,
         private fader: TextFader
     ) {
         super(11, [
@@ -24,9 +24,8 @@ class TutorialStep12 extends TutorialStep {
 
         this.extraButtons = [
             new ServerUpgradeButton(250, y, () => {
-                const server = new Server(w / 2, h / 4);
+                const server = serverFactory.create(w / 2, h / 4);
                 server.capacity = 20;
-                this.game.servers.push(server);
                 this.advance = true;
             }),
             new CapacityUpgradeButton(w / 2, y),

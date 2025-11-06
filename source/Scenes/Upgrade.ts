@@ -95,7 +95,9 @@ class Upgrade implements Scene {
     }
 
     private createServerButton(server: Server, action: () => void) {
-        return new BorderButton(server.x, server.y, Defaults.serverSize + 2, Defaults.serverSize + 2, 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
+        const size = Defaults.serverSize + 2;
+
+        return new BorderButton(server.x, server.y, size, size, 'transparent', 'limeGreen', 2, () => {
             action();
             this.selectUpgrade();
         });
