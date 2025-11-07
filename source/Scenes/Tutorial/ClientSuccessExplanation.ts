@@ -4,9 +4,10 @@
 /// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
+/// <reference path='TutorialHelper.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep10 extends TutorialStep {
+class ClientSuccessExplanation extends TutorialStep {
 
     constructor(
         private canvas: HTMLCanvasElement,
@@ -14,7 +15,7 @@ class TutorialStep10 extends TutorialStep {
         private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker
     ) {
-        super(9, [
+        super([
             'Nice! You can see your datacenter\'s speed in the bottom left of it.',
             'Now the clients can finish their data exchange without any more problems.',
             'When a client is served successfully you will gain some more popularity.']);
@@ -43,7 +44,6 @@ class TutorialStep10 extends TutorialStep {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }
-        this.orchestrator.updateMessages();
         this.game.update();
     }
 
@@ -51,22 +51,10 @@ class TutorialStep10 extends TutorialStep {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
-            align: CanvasTextAlign = 'start',
-            baseline: CanvasTextBaseline = 'middle',
-            color = 'black',
-            messageSize = Defaults.messageSize,
             serverSize = Defaults.serverSize;
 
-        let font = '18px sans-serif';
-        Utilities.drawText(10, h - 95, "Popularity: " + this.popularityTracker.popularity, font, align, baseline, color, context);
-
-        font = "10px sans-serif";
-        Utilities.drawText(w - 118 + messageSize / 2, 100, ': Request', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + messageSize + 5, ': Response (+1)', font, align, baseline, color, context);
-        Utilities.drawText(w - 118 + messageSize / 2, 100 + 2 * (messageSize + 5), ': Datacenter busy (-1)', font, align, baseline, color, context);
-        Utilities.drawCircle(w - 120, 100, messageSize / 2, 'lightBlue', 'skyBlue', 2, context);
-        Utilities.drawCircle(w - 120, 100 + messageSize + 5, messageSize / 2, 'lime', 'limeGreen', 2, context);
-        Utilities.drawCircle(w - 120, 100 + 2 * (messageSize + 5), messageSize / 2, 'tomato', 'indianRed', 2, context);
+        this.popularityTracker.draw(h - 95);
+        TutorialHelper.drawLegend(this.canvas, true);
 
         Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
     }

@@ -11,14 +11,14 @@ class FpsCounter {
     };
 
     logFps() {
-        let l = document.getElementById("fps");
+        let l = document.getElementById('fps');
         if (!l) {
-            const log = document.getElementById("log");
+            const log = document.getElementById('log');
 
             if (log) {
                 log.innerHTML = 'Fps: <span id="fps"></span><br />' + log.innerHTML;
             }
-            l = document.getElementById("fps");
+            l = document.getElementById('fps');
         }
         l!.innerHTML = this.fps.toString();
     };

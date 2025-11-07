@@ -8,7 +8,7 @@ class TutorialStep {
     public advanceOnSpace = false;
     public extraButtons: Button[] = [];
 
-    constructor(public id: number, public texts: [string, string, string]) { }
+    constructor(public texts: [string, string, string]) { }
 
     setup() { }
     run() { }

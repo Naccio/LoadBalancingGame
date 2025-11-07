@@ -1,7 +1,7 @@
 /// <reference path='../../Defaults.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
-/// <reference path='../../UI/Button.ts' />
+/// <reference path='../../UI/SimpleButton.ts' />
 /// <reference path='../../UI/GameArea.ts' />
 /// <reference path='../../UI/TextFader.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -9,10 +9,11 @@
 /// <reference path='TutorialStep.ts' />
 
 class Tutorial implements Scene {
-    private readonly nextButton: Button;
-    private readonly homeButton: Button;
+    private readonly nextButton: SimpleButton;
+    private readonly homeButton: SimpleButton;
 
     private currentStep: TutorialStep;
+    private currentStepIndex: number;
 
     public id = Defaults.gameModes.TUTORIAL;
 
@@ -28,8 +29,9 @@ class Tutorial implements Scene {
             h = canvas.height;
 
         this.currentStep = steps[0];
-        this.nextButton = new Button(w / 3, h - 40, 120, 40, 'Next', '#FFFFFF', () => this.advance());
-        this.homeButton = new Button(w * 2 / 3, h - 40, 120, 40, "Exit tutorial", "#FFFFFF", () => game.switchMode(Defaults.gameModes.MENU));
+        this.currentStepIndex = 0;
+        this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
+        this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
 
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));
@@ -53,7 +55,15 @@ class Tutorial implements Scene {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
-            texts = this.currentStep.texts;
+            texts = this.currentStep.texts,
+            rectangle = {
+                x: w / 2,
+                y: 0,
+                width: w,
+                height: 80,
+                color: Defaults.backgroundColor,
+                borderColor: Defaults.backgroundBorderColor
+            };
         this.currentStep.run();
         this.fader.update(1 / Defaults.frameRate);
 
@@ -64,12 +74,20 @@ class Tutorial implements Scene {
         context.clearRect(0, 0, w, h);
         this.gameArea.draw();
         this.fader.draw();
-        Utilities.drawRect(w / 2, 40, w, 80, '#0360AE', '#02467F', 1, context);
+        Utilities.drawRect({ ...rectangle, y: 40 }, context);
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText(w / 2, 18 + 20 * i, text, 'bold 18px monospace', 'center', 'middle', 'white', context);
+            Utilities.drawText({
+                x: w / 2,
+                y: 18 + 20 * i,
+                text,
+                fontWeight: 'bold',
+                fontSize: 18,
+                align: 'center',
+                color: Defaults.primaryColor
+            }, context);
         }
-        Utilities.drawRect(w / 2, h - 40, w, 80, '#0360AE', '#02467F', 1, context);
+        Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
         this.currentStep.draw();
     }
 
@@ -83,7 +101,8 @@ class Tutorial implements Scene {
     }
 
     private advance() {
-        this.currentStep = this.steps[this.currentStep.id + 1];
+        this.currentStepIndex += 1;
+        this.currentStep = this.steps[this.currentStepIndex];
         this.currentStep.setup();
     }
 

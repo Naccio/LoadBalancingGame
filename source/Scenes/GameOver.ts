@@ -3,14 +3,14 @@
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/PopularityTracker.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 
 class GameOver implements Scene {
-    private readonly baseline = 'middle';
-    private readonly color = 'white';
-    private buttons: Button[];
+    private readonly color = Defaults.primaryColor;
+
+    private buttons: SimpleButton[];
 
     public id = Defaults.gameModes.GAME_OVER;
 
@@ -26,8 +26,8 @@ class GameOver implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            new Button(w / 2, h - 110, 120, 40, 'Restart', '#FFFFFF', () => newGame.execute()),
-            new Button(w / 2, h - 60, 120, 40, 'Menu', '#FFFFFF', () => game.switchMode(Defaults.gameModes.MENU))
+            Utilities.defaultButton(w / 2, h - 110, 'Restart', () => newGame.execute()),
+            Utilities.defaultButton(w / 2, h - 60, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
 
@@ -41,18 +41,46 @@ class GameOver implements Scene {
             h = this.canvas.height;
 
         this.clouds.draw();
-        Utilities.drawText(w / 2, 100, 'Game Over', 'small-caps 60px monospace', 'center', this.baseline, 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 100,
+            text: 'Game Over',
+            fontSize: 60,
+            fontVariant: 'small-caps',
+            align: 'center',
+            color: Defaults.accentColor
+        }, context);
 
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
 
-        const font = '30px monospace';
-        Utilities.drawText(w / 2 + 68, h / 2 + 50, 'Popularity:', font, 'end', this.baseline, this.color, context);
-        Utilities.drawText(w / 2 + 75, h / 2 + 50, this.popularity.popularity.toString(), font, 'start', this.baseline, this.color, context);
+        const fontSize = 30;
+        Utilities.drawText({
+            x: w / 2 + 68,
+            y: h / 2 + 50,
+            text: 'Popularity:',
+            fontSize,
+            align: 'end',
+            color: this.color
+        }, context);
+        Utilities.drawText({
+            x: w / 2 + 75,
+            y: h / 2 + 50,
+            text: this.popularity.popularity.toString(),
+            fontSize,
+            align: 'start',
+            color: this.color
+        }, context);
 
-        Utilities.drawLine(w / 2 - 130, h / 2 + 20, w / 2 + 130, h / 2 + 20, 'red', 1, context);
+        Utilities.drawLine({
+            x1: w / 2 - 130,
+            y1: h / 2 + 20,
+            x2: w / 2 + 130,
+            y2: h / 2 + 20,
+            color: Defaults.accentColor
+        }, context);
     }
 
     private drawStat(y: number, text: string, value: number) {
@@ -64,13 +92,27 @@ class GameOver implements Scene {
         const context = this.canvas.getContext('2d')!,
             x = this.canvas.width / 2 + 80;
 
-        Utilities.drawText(x, y, text + ':', '15px monospace', 'end', this.baseline, this.color, context);
+        Utilities.drawText({
+            x,
+            y,
+            text: text + ':',
+            fontSize: 15,
+            align: 'end',
+            color: this.color
+        }, context);
     }
 
     private drawStatValue(y: number, value: number) {
         const context = this.canvas.getContext('2d')!,
             x = this.canvas.width / 2 + 90;
 
-        Utilities.drawText(x, y, value.toString(), '15px monospace', 'start', this.baseline, this.color, context);
+        Utilities.drawText({
+            x,
+            y,
+            text: value.toString(),
+            fontSize: 15,
+            align: 'start',
+            color: this.color
+        }, context);
     }
 }

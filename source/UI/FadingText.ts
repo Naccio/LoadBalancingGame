@@ -1,19 +1,11 @@
 /// <reference path='Color.ts' />
+/// <reference path='UIText.ts' />
 
-interface FadingText {
-    text: string;
-    color: Color;
-    fontSize: number;
-    fontWeight: string;
-    border?: boolean;
-    borderColor?: Color;
-    borderWidth?: number;
+interface FadingText extends UIText {
+    rgbColor: Color;
     life?: number;
     fadeIn?: boolean;
     alpha: number;
-    font: string;
     delta: number;
     id?: string;
-    x?: number;
-    y?: number;
 }

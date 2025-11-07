@@ -32,14 +32,14 @@ class MessageOrchestrator {
             m.life += 1 / Defaults.frameRate;
 
             //check if connection has been dropped while message was still traveling
-            if (m.status === "req") {
+            if (m.status === 'req') {
                 if (m.sender.connectedTo === undefined) {
                     this.messages.splice(i--, 1);
                     continue;
                 }
             }
 
-            if (m.status === "ack" || m.status === "nack") {
+            if (m.status === 'ack' || m.status === 'nack') {
                 if (m.receiver.connectedTo === undefined) {
                     this.messages.splice(i--, 1);
                     continue;
@@ -47,13 +47,13 @@ class MessageOrchestrator {
             }
 
             //check if message has ended its journey
-            if (m.status === "done") {
+            if (m.status === 'done') {
                 this.messages.splice(i--, 1);
                 continue;
             }
 
             //update message
-            if (m.status != "queued") {
+            if (m.status != 'queued') {
                 var r = m.receiver;
                 if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
                     m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)

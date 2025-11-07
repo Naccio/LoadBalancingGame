@@ -15,7 +15,11 @@ class GameTracker {
     public clients: Client[] = [];
     public attackers: Attacker[] = [];
 
-    constructor(private popularityTracker: PopularityTracker, private ui: GameUI) { }
+    constructor(
+        private popularityTracker: PopularityTracker,
+        private ui: GameUI,
+        private orchestrator: MessageOrchestrator
+    ) { }
 
     switchMode(gameMode: number) {
         this.ui.buttons = [];
@@ -36,6 +40,7 @@ class GameTracker {
 
     update() {
         this.elapsedTime += 1 / Defaults.frameRate;
+        this.orchestrator.updateMessages();
         this.updateClients();
         this.updateServers();
         this.updateAttackers();
@@ -91,7 +96,7 @@ class GameTracker {
                     this.popularityTracker.updatePopularity(-10, c.x, c.y);
                 }
             } else {
-                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientsSpeed) {
+                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {
                     c.sendMessage(elapsedTime);
                 }
             }
@@ -110,7 +115,7 @@ class GameTracker {
                 continue;
             }
 
-            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientsSpeed) {
+            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientSpeed) {
                 a.sendMessage(elapsedTime);
             }
         }

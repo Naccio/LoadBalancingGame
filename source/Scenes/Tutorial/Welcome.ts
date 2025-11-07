@@ -1,11 +1,13 @@
-/// <reference path='../../Model/Server.ts' />
-/// <reference path='../../Services/GameTracker.ts' />
+/// <reference path='../../Services/ServerFactory.ts' />
 /// <reference path='TutorialStep.ts' />
 
-class TutorialStep1 extends TutorialStep {
+class Welcome extends TutorialStep {
 
-    constructor(private canvas: HTMLCanvasElement, private game: GameTracker) {
-        super(0, [
+    constructor(
+        private canvas: HTMLCanvasElement,
+        private serverFactory: ServerFactory
+    ) {
+        super([
             'Welcome to Load Balancing: The Game!',
             'Here you will take the role of -you guessed it- a LOAD BALANCER.',
             'Click "Next" to start the tutorial.']);
@@ -17,10 +19,8 @@ class TutorialStep1 extends TutorialStep {
     setup() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            server = new Server(w / 2, h / 2);
+            server = this.serverFactory.create(w / 2, h / 2);
 
         server.capacity = 20;
-
-        this.game.servers.push(server);
     }
 }

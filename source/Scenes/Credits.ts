@@ -1,10 +1,10 @@
 /// <reference path='../Services/GameTracker.ts' />
-/// <reference path='../UI/Button.ts' />
+/// <reference path='../UI/SimpleButton.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Scene.ts' />
 
 class Credits implements Scene {
-    private buttons: Button[];
+    private buttons: SimpleButton[];
 
     public id = Defaults.gameModes.CREDITS;
 
@@ -12,7 +12,7 @@ class Credits implements Scene {
         const w = canvas.width,
             h = canvas.height;
 
-        this.buttons = [new Button(w / 2, h - 60, 120, 40, "Back", "#FFFFFF", () => {
+        this.buttons = [Utilities.defaultButton(w / 2, h - 60, 'Back', () => {
             game.switchMode(Defaults.gameModes.MENU);
         })];
     }
@@ -40,27 +40,40 @@ class Credits implements Scene {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width;
 
-        Utilities.drawRect(w / 2, y, w, 100, 'rgba(0,0,0,0.1)', 'rgba(200,200,200,0.5)', 0, context);
+        Utilities.drawRect({
+            x: w / 2,
+            y,
+            width: this.canvas.width,
+            height: 100,
+            color: Defaults.secondaryColorTransparent,
+            borderColor: Defaults.primaryColorMutedTransparent
+        }, context);
     }
 
     private drawHeading(y: number, text: string) {
-        this.drawText(y, text, 'bold 20px monospace', 'red');
+        this.drawText(y, text, 20, Defaults.accentColor, 'bold');
     }
 
     private drawMainText(y: number, text: string) {
-        this.drawText(y, text, '30px monospace', 'white');
+        this.drawText(y, text, 30, Defaults.primaryColor);
     }
 
     private drawSubText(y: number, text: string) {
-        this.drawText(y, text, '15px monospace', '#ddd');
+        this.drawText(y, text, 15, Defaults.primaryColorMuted);
     }
 
-    private drawText(y: number, text: string, font: string, color: string) {
+    private drawText(y: number, text: string, fontSize: number, color: string, fontWeight?: 'bold') {
         const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            align = "center",
-            baseline = "middle";
+            w = this.canvas.width;
 
-        Utilities.drawText(w / 2, y, text, font, align, baseline, color, context)
+        Utilities.drawText({
+            x: w / 2,
+            y,
+            text,
+            fontSize,
+            fontWeight,
+            align: 'center',
+            color
+        }, context)
     }
 }

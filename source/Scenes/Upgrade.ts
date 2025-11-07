@@ -2,7 +2,7 @@
 /// <reference path='../Model/Server.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/Scheduler.ts' />
-/// <reference path='../Services/UpgradesTracker.ts' />
+/// <reference path='../Upgrades/UpgradesTracker.ts' />
 /// <reference path='../UI/BorderButton.ts' />
 /// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameArea.ts' />
@@ -23,15 +23,19 @@ class Upgrade implements Scene {
 
     getButtons() {
         const w = this.canvas.width,
-            h = this.canvas.height;
-        let buttons = [new Button(w / 2, h - 100, 120, 40, 'Cancel', '#333333', () => this.game.switchMode(Defaults.gameModes.PAUSE))];
+            h = this.canvas.height,
+            button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
+
+        button.color = Defaults.secondaryColor;
+
+        let buttons: Button[] = [button];
 
         switch (this.upgradesTracker.selectedUpgrade) {
             case 'speed':
                 buttons = [...buttons, ...this.createServerButtons(s => s.speed += 2)];
                 break;
             case 'capacity':
-                buttons = [...buttons, ...this.createServerButtons(s => s.capacity += Defaults.serversCapacity)];
+                buttons = [...buttons, ...this.createServerButtons(s => s.capacity += Defaults.serverCapacity)];
                 break;
             case 'server':
                 buttons = [...buttons,
@@ -70,21 +74,32 @@ class Upgrade implements Scene {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText(w / 2, 60, `~ Select ${text} ~`, '30px monospace', 'center', 'middle', 'red', context);
+        Utilities.drawText({
+            x: w / 2,
+            y: 60,
+            text: `~ Select ${text} ~`,
+            fontSize: 30,
+            align: 'center',
+            color: Defaults.accentColor
+        }, context);
     }
 
     private createAreaButton(x: number, y: number, area: string) {
         const w = this.canvas.width,
-            h = this.canvas.height;
+            h = this.canvas.height,
+            borderWidth = Defaults.highlightWidth;
 
-        return new BorderButton(x, y, Math.floor(w / 3) - 2, Math.floor(h / 3) - 2, '', '#CCCCCC', 'limeGreen', 1, () => {
+        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
 
     private createServerButton(server: Server, action: () => void) {
-        return new BorderButton(server.x, server.y, Defaults.serverSize, Defaults.serverSize, '', 'rgba(0,0,0,0)', 'limeGreen', 2, () => {
+        const borderWidth = Defaults.highlightWidth,
+            size = Defaults.serverSize + borderWidth;
+
+        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });

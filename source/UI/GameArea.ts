@@ -6,7 +6,7 @@
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/PopularityTracker.ts' />
-/// <reference path='../Services/UpgradesTracker.ts' />
+/// <reference path='../Upgrades/UpgradesTracker.ts' />
 /// <reference path='../UI/CursorTracker.ts' />
 /// <reference path='../UI/TextFader.ts' />
 /// <reference path='../Utilities.ts' />
@@ -28,8 +28,20 @@ class GameArea {
 
         //draw a line connecting the selected client to the mouse pointer
         if (sc !== undefined) {
-            Utilities.drawLine(sc.x, sc.y, this.cursor.mouseX, this.cursor.mouseY, 'lightBlue', 3, context);
-            Utilities.drawCircle(sc.x, sc.y, Defaults.clientSize / 2 + 3, 'lightBlue', '', 0, context);
+            Utilities.drawLine({
+                x1: sc.x,
+                y1: sc.y,
+                x2: this.cursor.mouseX,
+                y2: this.cursor.mouseY,
+                color: Defaults.highlightColor,
+                width: Defaults.highlightWidth
+            }, context);
+            Utilities.drawCircle({
+                x: sc.x,
+                y: sc.y,
+                radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
+                color: Defaults.highlightColor
+            }, context);
         }
 
         this.drawConnections();
@@ -49,8 +61,8 @@ class GameArea {
     }
 
     drawConnections() {
-        this.game.clients.forEach(c => this.drawConnection(c, 'darkGray'));
-        this.game.attackers.forEach(a => this.drawConnection(a, 'dimGray'));
+        this.game.clients.forEach(c => this.drawConnection(c, Defaults.clientConnectionColor));
+        this.game.attackers.forEach(a => this.drawConnection(a, Defaults.attackerConnectionColor));
     }
 
     drawMessages() {
@@ -65,29 +77,31 @@ class GameArea {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height;
-
-        let font = "18px sans-serif",
-            color = "black";
-
         this.fader.draw();
 
         //bottom left
-        Utilities.drawText(10, h - 14, "Popularity: " + this.popularityTracker.popularity, font, 'start', 'alphabetic', color, context);
+        this.popularityTracker.draw(h - 14);
 
         //bottom center
-        color = "darkGray";
-        Utilities.drawText(w / 2, h - 14, "Press space to pause", font, 'center', 'alphabetic', color, context);
+        Utilities.drawText({
+            x: w / 2,
+            y: h - 14,
+            text: 'Press space to pause',
+            fontSize: 18,
+            fontFamily: 'sans-serif',
+            align: 'center',
+            baseline: 'alphabetic',
+            color: Defaults.secondaryColorMuted
+        }, context);
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
                 x: w / 2,
                 y: h - 35,
                 fontSize: 20,
-                fontWeight: '',
-                font: "20px sans-serif",
-                color: { r: 255, g: 0, b: 0 },
-                id: "upgrade",
-                text: "- Upgrade available! -",
+                rgbColor: { r: 255, g: 0, b: 0 },
+                id: 'upgrade',
+                text: '- Upgrade available! -',
                 life: 400,
                 alpha: 0,
                 delta: 0
@@ -110,13 +124,23 @@ class GameArea {
         }
         text += s;
 
+        let color = Defaults.secondaryColor
         if (remaining <= 30) {
-            color = "tomato";
+            color = Defaults.dangerColorMuted;
         }
         if (remaining <= 10) {
-            color = "red";
+            color = Defaults.dangerColor;
         }
-        Utilities.drawText(w - 10, h - 14, text, font, 'end', 'alphabetic', color, context);
+        Utilities.drawText({
+            x: w - 10,
+            y: h - 14,
+            text,
+            fontSize: 18,
+            fontFamily: 'sans-serif',
+            align: 'end',
+            baseline: 'alphabetic',
+            color
+        }, context);
     }
 
     private drawAttacker(attacker: Attacker) {
@@ -125,9 +149,25 @@ class GameArea {
             x = attacker.x,
             y = attacker.y;
 
-        Utilities.drawTriangle(x, y, size * 2 / Math.sqrt(3), size, '#333333', 'black', 2, context);
-
-        Utilities.drawText(x, y + 5, 'DoS', 'bold 10px Arial', 'center', 'middle', 'white', context);
+        Utilities.drawTriangle({
+            x,
+            y,
+            base: size * 2 / Math.sqrt(3),
+            height: size,
+            color: Defaults.attackerColor,
+            borderColor: Defaults.attackerBorderColor,
+            borderWidth: 2
+        }, context);
+        Utilities.drawText({
+            x,
+            y: y + 8,
+            text: 'DoS',
+            fontWeight: 'bold',
+            fontSize: 9,
+            fontFamily: 'Arial',
+            align: 'center',
+            color: Defaults.attackerTextColor
+        }, context);
     }
 
     private drawClient(client: Client) {
@@ -135,92 +175,97 @@ class GameArea {
             clientSize = Defaults.clientSize,
             maxClientWaitTime = Defaults.maxClientWaitTime,
             x = client.x,
-            y = client.y;
+            y = client.y,
+            circle = {
+                x,
+                y,
+                radius: clientSize / 2,
+                color: Defaults.clientColor,
+                borderColor: Defaults.clientBorderColor
+            };
 
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle(x, y, clientSize / 2, 'red', 'fireBrick', 2, context);
+                Utilities.drawCircle({
+                    ...circle,
+                    color: Defaults.dangerColor,
+                    borderColor: Defaults.dangerColorDark
+                }, context);
             } else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle(x, y, clientSize / 2, 'tomato', 'indianRed', 2, context);
+                Utilities.drawCircle({
+                    ...circle,
+                    color: Defaults.dangerColorMuted,
+                    borderColor: Defaults.dangerColorMutedDark
+                }, context);
             } else {
-                Utilities.drawCircle(x, y, clientSize / 2, 'gray', 'dimGray', 2, context);
+                Utilities.drawCircle(circle, context);
             }
 
-            Utilities.drawText(x, y, Math.round(maxClientWaitTime - client.life).toString(), 'bold 15px Arial', 'center', 'middle', 'white', context);
+            Utilities.drawText({
+                x,
+                y,
+                text: Math.round(maxClientWaitTime - client.life).toString(),
+                fontWeight: 'bold',
+                fontSize: 15,
+                fontFamily: 'Arial',
+                align: 'center',
+                color: Defaults.clientTextColor
+            }, context);
         }
         else {
-            Utilities.drawCircle(x, y, clientSize / 2, 'gray', 'dimGray', 2, context);
+            Utilities.drawCircle(circle, context);
         }
     }
 
     private drawConnection(t: MessageTransmitter, color: string) {
         if (t.connectedTo) {
             const context = this.canvas.getContext('2d')!;
-            Utilities.drawLine(t.x, t.y, t.connectedTo.x, t.connectedTo.y, color, 1, context);
+            Utilities.drawLine({
+                x1: t.x,
+                y1: t.y,
+                x2: t.connectedTo.x,
+                y2: t.connectedTo.y,
+                color
+            }, context);
         }
     }
 
     private drawMessage(message: Message) {
         const context = this.canvas.getContext('2d')!;
-        let fill, border;
+        let color, borderColor;
 
         switch (message.status) {
             case 'queued':
             case 'done':
                 return;
             case 'req':
-                fill = "lightBlue";
-                border = "steelBlue";
+                color = Defaults.messageReqColor;
+                borderColor = Defaults.messageReqBorderColor;
                 break;
             case 'ack':
-                fill = "lime";
-                border = "limeGreen";
+                color = Defaults.messageAckColor;
+                borderColor = Defaults.messageAckBorderColor;
                 break;
             case 'nack':
-                fill = "tomato";
-                border = "indianRed";
+                color = Defaults.messageNackColor;
+                borderColor = Defaults.messageNackBorderColor;
                 break;
             default:
                 throw 'Invalid message status: ' + message.status;
         }
 
-        Utilities.drawCircle(message.x, message.y, Defaults.messageSize / 2, fill, border, 1, context);
+        Utilities.drawCircle({
+            x: message.x,
+            y: message.y,
+            radius: Defaults.messageSize / 2,
+            color,
+            borderColor
+        }, context);
     }
 
     private drawServer(server: Server) {
-        const context = this.canvas.getContext('2d')!,
-            serverSize = Defaults.serverSize;
-        let i = Math.max(0, server.capacity / Defaults.serversCapacity - 1);
+        const context = this.canvas.getContext('2d')!;
 
-        for (; i > -1; i -= 1) {
-            const fill = `rgb(0,${128 - 15 * i},0)`,
-                border = `rgb(0,${100 - 15 * i},0)`;
-            Utilities.drawRect(server.x + 3 * i, server.y - 3 * i, serverSize, serverSize, fill, border, 1, context);
-        }
-
-        //draw server's queue
-        const serversSpeed = Defaults.serversSpeed,
-            queueWidth = 5,
-            queueHeight = serverSize - 10,
-            queueX = server.x + serverSize / 2 - 7,
-            queueY = server.y + 1,
-            fillPercentage = (server.queue.length / server.capacity) * 100,
-            gradientWidth = 5,
-            gradientHeight = fillPercentage * queueHeight / 100,
-            gradientX = queueX,
-            gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
-
-        Utilities.drawRectBorder(queueX, queueY, queueWidth, queueHeight, '#004500', 1, context);
-        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-        gradient.addColorStop(0.5, 'limeGreen');
-        gradient.addColorStop(1, 'red');
-        Utilities.drawRect(gradientX, gradientY, gradientWidth, gradientHeight, gradient, '', 0, context);
-
-        //draw server's speed
-        for (i = server.speed; i > 0; i -= serversSpeed) {
-            const starX = server.x - serverSize / 2 + 7,
-                starY = server.y + serverSize / 2 - 4 - 5 * (i / serversSpeed)
-            Utilities.drawStar(starX, starY, 5, 4, 2, 'limeGreen', '#004500', 2, context);
-        }
+        Utilities.drawServer(server, {}, context);
     }
 }
