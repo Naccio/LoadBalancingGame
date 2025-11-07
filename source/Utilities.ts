@@ -1,4 +1,5 @@
 /// <reference path='Model/ServerOptions.ts' />
+/// <reference path='UI/Arrow.ts' />
 /// <reference path='UI/Circle.ts' />
 /// <reference path='UI/Line.ts' />
 /// <reference path='UI/Rectangle.ts' />
@@ -10,6 +11,34 @@ class Utilities {
 
     public static defaultButton(x: number, y: number, text: string, onClick: () => void) {
         return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
+    }
+
+    public static drawArrow(arrow: Arrow, context: CanvasRenderingContext2D) {
+        const x1 = arrow.x1,
+            y1 = arrow.y1,
+            x2 = arrow.x2,
+            y2 = arrow.y2,
+            angle = Math.atan2(y2 - y1, x2 - x1),
+            inverseAngle = Math.PI - angle,
+            barbsAngle = arrow.barbsAngle ?? Math.PI / 5,
+            barbsLength = arrow.barbsLength ?? 8,
+            rightBarbAngle = barbsAngle - inverseAngle,
+            leftBarbAngle = -barbsAngle - inverseAngle,
+            rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength,
+            rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength,
+            leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength,
+            leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
+
+        context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
+        context.lineWidth = arrow?.width ?? 1;
+        context.lineJoin = 'round';
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.lineTo(rightBarbX, rightBarbY);
+        context.moveTo(x2, y2);
+        context.lineTo(leftBarbX, leftBarbY);
+        context.stroke();
     }
 
     public static drawCircle(circle: Circle, context: CanvasRenderingContext2D) {

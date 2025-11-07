@@ -9,8 +9,7 @@ class ServerUpgradeButton extends UpgradeButton {
 
     drawIcon(context: CanvasRenderingContext2D) {
         const x = this.x,
-            y = this.y,
-            serverSize = Defaults.serverSize;
+            y = this.y;
 
         Utilities.drawText({
             x: x - 25,

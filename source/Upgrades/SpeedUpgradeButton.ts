@@ -22,27 +22,11 @@ class SpeedUpgradeButton extends UpgradeButton {
             speedColor: Defaults.accentColorMuted,
             speedBorderColor: Defaults.accentColor
         }, context);
-        Utilities.drawLine({
+        Utilities.drawArrow({
             x1: starX,
-            y1: starY - 8,
+            y1: starY - 6,
             x2: starX,
             y2: starY - 21,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: starX - 1,
-            y1: starY - 21,
-            x2: starX + 5,
-            y2: starY - 14,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: starX + 1,
-            y1: starY - 21,
-            x2: starX - 5,
-            y2: starY - 14,
             color,
             width: lineWidth
         }, context);

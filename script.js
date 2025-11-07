@@ -257,6 +257,19 @@ class Utilities {
     static defaultButton(x, y, text, onClick) {
         return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
     }
+    static drawArrow(arrow, context) {
+        const x1 = arrow.x1, y1 = arrow.y1, x2 = arrow.x2, y2 = arrow.y2, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
+        context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
+        context.lineWidth = arrow?.width ?? 1;
+        context.lineJoin = 'round';
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.lineTo(rightBarbX, rightBarbY);
+        context.moveTo(x2, y2);
+        context.lineTo(leftBarbX, leftBarbY);
+        context.stroke();
+    }
     static drawCircle(circle, context) {
         context.beginPath();
         context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
@@ -1822,27 +1835,11 @@ class CapacityUpgradeButton extends UpgradeButton {
             queueColor: Defaults.accentColorMuted,
             queueBorderColor: Defaults.accentColor
         }, context);
-        Utilities.drawLine({
+        Utilities.drawArrow({
             x1: queueX,
             y1: queueY - serverSize / 2 + 2,
             x2: queueX,
             y2: queueY - serverSize / 2 - 13,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: queueX - 1,
-            y1: queueY - serverSize / 2 - 13,
-            x2: queueX + 5,
-            y2: queueY - serverSize / 2 - 6,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: queueX + 1,
-            y1: queueY - serverSize / 2 - 13,
-            x2: queueX - 5,
-            y2: queueY - serverSize / 2 - 6,
             color,
             width: lineWidth
         }, context);
@@ -1853,7 +1850,7 @@ class ServerUpgradeButton extends UpgradeButton {
         super(x, y, 'Buy new datacenter', onClick);
     }
     drawIcon(context) {
-        const x = this.x, y = this.y, serverSize = Defaults.serverSize;
+        const x = this.x, y = this.y;
         Utilities.drawText({
             x: x - 25,
             y,
@@ -1880,27 +1877,11 @@ class SpeedUpgradeButton extends UpgradeButton {
             speedColor: Defaults.accentColorMuted,
             speedBorderColor: Defaults.accentColor
         }, context);
-        Utilities.drawLine({
+        Utilities.drawArrow({
             x1: starX,
-            y1: starY - 8,
+            y1: starY - 6,
             x2: starX,
             y2: starY - 21,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: starX - 1,
-            y1: starY - 21,
-            x2: starX + 5,
-            y2: starY - 14,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: starX + 1,
-            y1: starY - 21,
-            x2: starX - 5,
-            y2: starY - 14,
             color,
             width: lineWidth
         }, context);

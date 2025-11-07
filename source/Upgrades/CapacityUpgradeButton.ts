@@ -21,27 +21,11 @@ class CapacityUpgradeButton extends UpgradeButton {
             queueColor: Defaults.accentColorMuted,
             queueBorderColor: Defaults.accentColor
         }, context);
-        Utilities.drawLine({
+        Utilities.drawArrow({
             x1: queueX,
             y1: queueY - serverSize / 2 + 2,
             x2: queueX,
             y2: queueY - serverSize / 2 - 13,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: queueX - 1,
-            y1: queueY - serverSize / 2 - 13,
-            x2: queueX + 5,
-            y2: queueY - serverSize / 2 - 6,
-            color,
-            width: lineWidth
-        }, context);
-        Utilities.drawLine({
-            x1: queueX + 1,
-            y1: queueY - serverSize / 2 - 13,
-            x2: queueX - 5,
-            y2: queueY - serverSize / 2 - 6,
             color,
             width: lineWidth
         }, context);
