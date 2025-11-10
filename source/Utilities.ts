@@ -1,10 +1,10 @@
 /// <reference path='Model/ServerOptions.ts' />
-/// <reference path='UI/Arrow.ts' />
-/// <reference path='UI/Circle.ts' />
-/// <reference path='UI/Line.ts' />
-/// <reference path='UI/Rectangle.ts' />
-/// <reference path='UI/Star.ts' />
-/// <reference path='UI/Triangle.ts' />
+/// <reference path='Graphics/Arrow.ts' />
+/// <reference path='Graphics/Circle.ts' />
+/// <reference path='Graphics/Line.ts' />
+/// <reference path='Graphics/Rectangle.ts' />
+/// <reference path='Graphics/Star.ts' />
+/// <reference path='Graphics/Triangle.ts' />
 /// <reference path='UI/UIText.ts' />
 
 class Utilities {

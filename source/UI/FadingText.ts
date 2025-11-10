@@ -1,4 +1,4 @@
-/// <reference path='Color.ts' />
+/// <reference path='../Graphics/Color.ts' />
 /// <reference path='UIText.ts' />
 
 interface FadingText extends UIText {
