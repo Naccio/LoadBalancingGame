@@ -21,13 +21,15 @@ class Credits implements Scene {
         return this.buttons;
     }
 
-    update() {
+    draw() {
         this.clouds.draw();
 
         this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
         this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');
         this.drawCredits(388, 'Music by:', 'Macspider', '(soundcloud.com/macspider)');
     }
+
+    update() {}
 
     private drawCredits(y: number, heading: string, text: string, subText: string) {
         this.drawRect(y);

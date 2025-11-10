@@ -143,6 +143,7 @@ class Application {
 
         this.clouds.update(1000 / Defaults.frameRate);
         this.activeScene.update();
+        this.activeScene.draw();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();
 

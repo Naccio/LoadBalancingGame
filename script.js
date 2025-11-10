@@ -1126,12 +1126,13 @@ class Credits {
     getButtons() {
         return this.buttons;
     }
-    update() {
+    draw() {
         this.clouds.draw();
         this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
         this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');
         this.drawCredits(388, 'Music by:', 'Macspider', '(soundcloud.com/macspider)');
     }
+    update() { }
     drawCredits(y, heading, text, subText) {
         this.drawRect(y);
         this.drawHeading(y - 28, heading);
@@ -1513,6 +1514,11 @@ class Game {
     getButtons() {
         return [];
     }
+    draw() {
+        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        context.clearRect(0, 0, w, h);
+        this.gameArea.draw();
+    }
     update() {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
@@ -1523,11 +1529,7 @@ class Game {
         var m = Math.floor(this.game.elapsedTime / 60);
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
             this.game.switchMode(Defaults.gameModes.GAME_OVER);
-            return;
         }
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
-        this.gameArea.draw();
     }
 }
 class GameOver {
@@ -1554,7 +1556,7 @@ class GameOver {
     getButtons() {
         return this.buttons;
     }
-    update() {
+    draw() {
         var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         this.clouds.draw();
         Utilities.drawText({
@@ -1595,6 +1597,7 @@ class GameOver {
             color: Defaults.accentColor
         }, context);
     }
+    update() { }
     drawStat(y, text, value) {
         this.drawStatTitle(y, text);
         this.drawStatValue(y, value);
@@ -1673,7 +1676,7 @@ class Tutorial {
         }
         return buttons;
     }
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts, rectangle = {
             x: w / 2,
             y: 0,
@@ -1682,11 +1685,6 @@ class Tutorial {
             color: Defaults.backgroundColor,
             borderColor: Defaults.backgroundBorderColor
         };
-        this.currentStep.run();
-        this.fader.update(1 / Defaults.frameRate);
-        if (this.currentStep.advance) {
-            this.advance();
-        }
         context.clearRect(0, 0, w, h);
         this.gameArea.draw();
         this.fader.draw();
@@ -1705,6 +1703,13 @@ class Tutorial {
         }
         Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
         this.currentStep.draw();
+    }
+    update() {
+        this.currentStep.run();
+        this.fader.update(1 / Defaults.frameRate);
+        if (this.currentStep.advance) {
+            this.advance();
+        }
     }
     reset() {
         this.game.reset();
@@ -1744,7 +1749,7 @@ class Menu {
     getButtons() {
         return this.buttons;
     }
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
         this.clouds.draw();
         Utilities.drawRect({
@@ -1782,6 +1787,7 @@ class Menu {
             width: 2
         }, context);
     }
+    update() { }
 }
 class UpgradeButton {
     x;
@@ -1918,7 +1924,7 @@ class Pause {
             ? [...this.buttons, ...this.upgradeButtons]
             : [...this.buttons];
     }
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, fontSize = 25;
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
@@ -1950,6 +1956,7 @@ class Pause {
             color: Defaults.accentColor
         }, context);
     }
+    update() { }
     selectUpgrade(id) {
         this.upgradesTracker.selectedUpgrade = id;
         this.game.switchMode(Defaults.gameModes.UPGRADE);
@@ -2600,7 +2607,7 @@ class Upgrade {
         }
         return buttons;
     }
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
         context.clearRect(0, 0, w, h);
         this.gameArea.drawServers();
@@ -2623,6 +2630,7 @@ class Upgrade {
             color: Defaults.accentColor
         }, context);
     }
+    update() { }
     createAreaButton(x, y, area) {
         const w = this.canvas.width, h = this.canvas.height, borderWidth = Defaults.highlightWidth;
         return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
@@ -2760,6 +2768,7 @@ class Application {
         }
         this.clouds.update(1000 / Defaults.frameRate);
         this.activeScene.update();
+        this.activeScene.draw();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();
         if (this.logActive) {

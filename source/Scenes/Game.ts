@@ -22,6 +22,15 @@ class Game implements Scene {
         return [];
     }
 
+    draw() {
+        const context = this.canvas.getContext('2d')!,
+            w = this.canvas.width,
+            h = this.canvas.height;
+
+        context.clearRect(0, 0, w, h);
+        this.gameArea.draw();
+    }
+
     update() {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
@@ -34,14 +43,6 @@ class Game implements Scene {
 
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
             this.game.switchMode(Defaults.gameModes.GAME_OVER);
-            return;
         }
-
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height;
-
-        context.clearRect(0, 0, w, h);
-        this.gameArea.draw();
     }
 }

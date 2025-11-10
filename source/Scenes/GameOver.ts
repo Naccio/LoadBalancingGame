@@ -35,7 +35,7 @@ class GameOver implements Scene {
         return this.buttons;
     }
 
-    update() {
+    draw() {
         var context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height;
@@ -82,6 +82,8 @@ class GameOver implements Scene {
             color: Defaults.accentColor
         }, context);
     }
+
+    update() {}
 
     private drawStat(y: number, text: string, value: number) {
         this.drawStatTitle(y, text);

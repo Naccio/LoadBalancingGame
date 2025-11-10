@@ -3,5 +3,6 @@
 interface Scene {
     id: number;
     getButtons(): Button[];
+    draw(): void;
     update(): void;
 }

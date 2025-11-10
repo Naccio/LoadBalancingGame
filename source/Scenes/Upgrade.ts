@@ -55,7 +55,7 @@ class Upgrade implements Scene {
         return buttons;
     }
 
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height;
@@ -83,6 +83,8 @@ class Upgrade implements Scene {
             color: Defaults.accentColor
         }, context);
     }
+
+    update() {}
 
     private createAreaButton(x: number, y: number, area: string) {
         const w = this.canvas.width,

@@ -51,7 +51,7 @@ class Tutorial implements Scene {
         return buttons;
     }
 
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
@@ -64,13 +64,7 @@ class Tutorial implements Scene {
                 color: Defaults.backgroundColor,
                 borderColor: Defaults.backgroundBorderColor
             };
-        this.currentStep.run();
-        this.fader.update(1 / Defaults.frameRate);
-
-        if (this.currentStep.advance) {
-            this.advance();
-        }
-
+            
         context.clearRect(0, 0, w, h);
         this.gameArea.draw();
         this.fader.draw();
@@ -89,6 +83,15 @@ class Tutorial implements Scene {
         }
         Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
         this.currentStep.draw();
+    }
+
+    update() {
+        this.currentStep.run();
+        this.fader.update(1 / Defaults.frameRate);
+
+        if (this.currentStep.advance) {
+            this.advance();
+        }
     }
 
     reset() {

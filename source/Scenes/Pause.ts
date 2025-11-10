@@ -49,7 +49,7 @@ class Pause implements Scene {
             : [...this.buttons];
     }
 
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             h = this.canvas.height,
@@ -87,6 +87,8 @@ class Pause implements Scene {
             color: Defaults.accentColor
         }, context);
     }
+
+    update() {}
 
     private selectUpgrade(id: string) {
         this.upgradesTracker.selectedUpgrade = id;

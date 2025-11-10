@@ -35,7 +35,7 @@ class Menu implements Scene {
         return this.buttons;
     }
 
-    update() {
+    draw() {
         const context = this.canvas.getContext('2d')!,
             w = this.canvas.width,
             align = 'center',
@@ -79,4 +79,6 @@ class Menu implements Scene {
             width: 2
         }, context);
     }
+
+    update() {}
 }
