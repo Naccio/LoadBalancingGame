@@ -1636,7 +1636,7 @@ class TutorialStep {
         this.texts = texts;
     }
     setup() { }
-    run() { }
+    update() { }
     draw() { }
 }
 class Tutorial {
@@ -1705,7 +1705,7 @@ class Tutorial {
         this.currentStep.draw();
     }
     update() {
-        this.currentStep.run();
+        this.currentStep.update();
         this.fader.update(1 / Defaults.frameRate);
         if (this.currentStep.advance) {
             this.advance();
@@ -2071,7 +2071,7 @@ class ClientSuccessExplanation extends TutorialStep {
             }
         });
     }
-    run() {
+    update() {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }
@@ -2095,7 +2095,7 @@ class ConnectionExplanation extends TutorialStep {
         this.game = game;
         this.hasHome = true;
     }
-    run() {
+    update() {
         const client = this.game.clients[0];
         if (client.connectedTo !== undefined) {
             this.advance = true;
@@ -2131,7 +2131,7 @@ class ConnectMoreClients extends TutorialStep {
     setup() {
         this.spawnClients();
     }
-    run() {
+    update() {
         const server = this.game.servers[0];
         if (server.queue.length > server.capacity / 2) {
             this.advance = true;
@@ -2178,7 +2178,7 @@ class ConnectToNewServer extends TutorialStep {
         this.game.clients[0].life = -21;
         this.game.clients[1].life = -21;
     }
-    run() {
+    update() {
         if (this.game.clients.length === 0) {
             const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
             client0.life = -21;
@@ -2233,7 +2233,7 @@ class DdosAttackExample extends TutorialStep {
         this.spawnClients();
         this.fader.addPermanentText(text);
     }
-    run() {
+    update() {
         if (this.game.selectedClient) {
             this.game.selectedClient = undefined;
         }
@@ -2331,7 +2331,7 @@ class PopularityExplanation extends TutorialStep {
     setup() {
         this.popularityTracker.popularity = 0;
     }
-    run() {
+    update() {
         this.game.update();
     }
     draw() {
@@ -2357,7 +2357,7 @@ class ServerBusyExample extends TutorialStep {
         this.hasNext = true;
         this.hasHome = true;
     }
-    run() {
+    update() {
         this.game.update();
     }
     draw() {
@@ -2455,7 +2455,7 @@ class TutorialFinished extends TutorialStep {
             Utilities.defaultButton(w / 3, h - 40, 'New game', () => newGame.execute())
         ];
     }
-    run() {
+    update() {
         this.game.update();
     }
     draw() {
@@ -2496,7 +2496,7 @@ class UpgradesIntroduction extends TutorialStep {
         };
         this.fader.addPermanentText(text);
     }
-    run() {
+    update() {
         this.game.update();
     }
     draw() {

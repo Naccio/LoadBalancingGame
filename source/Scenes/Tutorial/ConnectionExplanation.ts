@@ -14,7 +14,7 @@ class ConnectionExplanation extends TutorialStep {
         this.hasHome = true;
     }
 
-    run() {
+    update() {
         const client = this.game.clients[0];
 
         if (client.connectedTo !== undefined) {

@@ -41,7 +41,7 @@ class UpgradesIntroduction extends TutorialStep {
         this.fader.addPermanentText(text);
     }
 
-    run() {
+    update() {
         this.game.update();
     }
 

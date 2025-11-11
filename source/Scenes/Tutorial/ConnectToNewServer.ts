@@ -26,7 +26,7 @@ class ConnectToNewServer extends TutorialStep {
         this.game.clients[1].life = - 21;
     }
 
-    run() {
+    update() {
         if (this.game.clients.length === 0) {
             const w = this.canvas.width,
                 h = this.canvas.height,

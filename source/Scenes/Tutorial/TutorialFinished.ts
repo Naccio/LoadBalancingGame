@@ -28,7 +28,7 @@ class TutorialFinished extends TutorialStep {
         ]
     }
 
-    run() {
+    update() {
         this.game.update();
     }
 

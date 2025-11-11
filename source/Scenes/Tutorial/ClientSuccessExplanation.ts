@@ -40,7 +40,7 @@ class ClientSuccessExplanation extends TutorialStep {
         });
     }
 
-    run() {
+    update() {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }

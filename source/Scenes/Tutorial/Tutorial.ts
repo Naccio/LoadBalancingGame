@@ -64,7 +64,7 @@ class Tutorial implements Scene {
                 color: Defaults.backgroundColor,
                 borderColor: Defaults.backgroundBorderColor
             };
-            
+
         context.clearRect(0, 0, w, h);
         this.gameArea.draw();
         this.fader.draw();
@@ -86,7 +86,7 @@ class Tutorial implements Scene {
     }
 
     update() {
-        this.currentStep.run();
+        this.currentStep.update();
         this.fader.update(1 / Defaults.frameRate);
 
         if (this.currentStep.advance) {

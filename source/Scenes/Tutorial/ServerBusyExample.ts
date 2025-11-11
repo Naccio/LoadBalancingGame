@@ -22,7 +22,7 @@ class ServerBusyExample extends TutorialStep {
         this.hasHome = true;
     }
 
-    run() {
+    update() {
         this.game.update();
     }
 

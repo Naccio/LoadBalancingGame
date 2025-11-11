@@ -27,7 +27,7 @@ class ConnectMoreClients extends TutorialStep {
         this.spawnClients();
     }
 
-    run() {
+    update() {
         const server = this.game.servers[0];
 
         if (server.queue.length > server.capacity / 2) {

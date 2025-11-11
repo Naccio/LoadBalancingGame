@@ -47,7 +47,7 @@ class DdosAttackExample extends TutorialStep {
         this.fader.addPermanentText(text);
     }
 
-    run() {
+    update() {
         if (this.game.selectedClient) {
             this.game.selectedClient = undefined;
         }
