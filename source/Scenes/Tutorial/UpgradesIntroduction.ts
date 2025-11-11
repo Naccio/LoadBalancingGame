@@ -1,3 +1,4 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -9,7 +10,7 @@
 class UpgradesIntroduction extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         private fader: TextFader
@@ -46,14 +47,13 @@ class UpgradesIntroduction extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
 
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
@@ -61,6 +61,6 @@ class UpgradesIntroduction extends TutorialStep {
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
 }

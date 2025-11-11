@@ -124,11 +124,199 @@ class Attacker {
     }
     ;
 }
-class TextFader {
+class Defaults {
+    static accentColor = '#ff0000';
+    static accentColorMuted = '#fa8072';
+    static attackerBorderColor = '#000000';
+    static attackerColor = '#333333';
+    static attackerConnectionColor = '#696969';
+    static attackerTextColor = '#ffffff';
+    static backgroundBorderColor = '#02467f';
+    static backgroundColor = '#0360ae';
+    static clientBorderColor = '#696969';
+    static clientColor = '#808080';
+    static clientConnectionColor = '#a9a9a9';
+    static clientSize = 30;
+    static clientSpeed = 2;
+    static clientTextColor = '#ffffff';
+    static dangerColor = '#ff0000';
+    static dangerColorDark = '#b22222';
+    static dangerColorMuted = '#ff6347';
+    static dangerColorMutedDark = '#cd5c5c';
+    static defaultColor = '#000000';
+    static frameRate = 60;
+    static gameLength = 5;
+    static highlightColor = '#add8e6';
+    static highlightWidth = 3;
+    static maxClientWaitTime = 9;
+    static messageAckBorderColor = '#32cd32';
+    static messageAckColor = '#00ff00';
+    static messageNackBorderColor = Defaults.dangerColorMutedDark;
+    static messageNackColor = Defaults.dangerColorMuted;
+    static messageReqBorderColor = '#87ceeb';
+    static messageReqColor = '#add8e6';
+    static messageSize = 6;
+    static messageVelocity = 200;
+    static primaryColor = '#ffffff';
+    static primaryColorMuted = '#dddddd';
+    static primaryColorMutedTransparent = 'rgba(200,200,200,.5)';
+    static primaryColorTransparent = 'rgba(255,255,255,.6)';
+    static secondaryColor = '#333333';
+    static secondaryColorTransparent = 'rgba(0,0,0,.1)';
+    static secondaryColorMuted = '#a9a9a9';
+    static serverCapacity = 80;
+    static serverBorderColor = '#004500';
+    static serverColor = '#008000';
+    static serverSize = 40;
+    static serverSpeed = 3.5;
+    static successColor = '#00ff00';
+    static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
+    static serverDefaults = {
+        size: Defaults.serverSize,
+        color: Defaults.serverColor,
+        borderColor: Defaults.serverBorderColor,
+        queueColor: Defaults.serverColor,
+        queueBorderColor: Defaults.serverBorderColor,
+        speedColor: Defaults.successColor,
+        speedBorderColor: Defaults.serverBorderColor,
+    };
+    static serverDisabledDefaults = {
+        size: Defaults.serverSize,
+        color: '#DDDDDD',
+        borderColor: '#999999',
+        queueColor: '#BBBBBB',
+        queueBorderColor: '#999999',
+        speedColor: '#BBBBBB',
+        speedBorderColor: '#999999',
+    };
+}
+class Canvas {
+    canvasElement;
     context;
-    queues;
-    constructor(context) {
+    constructor(canvasElement) {
+        this.canvasElement = canvasElement;
+        const context = canvasElement.getContext('2d');
+        if (!context) {
+            throw 'Could not get 2D context from canvas';
+        }
         this.context = context;
+    }
+    get height() {
+        return this.canvasElement.height;
+    }
+    get width() {
+        return this.canvasElement.width;
+    }
+    clear() {
+        this.context.clearRect(0, 0, this.width, this.height);
+    }
+    createLinearGradient(x1, y1, x2, y2) {
+        return this.context.createLinearGradient(x1, y1, x2, y2);
+    }
+    drawArrow(arrow) {
+        const context = this.context, x1 = arrow.x1, y1 = arrow.y1, x2 = arrow.x2, y2 = arrow.y2, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
+        context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
+        context.lineWidth = arrow?.width ?? 1;
+        context.lineJoin = 'round';
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.lineTo(rightBarbX, rightBarbY);
+        context.moveTo(x2, y2);
+        context.lineTo(leftBarbX, leftBarbY);
+        context.stroke();
+    }
+    drawCircle(circle) {
+        const context = this.context;
+        context.beginPath();
+        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
+        context.closePath();
+        this.draw(circle);
+    }
+    drawLine(line) {
+        const context = this.context;
+        context.strokeStyle = line?.color ?? Defaults.defaultColor;
+        context.lineWidth = line?.width ?? 1;
+        context.beginPath();
+        context.moveTo(line.x1, line.y1);
+        context.lineTo(line.x2, line.y2);
+        context.stroke();
+    }
+    drawPolygon(polygon) {
+        const context = this.context, points = polygon.points, start = points.shift();
+        context.beginPath();
+        context.moveTo(start.x, start.y);
+        points.forEach(p => context.lineTo(p.x, p.y));
+        context.closePath();
+        this.draw(polygon);
+    }
+    drawRect(rectangle) {
+        const context = this.context, x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
+        context.beginPath();
+        context.rect(x - w / 2, y - h / 2, w, h);
+        context.closePath();
+        this.draw(rectangle);
+    }
+    drawStar(star) {
+        const context = this.context, centerX = star.x, centerY = star.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
+        let x, y, rot = Math.PI / 2 * 3;
+        context.beginPath();
+        context.moveTo(centerX, centerY - outerRadius);
+        for (let i = 0; i < spikes; i += 1) {
+            x = centerX + Math.cos(rot) * outerRadius;
+            y = centerY + Math.sin(rot) * outerRadius;
+            context.lineTo(x, y);
+            rot += step;
+            x = centerX + Math.cos(rot) * innerRadius;
+            y = centerY + Math.sin(rot) * innerRadius;
+            context.lineTo(x, y);
+            rot += step;
+        }
+        context.lineTo(centerX, centerY - outerRadius);
+        context.closePath();
+        this.draw(star);
+    }
+    drawText(text) {
+        const context = this.context, fontFamily = text.fontFamily ?? 'monospace';
+        let font = `${text.fontSize}px ${fontFamily}`;
+        if (text.fontVariant) {
+            font = `${text.fontVariant} ${font}`;
+        }
+        if (text.fontWeight) {
+            font = `${text.fontWeight} ${font}`;
+        }
+        context.font = font;
+        context.textAlign = text.align ?? 'start';
+        context.textBaseline = text.baseline ?? 'middle';
+        context.fillStyle = text.color ?? Defaults.defaultColor;
+        context.fillText(text.text, text.x, text.y);
+    }
+    drawTriangle(triangle) {
+        const context = this.context, x = triangle.x, y = triangle.y, b = triangle.base, h = triangle.height;
+        context.beginPath();
+        context.moveTo(x, y - h / 2);
+        context.lineTo(x + b / 2, y + h / 2);
+        context.lineTo(x - b / 2, y + h / 2);
+        this.draw(triangle);
+    }
+    draw(shape) {
+        const context = this.context;
+        if (shape.color) {
+            context.fillStyle = shape.color;
+            context.fill();
+        }
+        if (shape.borderColor) {
+            context.strokeStyle = shape.borderColor;
+            context.lineWidth = shape.borderWidth ?? 1;
+            context.stroke();
+        }
+    }
+}
+class TextFader {
+    canvas;
+    queues;
+    constructor(canvas) {
+        this.canvas = canvas;
         this.queues = { permanent: [], temporary: [] };
     }
     draw() {
@@ -243,40 +431,21 @@ class TextFader {
     ;
     drawText(text, x, y) {
         const delta = text.delta ?? 0, { r, g, b } = text.rgbColor, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
-        Utilities.drawText({
+        this.canvas.drawText({
             ...text,
             x,
             y: y - delta,
             fontFamily: 'Arial',
             align: 'center',
             color
-        }, this.context);
+        });
     }
 }
 class Utilities {
     static defaultButton(x, y, text, onClick) {
         return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
     }
-    static drawArrow(arrow, context) {
-        const x1 = arrow.x1, y1 = arrow.y1, x2 = arrow.x2, y2 = arrow.y2, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
-        context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
-        context.lineWidth = arrow?.width ?? 1;
-        context.lineJoin = 'round';
-        context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
-        context.lineTo(rightBarbX, rightBarbY);
-        context.moveTo(x2, y2);
-        context.lineTo(leftBarbX, leftBarbY);
-        context.stroke();
-    }
-    static drawCircle(circle, context) {
-        context.beginPath();
-        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
-        context.closePath();
-        Utilities.draw(circle, context);
-    }
-    static drawCircleHighlight(x, y, radius, context) {
+    static drawCircleHighlight(x, y, radius, canvas) {
         const innerCircle = {
             x,
             y,
@@ -288,25 +457,10 @@ class Utilities {
             radius: radius + 1,
             borderColor: 'red'
         };
-        Utilities.drawCircle(innerCircle, context);
-        Utilities.drawCircle(outerCircle, context);
+        canvas.drawCircle(innerCircle);
+        canvas.drawCircle(outerCircle);
     }
-    static drawLine(line, context) {
-        context.strokeStyle = line?.color ?? Defaults.defaultColor;
-        context.lineWidth = line?.width ?? 1;
-        context.beginPath();
-        context.moveTo(line.x1, line.y1);
-        context.lineTo(line.x2, line.y2);
-        context.stroke();
-    }
-    static drawRect(rectangle, context) {
-        const x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
-        context.beginPath();
-        context.rect(x - w / 2, y - h / 2, w, h);
-        context.closePath();
-        Utilities.draw(rectangle, context);
-    }
-    static drawServer(server, options, context) {
+    static drawServer(server, options, canvas) {
         options = {
             ...Defaults.serverDefaults,
             ...options
@@ -314,87 +468,45 @@ class Utilities {
         const size = options.size;
         let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
         for (; i > -1; i -= 1) {
-            Utilities.drawRect({
+            canvas.drawRect({
                 x: server.x + 3 * i,
                 y: server.y - 3 * i,
                 width: size,
                 height: size,
                 color: options.color,
                 borderColor: options.borderColor
-            }, context);
+            });
         }
         const speed = Defaults.serverSpeed, queueWidth = 5, queueHeight = size - 10, queueX = server.x + size / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
-        Utilities.drawRect({
+        canvas.drawRect({
             x: queueX,
             y: queueY,
             width: queueWidth + 2,
             height: queueHeight + 2,
             color: options.queueColor,
             borderColor: options.queueBorderColor
-        }, context);
-        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
+        });
+        const gradient = canvas.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
         gradient.addColorStop(0.5, Defaults.successColor);
         gradient.addColorStop(1, Defaults.dangerColor);
-        Utilities.drawRect({
+        canvas.drawRect({
             x: gradientX,
             y: gradientY,
             width: gradientWidth,
             height: gradientHeight,
             color: gradient
-        }, context);
+        });
         for (i = server.speed; i > 0; i -= speed) {
             const starX = server.x - size / 2 + 7, starY = server.y + size / 2 - 4 - 5 * (i / speed);
-            Utilities.drawStar({
+            canvas.drawStar({
                 x: starX,
                 y: starY,
                 outerRadius: 4,
                 innerRadius: 2,
                 color: options.speedColor,
                 borderColor: options.speedBorderColor
-            }, context);
+            });
         }
-    }
-    static drawStar(star, context) {
-        const centerX = star.x, centerY = star.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
-        let x, y, rot = Math.PI / 2 * 3;
-        context.beginPath();
-        context.moveTo(centerX, centerY - outerRadius);
-        for (let i = 0; i < spikes; i += 1) {
-            x = centerX + Math.cos(rot) * outerRadius;
-            y = centerY + Math.sin(rot) * outerRadius;
-            context.lineTo(x, y);
-            rot += step;
-            x = centerX + Math.cos(rot) * innerRadius;
-            y = centerY + Math.sin(rot) * innerRadius;
-            context.lineTo(x, y);
-            rot += step;
-        }
-        context.lineTo(centerX, centerY - outerRadius);
-        context.closePath();
-        Utilities.draw(star, context);
-    }
-    static drawText(text, context) {
-        const fontFamily = text.fontFamily ?? 'monospace';
-        let font = `${text.fontSize}px ${fontFamily}`;
-        if (text.fontVariant) {
-            font = `${text.fontVariant} ${font}`;
-        }
-        if (text.fontWeight) {
-            font = `${text.fontWeight} ${font}`;
-        }
-        context.font = font;
-        context.textAlign = text.align ?? 'start';
-        context.textBaseline = text.baseline ?? 'middle';
-        context.fillStyle = text.color ?? Defaults.defaultColor;
-        context.fillText(text.text, text.x, text.y);
-    }
-    static drawTriangle(triangle, context) {
-        const x = triangle.x, y = triangle.y, b = triangle.base, h = triangle.height;
-        context.beginPath();
-        context.moveTo(x, y - h / 2);
-        context.lineTo(x + b / 2, y + h / 2);
-        context.lineTo(x - b / 2, y + h / 2);
-        Utilities.draw(triangle, context);
     }
     static getDistance(x1, y1, x2, y2) {
         var xs = x2 - x1, ys = y2 - y1;
@@ -411,17 +523,6 @@ class Utilities {
     }
     static random(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-    static draw(shape, context) {
-        if (shape.color) {
-            context.fillStyle = shape.color;
-            context.fill();
-        }
-        if (shape.borderColor) {
-            context.strokeStyle = shape.borderColor;
-            context.lineWidth = shape.borderWidth ?? 1;
-            context.stroke();
-        }
     }
 }
 class UpgradesTracker {
@@ -458,14 +559,13 @@ class PopularityTracker {
         this.popularity = 0;
     }
     draw(y) {
-        const context = this.canvas.getContext('2d');
-        Utilities.drawText({
+        this.canvas.drawText({
             x: 10,
             y,
             text: 'Popularity: ' + this.popularity,
             fontSize: 18,
             fontFamily: 'sans-serif'
-        }, context);
+        });
     }
     reset() {
         this.popularity = 0;
@@ -605,35 +705,45 @@ class VolumeButton {
         this.width = size;
         this.height = size;
     }
-    draw(hovered, context) {
+    draw(hovered, canvas) {
         const x = this.x, y = this.y, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent, status = this.isOn ? 'On' : 'Off';
-        Utilities.drawRect({
+        canvas.drawRect({
             x: x - w / 4 + 1,
             y,
             width: w / 4 + 1,
             height: h / 2 - 1,
             color
-        }, context);
-        var path = new Path2D();
-        path.moveTo(x - 1, y - h / 4);
-        path.lineTo(x + w / 4, y - h / 2 + 1);
-        path.lineTo(x + w / 4, y + h / 2 - 1);
-        path.lineTo(x - 1, y + h / 4);
-        path.closePath();
-        context.fillStyle = color;
-        context.fill(path);
+        });
+        canvas.drawPolygon({
+            x,
+            y,
+            points: [{
+                    x: x - 1,
+                    y: y - h / 4
+                }, {
+                    x: x + w / 4,
+                    y: y - h / 2 + 1
+                }, {
+                    x: x + w / 4,
+                    y: y + h / 2 - 1
+                }, {
+                    x: x - 1,
+                    y: y + h / 4
+                }],
+            color
+        });
         if (!this.isOn) {
-            Utilities.drawLine({
+            canvas.drawLine({
                 x1: x - w / 2,
                 y1: y + h / 2,
                 x2: x + w / 2,
                 y2: y - h / 2,
                 color: Defaults.accentColor,
                 width: 2
-            }, context);
+            });
         }
         if (hovered) {
-            Utilities.drawText({
+            canvas.drawText({
                 x,
                 y: y + w / 2 + 2,
                 text: 'Music: ' + status,
@@ -641,7 +751,7 @@ class VolumeButton {
                 align: 'center',
                 baseline: 'top',
                 color: Defaults.primaryColor
-            }, context);
+            });
         }
     }
 }
@@ -781,72 +891,6 @@ class AttackerFactory {
         this.game.attackers.push(attacker);
         return attacker;
     }
-}
-class Defaults {
-    static accentColor = '#ff0000';
-    static accentColorMuted = '#fa8072';
-    static attackerBorderColor = '#000000';
-    static attackerColor = '#333333';
-    static attackerConnectionColor = '#696969';
-    static attackerTextColor = '#ffffff';
-    static backgroundBorderColor = '#02467f';
-    static backgroundColor = '#0360ae';
-    static clientBorderColor = '#696969';
-    static clientColor = '#808080';
-    static clientConnectionColor = '#a9a9a9';
-    static clientSize = 30;
-    static clientSpeed = 2;
-    static clientTextColor = '#ffffff';
-    static dangerColor = '#ff0000';
-    static dangerColorDark = '#b22222';
-    static dangerColorMuted = '#ff6347';
-    static dangerColorMutedDark = '#cd5c5c';
-    static defaultColor = '#000000';
-    static frameRate = 60;
-    static gameLength = 5;
-    static highlightColor = '#add8e6';
-    static highlightWidth = 3;
-    static maxClientWaitTime = 9;
-    static messageAckBorderColor = '#32cd32';
-    static messageAckColor = '#00ff00';
-    static messageNackBorderColor = Defaults.dangerColorMutedDark;
-    static messageNackColor = Defaults.dangerColorMuted;
-    static messageReqBorderColor = '#87ceeb';
-    static messageReqColor = '#add8e6';
-    static messageSize = 6;
-    static messageVelocity = 200;
-    static primaryColor = '#ffffff';
-    static primaryColorMuted = '#dddddd';
-    static primaryColorMutedTransparent = 'rgba(200,200,200,.5)';
-    static primaryColorTransparent = 'rgba(255,255,255,.6)';
-    static secondaryColor = '#333333';
-    static secondaryColorTransparent = 'rgba(0,0,0,.1)';
-    static secondaryColorMuted = '#a9a9a9';
-    static serverCapacity = 80;
-    static serverBorderColor = '#004500';
-    static serverColor = '#008000';
-    static serverSize = 40;
-    static serverSpeed = 3.5;
-    static successColor = '#00ff00';
-    static gameModes = { MENU: 0, GAME: 1, GAME_OVER: 2, CREDITS: 3, PAUSE: 4, UPGRADE: 5, TUTORIAL: 6 };
-    static serverDefaults = {
-        size: Defaults.serverSize,
-        color: Defaults.serverColor,
-        borderColor: Defaults.serverBorderColor,
-        queueColor: Defaults.serverColor,
-        queueBorderColor: Defaults.serverBorderColor,
-        speedColor: Defaults.successColor,
-        speedBorderColor: Defaults.serverBorderColor,
-    };
-    static serverDisabledDefaults = {
-        size: Defaults.serverSize,
-        color: '#DDDDDD',
-        borderColor: '#999999',
-        queueColor: '#BBBBBB',
-        queueBorderColor: '#999999',
-        speedColor: '#BBBBBB',
-        speedBorderColor: '#999999',
-    };
 }
 class ClientFactory {
     game;
@@ -1088,9 +1132,9 @@ class SimpleButton {
         this.color = color;
         this.onClick = onClick;
     }
-    draw(hovered, context) {
+    draw(hovered, canvas) {
         const color = hovered ? Utilities.invertColor(this.color) : this.color;
-        Utilities.drawRect({
+        canvas.drawRect({
             x: this.x,
             y: this.y,
             width: this.width,
@@ -1098,15 +1142,15 @@ class SimpleButton {
             color: hovered ? this.color : undefined,
             borderColor: this.color,
             borderWidth: 2
-        }, context);
-        Utilities.drawText({
+        });
+        canvas.drawText({
             x: this.x,
             y: this.y,
             text: this.text,
             fontSize: 15,
             align: 'center',
             color
-        }, context);
+        });
     }
     ;
 }
@@ -1140,15 +1184,15 @@ class Credits {
         this.drawSubText(y + 28, subText);
     }
     drawRect(y) {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width;
-        Utilities.drawRect({
+        const w = this.canvas.width;
+        this.canvas.drawRect({
             x: w / 2,
             y,
-            width: this.canvas.width,
+            width: w,
             height: 100,
             color: Defaults.secondaryColorTransparent,
             borderColor: Defaults.primaryColorMutedTransparent
-        }, context);
+        });
     }
     drawHeading(y, text) {
         this.drawText(y, text, 20, Defaults.accentColor, 'bold');
@@ -1160,8 +1204,8 @@ class Credits {
         this.drawText(y, text, 15, Defaults.primaryColorMuted);
     }
     drawText(y, text, fontSize, color, fontWeight) {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width;
-        Utilities.drawText({
+        const w = this.canvas.width;
+        this.canvas.drawText({
             x: w / 2,
             y,
             text,
@@ -1169,7 +1213,7 @@ class Credits {
             fontWeight,
             align: 'center',
             color
-        }, context);
+        });
     }
 }
 class CursorTracker {
@@ -1291,22 +1335,22 @@ class GameArea {
         this.fader = fader;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), sc = this.game.selectedClient;
+        const sc = this.game.selectedClient;
         if (sc !== undefined) {
-            Utilities.drawLine({
+            this.canvas.drawLine({
                 x1: sc.x,
                 y1: sc.y,
                 x2: this.cursor.mouseX,
                 y2: this.cursor.mouseY,
                 color: Defaults.highlightColor,
                 width: Defaults.highlightWidth
-            }, context);
-            Utilities.drawCircle({
+            });
+            this.canvas.drawCircle({
                 x: sc.x,
                 y: sc.y,
                 radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
                 color: Defaults.highlightColor
-            }, context);
+            });
         }
         this.drawConnections();
         this.drawMessages();
@@ -1332,10 +1376,10 @@ class GameArea {
         this.game.servers.forEach(s => this.drawServer(s));
     }
     drawUI() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        const w = this.canvas.width, h = this.canvas.height;
         this.fader.draw();
         this.popularityTracker.draw(h - 14);
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: h - 14,
             text: 'Press space to pause',
@@ -1344,7 +1388,7 @@ class GameArea {
             align: 'center',
             baseline: 'alphabetic',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
                 x: w / 2,
@@ -1376,7 +1420,7 @@ class GameArea {
         if (remaining <= 10) {
             color = Defaults.dangerColor;
         }
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w - 10,
             y: h - 14,
             text,
@@ -1385,11 +1429,11 @@ class GameArea {
             align: 'end',
             baseline: 'alphabetic',
             color
-        }, context);
+        });
     }
     drawAttacker(attacker) {
-        const context = this.canvas.getContext('2d'), size = Defaults.clientSize, x = attacker.x, y = attacker.y;
-        Utilities.drawTriangle({
+        const size = Defaults.clientSize, x = attacker.x, y = attacker.y;
+        this.canvas.drawTriangle({
             x,
             y,
             base: size * 2 / Math.sqrt(3),
@@ -1397,8 +1441,8 @@ class GameArea {
             color: Defaults.attackerColor,
             borderColor: Defaults.attackerBorderColor,
             borderWidth: 2
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x,
             y: y + 8,
             text: 'DoS',
@@ -1407,10 +1451,10 @@ class GameArea {
             fontFamily: 'Arial',
             align: 'center',
             color: Defaults.attackerTextColor
-        }, context);
+        });
     }
     drawClient(client) {
-        const context = this.canvas.getContext('2d'), clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y, circle = {
+        const clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y, circle = {
             x,
             y,
             radius: clientSize / 2,
@@ -1419,23 +1463,23 @@ class GameArea {
         };
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle({
+                this.canvas.drawCircle({
                     ...circle,
                     color: Defaults.dangerColor,
                     borderColor: Defaults.dangerColorDark
-                }, context);
+                });
             }
             else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle({
+                this.canvas.drawCircle({
                     ...circle,
                     color: Defaults.dangerColorMuted,
                     borderColor: Defaults.dangerColorMutedDark
-                }, context);
+                });
             }
             else {
-                Utilities.drawCircle(circle, context);
+                this.canvas.drawCircle(circle);
             }
-            Utilities.drawText({
+            this.canvas.drawText({
                 x,
                 y,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
@@ -1444,26 +1488,24 @@ class GameArea {
                 fontFamily: 'Arial',
                 align: 'center',
                 color: Defaults.clientTextColor
-            }, context);
+            });
         }
         else {
-            Utilities.drawCircle(circle, context);
+            this.canvas.drawCircle(circle);
         }
     }
     drawConnection(t, color) {
         if (t.connectedTo) {
-            const context = this.canvas.getContext('2d');
-            Utilities.drawLine({
+            this.canvas.drawLine({
                 x1: t.x,
                 y1: t.y,
                 x2: t.connectedTo.x,
                 y2: t.connectedTo.y,
                 color
-            }, context);
+            });
         }
     }
     drawMessage(message) {
-        const context = this.canvas.getContext('2d');
         let color, borderColor;
         switch (message.status) {
             case 'queued':
@@ -1484,17 +1526,16 @@ class GameArea {
             default:
                 throw 'Invalid message status: ' + message.status;
         }
-        Utilities.drawCircle({
+        this.canvas.drawCircle({
             x: message.x,
             y: message.y,
             radius: Defaults.messageSize / 2,
             color,
             borderColor
-        }, context);
+        });
     }
     drawServer(server) {
-        const context = this.canvas.getContext('2d');
-        Utilities.drawServer(server, {}, context);
+        Utilities.drawServer(server, {}, this.canvas);
     }
 }
 class Game {
@@ -1515,8 +1556,7 @@ class Game {
         return [];
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
+        this.canvas.clear();
         this.gameArea.draw();
     }
     update() {
@@ -1557,9 +1597,9 @@ class GameOver {
         return this.buttons;
     }
     draw() {
-        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        var w = this.canvas.width, h = this.canvas.height;
         this.clouds.draw();
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: 100,
             text: 'Game Over',
@@ -1567,35 +1607,35 @@ class GameOver {
             fontVariant: 'small-caps',
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
         const fontSize = 30;
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2 + 68,
             y: h / 2 + 50,
             text: 'Popularity:',
             fontSize,
             align: 'end',
             color: this.color
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2 + 75,
             y: h / 2 + 50,
             text: this.popularity.popularity.toString(),
             fontSize,
             align: 'start',
             color: this.color
-        }, context);
-        Utilities.drawLine({
+        });
+        this.canvas.drawLine({
             x1: w / 2 - 130,
             y1: h / 2 + 20,
             x2: w / 2 + 130,
             y2: h / 2 + 20,
             color: Defaults.accentColor
-        }, context);
+        });
     }
     update() { }
     drawStat(y, text, value) {
@@ -1603,26 +1643,26 @@ class GameOver {
         this.drawStatValue(y, value);
     }
     drawStatTitle(y, text) {
-        const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 80;
-        Utilities.drawText({
+        const x = this.canvas.width / 2 + 80;
+        this.canvas.drawText({
             x,
             y,
             text: text + ':',
             fontSize: 15,
             align: 'end',
             color: this.color
-        }, context);
+        });
     }
     drawStatValue(y, value) {
-        const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 90;
-        Utilities.drawText({
+        const x = this.canvas.width / 2 + 90;
+        this.canvas.drawText({
             x,
             y,
             text: value.toString(),
             fontSize: 15,
             align: 'start',
             color: this.color
-        }, context);
+        });
     }
 }
 class TutorialStep {
@@ -1677,7 +1717,7 @@ class Tutorial {
         return buttons;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts, rectangle = {
+        const w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts, rectangle = {
             x: w / 2,
             y: 0,
             width: w,
@@ -1685,13 +1725,13 @@ class Tutorial {
             color: Defaults.backgroundColor,
             borderColor: Defaults.backgroundBorderColor
         };
-        context.clearRect(0, 0, w, h);
+        this.canvas.clear();
         this.gameArea.draw();
         this.fader.draw();
-        Utilities.drawRect({ ...rectangle, y: 40 }, context);
+        this.canvas.drawRect({ ...rectangle, y: 40 });
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText({
+            this.canvas.drawText({
                 x: w / 2,
                 y: 18 + 20 * i,
                 text,
@@ -1699,9 +1739,9 @@ class Tutorial {
                 fontSize: 18,
                 align: 'center',
                 color: Defaults.primaryColor
-            }, context);
+            });
         }
-        Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
+        this.canvas.drawRect({ ...rectangle, y: h - 40 });
         this.currentStep.draw();
     }
     update() {
@@ -1750,17 +1790,17 @@ class Menu {
         return this.buttons;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
+        const w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
         this.clouds.draw();
-        Utilities.drawRect({
+        this.canvas.drawRect({
             x: w / 2,
             y: 140,
             width: w,
             height: 180,
             color: Defaults.secondaryColorTransparent,
             borderColor: Defaults.primaryColorMutedTransparent
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: 110,
             text: 'Load Balancing',
@@ -1769,23 +1809,23 @@ class Menu {
             fontSize: 110,
             align,
             color
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: 185,
             text: 'The Game',
             fontSize: 45,
             align,
             color
-        }, context);
-        Utilities.drawLine({
+        });
+        this.canvas.drawLine({
             x1: 120,
             y1: 160,
             x2: w - 118,
             y2: 160,
             color: Defaults.accentColor,
             width: 2
-        }, context);
+        });
     }
     update() { }
 }
@@ -1806,8 +1846,8 @@ class UpgradeButton {
         }
     }
     onClick() { }
-    draw(hovered, context) {
-        Utilities.drawRect({
+    draw(hovered, canvas) {
+        canvas.drawRect({
             x: this.x,
             y: this.y,
             width: this.width,
@@ -1815,17 +1855,17 @@ class UpgradeButton {
             color: Defaults.secondaryColor,
             borderColor: hovered ? Defaults.primaryColor : undefined,
             borderWidth: 2
-        }, context);
-        this.drawIcon(context);
+        });
+        this.drawIcon(canvas);
         if (hovered) {
-            Utilities.drawText({
-                x: context.canvas.width / 2,
-                y: context.canvas.height - 50,
+            canvas.drawText({
+                x: canvas.width / 2,
+                y: canvas.height - 50,
                 text: this.text,
                 fontSize: 20,
                 align: 'center',
                 color: Defaults.accentColor
-            }, context);
+            });
         }
     }
 }
@@ -1833,64 +1873,64 @@ class CapacityUpgradeButton extends UpgradeButton {
     constructor(x, y, onClick) {
         super(x, y, 'Scale off at one location', onClick);
     }
-    drawIcon(context) {
+    drawIcon(canvas) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
         var queueX = x + serverSize / 2 - 7, queueY = y + 1, color = Defaults.accentColor, lineWidth = 3;
         Utilities.drawServer(new Server(x, y), {
             ...Defaults.serverDisabledDefaults,
             queueColor: Defaults.accentColorMuted,
             queueBorderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawArrow({
+        }, canvas);
+        canvas.drawArrow({
             x1: queueX,
             y1: queueY - serverSize / 2 + 2,
             x2: queueX,
             y2: queueY - serverSize / 2 - 13,
             color,
             width: lineWidth
-        }, context);
+        });
     }
 }
 class ServerUpgradeButton extends UpgradeButton {
     constructor(x, y, onClick) {
         super(x, y, 'Buy new datacenter', onClick);
     }
-    drawIcon(context) {
+    drawIcon(canvas) {
         const x = this.x, y = this.y;
-        Utilities.drawText({
+        canvas.drawText({
             x: x - 25,
             y,
             text: '+',
             fontSize: 45,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
         Utilities.drawServer(new Server(x + 15, y), {
             ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
-        }, context);
+        }, canvas);
     }
 }
 class SpeedUpgradeButton extends UpgradeButton {
     constructor(x, y, onClick) {
         super(x, y, 'Improve speed at one location', onClick);
     }
-    drawIcon(context) {
+    drawIcon(canvas) {
         const x = this.x, y = this.y, serverSize = Defaults.serverSize;
         var starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
         Utilities.drawServer(new Server(x, y), {
             ...Defaults.serverDisabledDefaults,
             speedColor: Defaults.accentColorMuted,
             speedBorderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawArrow({
+        }, canvas);
+        canvas.drawArrow({
             x1: starX,
             y1: starY - 6,
             x2: starX,
             y2: starY - 21,
             color,
             width: lineWidth
-        }, context);
+        });
     }
 }
 class Pause {
@@ -1925,36 +1965,36 @@ class Pause {
             : [...this.buttons];
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, fontSize = 25;
+        const w = this.canvas.width, h = this.canvas.height, x = w / 2, fontSize = 25;
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            Utilities.drawText({
+            this.canvas.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
                 color: Defaults.secondaryColor
-            }, context);
+            });
         }
         else {
-            Utilities.drawText({
+            this.canvas.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
                 color: Defaults.primaryColorMuted
-            }, context);
+            });
         }
-        Utilities.drawText({
+        this.canvas.drawText({
             x,
             y: 60,
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
     update() { }
     selectUpgrade(id) {
@@ -1981,19 +2021,19 @@ class ClientExplanation extends TutorialStep {
         client.life = -31;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
-        Utilities.drawCircle({
+        const w = this.canvas.width, h = this.canvas.height;
+        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, this.canvas);
+        this.canvas.drawCircle({
             x: w * 3 / 4,
             y: h / 2,
             radius: Defaults.clientSize / 2,
             color: 'gray'
-        }, context);
+        });
     }
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, circle = {
+        const w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, circle = {
             x,
             y,
             radius: iconRadius
@@ -2003,38 +2043,38 @@ class TutorialHelper {
             fontSize: 10,
             fontFamily: 'sans-serif'
         };
-        Utilities.drawCircle({
+        canvas.drawCircle({
             ...circle,
             color: Defaults.messageReqColor,
             borderColor: Defaults.messageReqBorderColor
-        }, context);
-        Utilities.drawText({
+        });
+        canvas.drawText({
             ...text,
             text: ': Request'
-        }, context);
-        Utilities.drawCircle({
+        });
+        canvas.drawCircle({
             ...circle,
             y: y + lineSpacing,
             color: Defaults.messageAckColor,
             borderColor: Defaults.messageAckBorderColor
-        }, context);
-        Utilities.drawText({
+        });
+        canvas.drawText({
             ...text,
             y: y + lineSpacing,
             text: ': Response (+1)'
-        }, context);
+        });
         if (includeNACK) {
-            Utilities.drawCircle({
+            canvas.drawCircle({
                 ...circle,
                 y: y + lineSpacing * 2,
                 color: Defaults.messageNackColor,
                 borderColor: Defaults.messageNackBorderColor
-            }, context);
-            Utilities.drawText({
+            });
+            canvas.drawText({
                 ...text,
                 y: y + lineSpacing * 2,
                 text: ': Datacenter busy (-1)'
-            }, context);
+            });
         }
     }
 }
@@ -2078,10 +2118,10 @@ class ClientSuccessExplanation extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
+        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, this.canvas);
     }
 }
 class ConnectionExplanation extends TutorialStep {
@@ -2243,9 +2283,9 @@ class DdosAttackExample extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        const w = this.canvas.width, h = this.canvas.height;
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
@@ -2253,7 +2293,7 @@ class DdosAttackExample extends TutorialStep {
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
     spawnClients() {
         const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
@@ -2287,29 +2327,29 @@ class NewServerUpgradeExample extends TutorialStep {
         this.fader.removeFromPermanentQueue('upgradeTut');
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawRect({
+        const w = this.canvas.width, h = this.canvas.height;
+        this.canvas.drawRect({
             x: w / 2,
             y: h / 2,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: h / 2 + 60,
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: h / 3,
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 }
 class PopularityExplanation extends TutorialStep {
@@ -2335,10 +2375,10 @@ class PopularityExplanation extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height;
+        const h = this.canvas.height;
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
-        Utilities.drawCircleHighlight(70, h - 95, 67, context);
+        Utilities.drawCircleHighlight(70, h - 95, 67, this.canvas);
     }
 }
 class ServerBusyExample extends TutorialStep {
@@ -2361,10 +2401,10 @@ class ServerBusyExample extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
+        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, this.canvas);
     }
 }
 class ServerExplanation extends TutorialStep {
@@ -2380,8 +2420,8 @@ class ServerExplanation extends TutorialStep {
         this.hasHome = true;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, context);
+        const w = this.canvas.width, h = this.canvas.height;
+        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, this.canvas);
     }
 }
 class SpeedUpgradeExample extends TutorialStep {
@@ -2411,29 +2451,29 @@ class SpeedUpgradeExample extends TutorialStep {
         this.fader.removeFromPermanentQueue('upgradeTut');
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawRect({
+        const w = this.canvas.width, h = this.canvas.height;
+        this.canvas.drawRect({
             x: w / 2,
             y: h / 2,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: h / 2 + 60,
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: h / 3,
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 }
 class TutorialFinished extends TutorialStep {
@@ -2500,10 +2540,10 @@ class UpgradesIntroduction extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        const w = this.canvas.width, h = this.canvas.height;
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
@@ -2511,7 +2551,7 @@ class UpgradesIntroduction extends TutorialStep {
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
 }
 class Welcome extends TutorialStep {
@@ -2552,16 +2592,16 @@ class BorderButton {
         this.borderWidth = borderWidth;
         this.onClick = onClick;
     }
-    draw(hovered, context) {
+    draw(hovered, canvas) {
         const color = hovered ? this.hoverColor : this.color;
-        Utilities.drawRect({
+        canvas.drawRect({
             x: this.x,
             y: this.y,
             width: this.width,
             height: this.height,
             borderColor: color,
             borderWidth: this.borderWidth
-        }, context);
+        });
     }
 }
 class Upgrade {
@@ -2608,8 +2648,8 @@ class Upgrade {
         return buttons;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
+        const w = this.canvas.width;
+        this.canvas.clear();
         this.gameArea.drawServers();
         let text;
         switch (this.upgradesTracker.selectedUpgrade) {
@@ -2621,14 +2661,14 @@ class Upgrade {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: 60,
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
     update() { }
     createAreaButton(x, y, area) {
@@ -2708,10 +2748,10 @@ class Application {
         window.addEventListener('blur', () => this.blurHandler());
     }
     static build(clouds) {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
+        const canvasElement = document.getElementById('canvas');
         const music = new Audio('assets/music.mp3');
-        const fader = new TextFader(context);
+        const canvas = new Canvas(canvasElement);
+        const fader = new TextFader(canvas);
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
@@ -2721,7 +2761,7 @@ class Application {
         const attackerFactory = new AttackerFactory(game, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
         const serverFactory = new ServerFactory(game);
-        const cursor = new CursorTracker(game, canvas, ui);
+        const cursor = new CursorTracker(game, canvasElement, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
@@ -2781,13 +2821,13 @@ class Application {
         this.clouds.add(x, y, w, h, circles, color, speed);
     }
     drawButtons() {
-        const context = this.canvas.getContext('2d'), mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
+        const mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
         this.ui.buttons.forEach((button) => {
             const hovered = mouseX > button.x - (button.width + 2) / 2 &&
                 mouseX < button.x + (button.width + 2) / 2 &&
                 mouseY > button.y - (button.height + 4) / 2 &&
                 mouseY < button.y + (button.height + 2) / 2;
-            button.draw(hovered, context);
+            button.draw(hovered, this.canvas);
         });
     }
     blurHandler() {

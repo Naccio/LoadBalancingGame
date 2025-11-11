@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='UpgradeButton.ts' />
 
@@ -7,21 +8,21 @@ class ServerUpgradeButton extends UpgradeButton {
         super(x, y, 'Buy new datacenter', onClick)
     }
 
-    drawIcon(context: CanvasRenderingContext2D) {
+    drawIcon(canvas: Canvas) {
         const x = this.x,
             y = this.y;
 
-        Utilities.drawText({
+        canvas.drawText({
             x: x - 25,
             y,
             text: '+',
             fontSize: 45,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
         Utilities.drawServer(new Server(x + 15, y), {
             ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
-        }, context);
+        }, canvas);
     }
 }

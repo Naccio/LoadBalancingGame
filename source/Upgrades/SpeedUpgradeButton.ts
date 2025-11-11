@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='UpgradeButton.ts' />
 
@@ -7,7 +8,7 @@ class SpeedUpgradeButton extends UpgradeButton {
         super(x, y, 'Improve speed at one location', onClick)
     }
 
-    drawIcon(context: CanvasRenderingContext2D) {
+    drawIcon(canvas: Canvas) {
         const x = this.x,
             y = this.y,
             serverSize = Defaults.serverSize;
@@ -21,14 +22,14 @@ class SpeedUpgradeButton extends UpgradeButton {
             ...Defaults.serverDisabledDefaults,
             speedColor: Defaults.accentColorMuted,
             speedBorderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawArrow({
+        }, canvas);
+        canvas.drawArrow({
             x1: starX,
             y1: starY - 6,
             x2: starX,
             y2: starY - 21,
             color,
             width: lineWidth
-        }, context);
+        });
     }
 }

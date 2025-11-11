@@ -1,4 +1,5 @@
 /// <reference path='../Commands/NewGame.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../UI/Button.ts' />
 /// <reference path='../UI/GameUI.ts' />
@@ -13,7 +14,7 @@ class Menu implements Scene {
     public id = Defaults.gameModes.MENU;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private clouds: Clouds,
         game: GameTracker,
         ui: GameUI,
@@ -36,22 +37,21 @@ class Menu implements Scene {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             align = 'center',
             color = Defaults.primaryColorTransparent;
 
         this.clouds.draw();
 
-        Utilities.drawRect({
+        this.canvas.drawRect({
             x: w / 2,
             y: 140,
             width: w,
             height: 180,
             color: Defaults.secondaryColorTransparent,
             borderColor: Defaults.primaryColorMutedTransparent
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: 110,
             text: 'Load Balancing',
@@ -60,25 +60,25 @@ class Menu implements Scene {
             fontSize: 110,
             align,
             color
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: 185,
             text: 'The Game',
             fontSize: 45,
             align,
             color
-        }, context);
+        });
 
-        Utilities.drawLine({
+        this.canvas.drawLine({
             x1: 120,
             y1: 160,
             x2: w - 118,
             y2: 160,
             color: Defaults.accentColor,
             width: 2
-        }, context);
+        });
     }
 
-    update() {}
+    update() { }
 }

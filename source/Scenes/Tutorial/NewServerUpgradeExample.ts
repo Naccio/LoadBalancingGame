@@ -1,3 +1,4 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/ServerFactory.ts' />
 /// <reference path='../../UI/TextFader.ts' />
 /// <reference path='../../Upgrades/CapacityUpgradeButton.ts' />
@@ -9,7 +10,7 @@
 class NewServerUpgradeExample extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         serverFactory: ServerFactory,
         private fader: TextFader
     ) {
@@ -38,31 +39,30 @@ class NewServerUpgradeExample extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
 
-        Utilities.drawRect({
+        this.canvas.drawRect({
             x: w / 2,
             y: h / 2,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: h / 2 + 60,
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
-        }, context);
-        Utilities.drawText({
+        });
+        this.canvas.drawText({
             x: w / 2,
             y: h / 3,
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 }

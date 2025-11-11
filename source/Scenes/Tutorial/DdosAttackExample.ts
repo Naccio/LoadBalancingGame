@@ -1,3 +1,4 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/AttackerFactory.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
@@ -8,7 +9,7 @@
 class DdosAttackExample extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private fader: TextFader,
         private clientFactory: ClientFactory,
@@ -58,13 +59,12 @@ class DdosAttackExample extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
 
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: h - 95,
             text: 'Press space to pause',
@@ -72,7 +72,7 @@ class DdosAttackExample extends TutorialStep {
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
 
     private spawnClients() {

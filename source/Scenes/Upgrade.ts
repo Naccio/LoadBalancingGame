@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Model/Server.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/Scheduler.ts' />
@@ -13,7 +14,7 @@ class Upgrade implements Scene {
     public id = Defaults.gameModes.UPGRADE;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private upgradesTracker: UpgradesTracker,
         private scheduler: Scheduler,
@@ -56,12 +57,9 @@ class Upgrade implements Scene {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height;
+        const w = this.canvas.width;
 
-        context.clearRect(0, 0, w, h);
-
+        this.canvas.clear();
         this.gameArea.drawServers();
 
         let text;
@@ -74,17 +72,17 @@ class Upgrade implements Scene {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText({
+        this.canvas.drawText({
             x: w / 2,
             y: 60,
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 
-    update() {}
+    update() { }
 
     private createAreaButton(x: number, y: number, area: string) {
         const w = this.canvas.width,

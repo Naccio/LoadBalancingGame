@@ -1,5 +1,6 @@
 /// <reference path='../../Defaults.ts' />
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -10,7 +11,7 @@
 class ClientSuccessExplanation extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker
@@ -48,14 +49,13 @@ class ClientSuccessExplanation extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height,
             serverSize = Defaults.serverSize;
 
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
+        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, this.canvas);
     }
 }

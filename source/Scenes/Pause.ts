@@ -1,5 +1,6 @@
 /// <reference path='../Commands/NewGame.ts' />
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Upgrades/UpgradesTracker.ts' />
 /// <reference path='../UI/Button.ts' />
@@ -18,7 +19,7 @@ class Pause implements Scene {
     public id = Defaults.gameModes.PAUSE;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private clouds: Clouds,
         private game: GameTracker,
         private upgradesTracker: UpgradesTracker,
@@ -50,8 +51,7 @@ class Pause implements Scene {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height,
             x = w / 2,
             fontSize = 25;
@@ -59,36 +59,36 @@ class Pause implements Scene {
         this.clouds.draw();
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            Utilities.drawText({
+            this.canvas.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
                 color: Defaults.secondaryColor
-            }, context);
+            });
         } else {
-            Utilities.drawText({
+            this.canvas.drawText({
                 x,
                 y: h / 2 + 60,
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
                 color: Defaults.primaryColorMuted
-            }, context);
+            });
         }
 
-        Utilities.drawText({
+        this.canvas.drawText({
             x,
             y: 60,
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 
-    update() {}
+    update() { }
 
     private selectUpgrade(id: string) {
         this.upgradesTracker.selectedUpgrade = id;

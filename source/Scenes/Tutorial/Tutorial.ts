@@ -1,4 +1,5 @@
 /// <reference path='../../Defaults.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../UI/SimpleButton.ts' />
@@ -19,7 +20,7 @@ class Tutorial implements Scene {
 
     public constructor(
         private steps: TutorialStep[],
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private gameArea: GameArea,
         private fader: TextFader,
         private game: GameTracker,
@@ -52,8 +53,7 @@ class Tutorial implements Scene {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height,
             texts = this.currentStep.texts,
             rectangle = {
@@ -65,13 +65,13 @@ class Tutorial implements Scene {
                 borderColor: Defaults.backgroundBorderColor
             };
 
-        context.clearRect(0, 0, w, h);
+        this.canvas.clear();
         this.gameArea.draw();
         this.fader.draw();
-        Utilities.drawRect({ ...rectangle, y: 40 }, context);
+        this.canvas.drawRect({ ...rectangle, y: 40 });
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText({
+            this.canvas.drawText({
                 x: w / 2,
                 y: 18 + 20 * i,
                 text,
@@ -79,9 +79,9 @@ class Tutorial implements Scene {
                 fontSize: 18,
                 align: 'center',
                 color: Defaults.primaryColor
-            }, context);
+            });
         }
-        Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
+        this.canvas.drawRect({ ...rectangle, y: h - 40 });
         this.currentStep.draw();
     }
 

@@ -1,3 +1,4 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../UI/TextFader.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='../Upgrades/UpgradesTracker.ts' />
@@ -5,20 +6,18 @@
 class PopularityTracker {
     public popularity: number;
 
-    constructor(private fader: TextFader, private upgrades: UpgradesTracker, private canvas: HTMLCanvasElement) {
+    constructor(private fader: TextFader, private upgrades: UpgradesTracker, private canvas: Canvas) {
         this.popularity = 0;
     }
 
     draw(y: number) {
-        const context = this.canvas.getContext('2d')!;
-
-        Utilities.drawText({
+        this.canvas.drawText({
             x: 10,
             y,
             text: 'Popularity: ' + this.popularity,
             fontSize: 18,
             fontFamily: 'sans-serif'
-        }, context);
+        });
     }
 
     reset() {

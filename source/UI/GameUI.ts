@@ -1,3 +1,4 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='Button.ts' />
 /// <reference path='VolumeButton.ts' />
 
@@ -6,7 +7,7 @@ class GameUI {
 
     public readonly volumeButton: VolumeButton;
 
-    constructor(music: HTMLAudioElement, canvas: HTMLCanvasElement) {
+    constructor(music: HTMLAudioElement, canvas: Canvas) {
         const w = canvas.width,
             h = canvas.height,
             x = w - 40,

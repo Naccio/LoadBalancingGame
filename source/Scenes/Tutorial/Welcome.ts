@@ -1,10 +1,11 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/ServerFactory.ts' />
 /// <reference path='TutorialStep.ts' />
 
 class Welcome extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private serverFactory: ServerFactory
     ) {
         super([

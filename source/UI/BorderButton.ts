@@ -1,3 +1,4 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='Button.ts' />
 
 class BorderButton implements Button {
@@ -12,16 +13,16 @@ class BorderButton implements Button {
         public onClick: () => void
     ) { }
 
-    public draw(hovered: boolean, context: CanvasRenderingContext2D) {
+    public draw(hovered: boolean, canvas: Canvas) {
         const color = hovered ? this.hoverColor : this.color;
 
-        Utilities.drawRect({
+        canvas.drawRect({
             x: this.x,
             y: this.y,
             width: this.width,
             height: this.height,
             borderColor: color,
             borderWidth: this.borderWidth
-        }, context);
+        });
     }
 }

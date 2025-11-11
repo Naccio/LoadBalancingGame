@@ -1,4 +1,5 @@
 /// <reference path='../../Defaults.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
@@ -6,7 +7,7 @@
 class ClientExplanation extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private clientFactory: ClientFactory
     ) {
         super([
@@ -27,16 +28,15 @@ class ClientExplanation extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
 
-        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
-        Utilities.drawCircle({
+        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, this.canvas);
+        this.canvas.drawCircle({
             x: w * 3 / 4,
             y: h / 2,
             radius: Defaults.clientSize / 2,
             color: 'gray'
-        }, context);
+        });
     }
 }

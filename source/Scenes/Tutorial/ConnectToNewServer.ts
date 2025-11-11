@@ -1,4 +1,5 @@
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -8,7 +9,7 @@
 class ConnectToNewServer extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory

@@ -1,3 +1,4 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Model/Server.ts' />
 /// <reference path='AttackerFactory.ts' />
 /// <reference path='ClientFactory.ts' />
@@ -17,7 +18,7 @@ class Scheduler {
 
     constructor(
         private popularityTracker: PopularityTracker,
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private clientFactory: ClientFactory,
         private attackerFactory: AttackerFactory,

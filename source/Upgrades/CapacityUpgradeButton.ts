@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='UpgradeButton.ts' />
 
@@ -7,7 +8,7 @@ class CapacityUpgradeButton extends UpgradeButton {
         super(x, y, 'Scale off at one location', onClick);
     }
 
-    drawIcon(context: CanvasRenderingContext2D) {
+    drawIcon(canvas: Canvas) {
         const x = this.x,
             y = this.y,
             serverSize = Defaults.serverSize;
@@ -20,14 +21,14 @@ class CapacityUpgradeButton extends UpgradeButton {
             ...Defaults.serverDisabledDefaults,
             queueColor: Defaults.accentColorMuted,
             queueBorderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawArrow({
+        }, canvas);
+        canvas.drawArrow({
             x1: queueX,
             y1: queueY - serverSize / 2 + 2,
             x2: queueX,
             y2: queueY - serverSize / 2 - 13,
             color,
             width: lineWidth
-        }, context);
+        });
     }
 }

@@ -1,4 +1,5 @@
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -8,7 +9,7 @@
 class PopularityExplanation extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker
     ) {
@@ -30,12 +31,11 @@ class PopularityExplanation extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            h = this.canvas.height;
+        const h = this.canvas.height;
 
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
 
-        Utilities.drawCircleHighlight(70, h - 95, 67, context);
+        Utilities.drawCircleHighlight(70, h - 95, 67, this.canvas);
     }
 }

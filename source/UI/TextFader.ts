@@ -1,3 +1,4 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='FadingText.ts' />
 
 class TextFader {
@@ -12,7 +13,7 @@ class TextFader {
         permanent: FadingText[]
     };
 
-    constructor(private context: CanvasRenderingContext2D) {
+    constructor(private canvas: Canvas) {
         this.queues = { permanent: [], temporary: [] }
     }
 
@@ -140,13 +141,13 @@ class TextFader {
             a = text.alpha,
             color = `rgba(${r}, ${g}, ${b}, ${a})`;
 
-        Utilities.drawText({
+        this.canvas.drawText({
             ...text,
             x,
             y: y - delta,
             fontFamily: 'Arial',
             align: 'center',
             color
-        }, this.context);
+        });
     }
 }

@@ -49,7 +49,7 @@ class Application {
         private game: GameTracker,
         private ui: GameUI,
         private cursor: CursorTracker,
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private fpsCounter: FpsCounter,
         private clouds: Clouds
     ) {
@@ -72,12 +72,12 @@ class Application {
     }
 
     public static build(clouds: Clouds) {
-        const canvas = <HTMLCanvasElement>document.getElementById('canvas');
-        const context = canvas.getContext('2d')!;
+        const canvasElement = <HTMLCanvasElement>document.getElementById('canvas');
 
         const music = new Audio('assets/music.mp3');
 
-        const fader = new TextFader(context);
+        const canvas = new Canvas(canvasElement);
+        const fader = new TextFader(canvas);
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
@@ -87,7 +87,7 @@ class Application {
         const attackerFactory = new AttackerFactory(game, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
         const serverFactory = new ServerFactory(game);
-        const cursor = new CursorTracker(game, canvas, ui);
+        const cursor = new CursorTracker(game, canvasElement, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
 
@@ -165,8 +165,7 @@ class Application {
     }
 
     private drawButtons() {
-        const context = this.canvas.getContext('2d')!,
-            mouseX = this.cursor.mouseX,
+        const mouseX = this.cursor.mouseX,
             mouseY = this.cursor.mouseY;
 
         this.ui.buttons.forEach((button) => {
@@ -176,7 +175,7 @@ class Application {
                 mouseY > button.y - (button.height + 4) / 2 &&
                 mouseY < button.y + (button.height + 2) / 2;
 
-            button.draw(hovered, context);
+            button.draw(hovered, this.canvas);
         });
     }
 

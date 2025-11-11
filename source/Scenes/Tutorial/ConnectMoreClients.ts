@@ -1,5 +1,6 @@
 /// <reference path='../../Defaults.ts' />
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -10,7 +11,7 @@
 class ConnectMoreClients extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory

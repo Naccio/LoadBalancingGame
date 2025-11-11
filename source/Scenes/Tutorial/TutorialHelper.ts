@@ -1,10 +1,10 @@
 /// <reference path='../../Defaults.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Utilities.ts' />
 
 class TutorialHelper {
-    public static drawLegend(canvas: HTMLCanvasElement, includeNACK: boolean) {
-        const context = canvas.getContext('2d')!,
-            w = canvas.width,
+    public static drawLegend(canvas: Canvas, includeNACK: boolean) {
+        const w = canvas.width,
             x = w - 120,
             y = 100,
             iconRadius = 3,
@@ -22,38 +22,38 @@ class TutorialHelper {
                 fontFamily: 'sans-serif'
             };
 
-        Utilities.drawCircle({
+        canvas.drawCircle({
             ...circle,
             color: Defaults.messageReqColor,
             borderColor: Defaults.messageReqBorderColor
-        }, context);
-        Utilities.drawText({
+        });
+        canvas.drawText({
             ...text,
             text: ': Request'
-        }, context);
-        Utilities.drawCircle({
+        });
+        canvas.drawCircle({
             ...circle,
             y: y + lineSpacing,
             color: Defaults.messageAckColor,
             borderColor: Defaults.messageAckBorderColor
-        }, context);
-        Utilities.drawText({
+        });
+        canvas.drawText({
             ...text,
             y: y + lineSpacing,
             text: ': Response (+1)'
-        }, context);
+        });
         if (includeNACK) {
-            Utilities.drawCircle({
+            canvas.drawCircle({
                 ...circle,
                 y: y + lineSpacing * 2,
                 color: Defaults.messageNackColor,
                 borderColor: Defaults.messageNackBorderColor
-            }, context);
-            Utilities.drawText({
+            });
+            canvas.drawText({
                 ...text,
                 y: y + lineSpacing * 2,
                 text: ': Datacenter busy (-1)'
-            }, context);
+            });
         }
     }
 }

@@ -1,3 +1,4 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../UI/Button.ts' />
 /// <reference path='../Utilities.ts' />
 
@@ -16,10 +17,10 @@ abstract class UpgradeButton implements Button {
 
     onClick() { }
 
-    abstract drawIcon(context: CanvasRenderingContext2D): void;
+    abstract drawIcon(context: Canvas): void;
 
-    draw(hovered: boolean, context: CanvasRenderingContext2D) {
-        Utilities.drawRect({
+    draw(hovered: boolean, canvas: Canvas) {
+        canvas.drawRect({
             x: this.x,
             y: this.y,
             width: this.width,
@@ -27,19 +28,19 @@ abstract class UpgradeButton implements Button {
             color: Defaults.secondaryColor,
             borderColor: hovered ? Defaults.primaryColor : undefined,
             borderWidth: 2
-        }, context);
+        });
 
-        this.drawIcon(context);
+        this.drawIcon(canvas);
 
         if (hovered) {
-            Utilities.drawText({
-                x: context.canvas.width / 2,
-                y: context.canvas.height - 50,
+            canvas.drawText({
+                x: canvas.width / 2,
+                y: canvas.height - 50,
                 text: this.text,
                 fontSize: 20,
                 align: 'center',
                 color: Defaults.accentColor
-            }, context);
+            });
         }
     }
 }
