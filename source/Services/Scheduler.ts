@@ -52,7 +52,7 @@ class Scheduler {
         const width = this.canvas.width,
             height = this.canvas.height,
             serverSize = Defaults.serverSize;
-        let x, y, minX, minY, maxX, maxY;
+        let minX, minY, maxX, maxY;
 
         switch (zone) {
             case 'nw':
@@ -113,63 +113,41 @@ class Scheduler {
                 throw `Invalid zone: ${zone}.`;
         }
 
-        x = Utilities.random(minX, maxX);
-        y = Utilities.random(minY, maxY);
-        while (this.checkCollisions({ x, y })) {
-            x = Utilities.random(minX, maxX);
-            y = Utilities.random(minY, maxY);
-        }
+        const
+            min = {
+                x: minX,
+                y: minY
+            },
+            max = {
+                x: maxX,
+                y: maxY
+            },
+            position = this.getRandomPositionBounded(min, max);
 
-        this.serverFactory.create({ x, y });
+        this.serverFactory.create(position);
     };
 
     createClient() {
-        const width = this.canvas.width,
-            height = this.canvas.height,
-            elapsedTime = this.game.elapsedTime,
-            clientSize = Defaults.clientSize,
-            minX = clientSize,
-            maxX = width - clientSize,
-            minY = clientSize,
-            maxY = height - clientSize,
-            messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100);
+        const elapsedTime = this.game.elapsedTime,
+            messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100),
+            position = this.getRandomPosition(Defaults.clientSize);
 
-        let x = Utilities.random(minX, maxX),
-            y = Utilities.random(minY, maxY);
-        while (this.checkCollisions({ x, y })) {
-            x = Utilities.random(minX, maxX);
-            y = Utilities.random(minY, maxY);
-        }
-
-        this.clientFactory.create({ x, y }, messages);
+        this.clientFactory.create(position, messages);
         this.timeLastClient = elapsedTime;
     };
 
     initiateDDoS() {
-        const width = this.canvas.width,
-            height = this.canvas.height,
-            elapsedTime = this.game.elapsedTime,
-            clientSize = Defaults.clientSize,
-            minX = clientSize,
-            maxX = width - clientSize,
-            minY = clientSize,
-            maxY = height - clientSize,
+        const elapsedTime = this.game.elapsedTime,
             modifier = Math.floor(this.popularityTracker.popularity / 400),
             messages = this.attackersMessages + modifier,
             number = this.attackersNumber + modifier;
 
         for (let i = 0; i < number; i += 1) {
-            let x = Utilities.random(minX, maxX),
-                y = Utilities.random(minY, maxY);
-            while (this.checkCollisions({ x, y })) {
-                x = Utilities.random(minX, maxX);
-                y = Utilities.random(minY, maxY);
-            }
-
-            const server = this.findClosestServer({ x, y });
+            const position = this.getRandomPosition(Defaults.clientSize),
+                server = this.findClosestServer(position);
 
             if (server) {
-                this.attackerFactory.create({ x, y }, messages, server);
+                this.attackerFactory.create(position, messages, server);
             }
         }
 
@@ -217,5 +195,31 @@ class Scheduler {
         });
 
         return closest;
+    }
+
+    private getRandomPosition(size: number) {
+        const width = this.canvas.width,
+            height = this.canvas.height,
+            min = {
+                x: size,
+                y: size,
+            },
+            max = {
+                x: width - size,
+                y: height - size
+            };
+
+        return this.getRandomPositionBounded(min, max);
+    }
+
+    private getRandomPositionBounded(min: Point, max: Point) {
+        let x, y;
+
+        do {
+            x = Utilities.random(min.x, max.x);
+            y = Utilities.random(min.y, max.y);
+        } while (this.checkCollisions({ x, y }))
+
+        return { x, y };
     }
 }
