@@ -8,7 +8,6 @@ class MessageOrchestrator {
 
     createMessage(sender: MessageTransmitter, receiver: MessageTransmitter) {
         const m = new Message(sender, receiver);
-        m.computeVelocity();
         this.messages.push(m);
     }
 

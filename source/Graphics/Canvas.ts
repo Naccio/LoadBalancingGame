@@ -50,30 +50,21 @@ class Canvas {
         const context = this.context,
             from = arrow.from,
             to = arrow.to,
-            x1 = from.x,
-            y1 = from.y,
-            x2 = to.x,
-            y2 = to.y,
-            angle = Math.atan2(y2 - y1, x2 - x1),
-            inverseAngle = Math.PI - angle,
             barbsAngle = arrow.barbsAngle ?? Math.PI / 5,
             barbsLength = arrow.barbsLength ?? 8,
-            rightBarbAngle = barbsAngle - inverseAngle,
-            leftBarbAngle = -barbsAngle - inverseAngle,
-            rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength,
-            rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength,
-            leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength,
-            leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
+            direction = VectorMath.direction(to, from),
+            rightBarb = direction.rotate(barbsAngle).multiply(barbsLength).add(to),
+            leftBarb = direction.rotate(-barbsAngle).multiply(barbsLength).add(to);
 
         context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
         context.lineWidth = arrow?.width ?? 1;
         context.lineJoin = 'round';
         context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
-        context.lineTo(rightBarbX, rightBarbY);
-        context.moveTo(x2, y2);
-        context.lineTo(leftBarbX, leftBarbY);
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.lineTo(rightBarb.x, rightBarb.y);
+        context.moveTo(to.x, to.y);
+        context.lineTo(leftBarb.x, leftBarb.y);
         context.stroke();
     }
 
@@ -129,31 +120,27 @@ class Canvas {
 
     public drawStar(star: Star) {
         const context = this.context,
-            centerX = star.position.x,
-            centerY = star.position.y,
+            center = star.position,
             spikes = star.spikes ?? 5,
             outerRadius = star.outerRadius,
             innerRadius = star.innerRadius,
             step = Math.PI / spikes;
 
-        let x, y,
-            rot = Math.PI / 2 * 3;
+        let rot = Math.PI / 2 * 3;
 
         context.beginPath();
-        context.moveTo(centerX, centerY - outerRadius);
+        context.moveTo(center.x, center.y - outerRadius);
         for (let i = 0; i < spikes; i += 1) {
-            x = centerX + Math.cos(rot) * outerRadius;
-            y = centerY + Math.sin(rot) * outerRadius;
-            context.lineTo(x, y);
+            const outer = VectorMath.shift(center, rot, outerRadius);
+            context.lineTo(outer.x, outer.y);
             rot += step;
 
-            x = centerX + Math.cos(rot) * innerRadius;
-            y = centerY + Math.sin(rot) * innerRadius;
-            context.lineTo(x, y);
+            const inner = VectorMath.shift(center, rot, innerRadius);
+            context.lineTo(inner.x, inner.y);
             rot += step;
         }
 
-        context.lineTo(centerX, centerY - outerRadius);
+        context.lineTo(center.x, center.y - outerRadius);
         context.closePath();
 
         this.draw(star);

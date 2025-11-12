@@ -9,15 +9,7 @@ class TutorialHelper {
             y = 100,
             iconRadius = 3,
             textSpacing = 2,
-            lineSpacing = iconRadius + 5,
-            text = {
-                position: {
-                    x: x + textSpacing + iconRadius,
-                    y
-                },
-                fontSize: 10,
-                fontFamily: 'sans-serif'
-            };
+            lineSpacing = iconRadius + 5;
 
         canvas.drawCircle({
             position: { x, y },

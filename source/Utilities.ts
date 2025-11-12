@@ -102,13 +102,6 @@ class Utilities {
         }
     }
 
-    public static getDistance(p1: Point, p2: Point) {
-        var xs = p2.x - p1.x,
-            ys = p2.y - p1.y;
-
-        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
-    }
-
     //must be string containing hex value ('#xxxxxx')
     public static invertColor(color: string) {
         color = color.substring(1);
@@ -118,9 +111,5 @@ class Utilities {
         color = ('000000' + color).slice(-6);
         color = '#' + color;
         return color;
-    }
-
-    public static random(min: number, max: number) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }

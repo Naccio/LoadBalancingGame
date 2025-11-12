@@ -1,5 +1,7 @@
 /// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../MathHelper.ts' />
 /// <reference path='../Model/Server.ts' />
+/// <reference path='../VectorMath.ts' />
 /// <reference path='AttackerFactory.ts' />
 /// <reference path='ClientFactory.ts' />
 /// <reference path='GameTracker.ts' />
@@ -51,77 +53,47 @@ class Scheduler {
     createServer(zone: string) {
         const width = this.canvas.width,
             height = this.canvas.height,
-            serverSize = Defaults.serverSize;
-        let minX, minY, maxX, maxY;
+            serverSize = Defaults.serverSize,
+            padding = { x: serverSize, y: serverSize },
+            zoneSize = { x: width / 3, y: height / 3 };
+        
+        let scale;
 
         switch (zone) {
             case 'nw':
-                minX = serverSize;
-                minY = serverSize;
-                maxX = width / 3;
-                maxY = height / 3;
+                scale = { x: 0, y: 0 };
                 break;
             case 'n':
-                minX = width / 3;
-                minY = serverSize;
-                maxX = width * 2 / 3;
-                maxY = height / 3;
+                scale = { x: 1, y: 0 };
                 break;
             case 'ne':
-                minX = width * 2 / 3;
-                minY = serverSize;
-                maxX = width - serverSize;
-                maxY = height / 3;
+                scale = { x: 2, y: 0 };
                 break;
             case 'w':
-                minX = serverSize;
-                minY = height / 3;
-                maxX = width / 3;
-                maxY = height * 2 / 3;
+                scale = { x: 0, y: 1 };
                 break;
             case 'c':
-                minX = width / 3;
-                minY = height / 3;
-                maxX = width * 2 / 3;
-                maxY = height * 2 / 3;
+                scale = { x: 1, y: 1 };
                 break;
             case 'e':
-                minX = width * 2 / 3;
-                minY = height / 3;
-                maxX = width - serverSize;
-                maxY = height * 2 / 3;
+                scale = { x: 2, y: 1 };
                 break;
             case 'sw':
-                minX = serverSize;
-                minY = height * 2 / 3;
-                maxX = width / 3;
-                maxY = height - serverSize;
+                scale = { x: 0, y: 2 };
                 break;
             case 's':
-                minX = width / 3;
-                minY = height * 2 / 3;
-                maxX = width * 2 / 3;
-                maxY = height - serverSize;
+                scale = { x: 1, y: 2 };
                 break;
             case 'se':
-                minX = width * 2 / 3;
-                minY = height * 2 / 3;
-                maxX = width - serverSize;
-                maxY = height - serverSize;
+                scale = { x: 2, y: 2 };
                 break;
             default:
                 throw `Invalid zone: ${zone}.`;
         }
 
-        const
-            min = {
-                x: minX,
-                y: minY
-            },
-            max = {
-                x: maxX,
-                y: maxY
-            },
+        const shift = VectorMath.hadamardProduct(zoneSize, scale),
+            min = VectorMath.add(VectorMath.zero, shift).add(padding),
+            max = VectorMath.add(zoneSize, shift).subtract(padding),
             position = this.getRandomPositionBounded(min, max);
 
         this.serverFactory.create(position);
@@ -129,7 +101,7 @@ class Scheduler {
 
     createClient() {
         const elapsedTime = this.game.elapsedTime,
-            messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100),
+            messages = MathHelper.randomInt(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100),
             position = this.getRandomPosition(Defaults.clientSize);
 
         this.clientFactory.create(position, messages);
@@ -187,7 +159,7 @@ class Scheduler {
             currentDistance = this.canvas.width;
 
         this.game.servers.forEach((server) => {
-            const newDistance = Utilities.getDistance(position, server.position);
+            const newDistance = VectorMath.distance(position, server.position);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;
                 closest = server;
@@ -216,8 +188,8 @@ class Scheduler {
         let x, y;
 
         do {
-            x = Utilities.random(min.x, max.x);
-            y = Utilities.random(min.y, max.y);
+            x = MathHelper.randomInt(min.x, max.x);
+            y = MathHelper.randomInt(min.y, max.y);
         } while (this.checkCollisions({ x, y }))
 
         return { x, y };

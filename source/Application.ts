@@ -154,12 +154,12 @@ class Application {
     }
 
     private createCloud(x: number, y: number) {
-        const w = Utilities.random(350, 500),
-            h = Utilities.random(w, 700),
-            circles = Utilities.random(15, 30),
-            n = Utilities.random(180, 255),
+        const w = MathHelper.random(350, 500),
+            h = MathHelper.random(w, 700),
+            circles = MathHelper.random(15, 30),
+            n = MathHelper.random(180, 255),
             color = { r: n, g: n, b: n, a: .1 },
-            speed = Utilities.random(100, 200);
+            speed = MathHelper.random(100, 200);
 
         this.clouds.add(x, y, w, h, circles, color, speed);
     }

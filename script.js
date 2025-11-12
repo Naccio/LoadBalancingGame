@@ -2,40 +2,29 @@
 class Message {
     sender;
     receiver;
+    speed;
     position;
-    dx;
-    dy;
     status;
     life;
     constructor(sender, receiver) {
         this.sender = sender;
         this.receiver = receiver;
         this.position = { ...sender.position };
-        this.dx = 0;
-        this.dy = 0;
-        this.sender = sender;
-        this.receiver = receiver;
         this.status = 'req';
         this.life = 0;
-        this.computeVelocity();
-    }
-    computeVelocity() {
-        const rp = this.receiver.position, p = this.position, xDiff = rp.x - p.x, yDiff = rp.y - p.y, angle = Math.atan2(yDiff, xDiff), v = Defaults.messageVelocity / Defaults.frameRate;
-        this.dx = Math.cos(angle) * v;
-        this.dy = Math.sin(angle) * v;
+        this.speed = VectorMath.direction(sender.position, receiver.position)
+            .multiply(Defaults.messageVelocity);
     }
     move() {
-        const p = this.position;
-        this.position = {
-            x: p.x + this.dx,
-            y: p.y + this.dy
-        };
+        this.position = this.speed
+            .divide(Defaults.frameRate)
+            .add(this.position);
     }
     invertDirection() {
         const tmp = this.sender;
         this.sender = this.receiver;
         this.receiver = tmp;
-        this.computeVelocity();
+        this.speed = this.speed.invert();
     }
     ;
 }
@@ -45,7 +34,6 @@ class MessageOrchestrator {
     avgResponseTime = 0;
     createMessage(sender, receiver) {
         const m = new Message(sender, receiver);
-        m.computeVelocity();
         this.messages.push(m);
     }
     registerAck(message) {
@@ -215,16 +203,16 @@ class Canvas {
         return this.context.createLinearGradient(x1, y1, x2, y2);
     }
     drawArrow(arrow) {
-        const context = this.context, from = arrow.from, to = arrow.to, x1 = from.x, y1 = from.y, x2 = to.x, y2 = to.y, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
+        const context = this.context, from = arrow.from, to = arrow.to, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, direction = VectorMath.direction(to, from), rightBarb = direction.rotate(barbsAngle).multiply(barbsLength).add(to), leftBarb = direction.rotate(-barbsAngle).multiply(barbsLength).add(to);
         context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
         context.lineWidth = arrow?.width ?? 1;
         context.lineJoin = 'round';
         context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
-        context.lineTo(rightBarbX, rightBarbY);
-        context.moveTo(x2, y2);
-        context.lineTo(leftBarbX, leftBarbY);
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.lineTo(rightBarb.x, rightBarb.y);
+        context.moveTo(to.x, to.y);
+        context.lineTo(leftBarb.x, leftBarb.y);
         context.stroke();
     }
     drawCircle(circle) {
@@ -259,21 +247,19 @@ class Canvas {
         this.draw(rectangle);
     }
     drawStar(star) {
-        const context = this.context, centerX = star.position.x, centerY = star.position.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
-        let x, y, rot = Math.PI / 2 * 3;
+        const context = this.context, center = star.position, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
+        let rot = Math.PI / 2 * 3;
         context.beginPath();
-        context.moveTo(centerX, centerY - outerRadius);
+        context.moveTo(center.x, center.y - outerRadius);
         for (let i = 0; i < spikes; i += 1) {
-            x = centerX + Math.cos(rot) * outerRadius;
-            y = centerY + Math.sin(rot) * outerRadius;
-            context.lineTo(x, y);
+            const outer = VectorMath.shift(center, rot, outerRadius);
+            context.lineTo(outer.x, outer.y);
             rot += step;
-            x = centerX + Math.cos(rot) * innerRadius;
-            y = centerY + Math.sin(rot) * innerRadius;
-            context.lineTo(x, y);
+            const inner = VectorMath.shift(center, rot, innerRadius);
+            context.lineTo(inner.x, inner.y);
             rot += step;
         }
-        context.lineTo(centerX, centerY - outerRadius);
+        context.lineTo(center.x, center.y - outerRadius);
         context.closePath();
         this.draw(star);
     }
@@ -514,10 +500,6 @@ class Utilities {
             });
         }
     }
-    static getDistance(p1, p2) {
-        var xs = p2.x - p1.x, ys = p2.y - p1.y;
-        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
-    }
     static invertColor(color) {
         color = color.substring(1);
         let colorNumber = parseInt(color, 16);
@@ -526,9 +508,6 @@ class Utilities {
         color = ('000000' + color).slice(-6);
         color = '#' + color;
         return color;
-    }
-    static random(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
 class UpgradesTracker {
@@ -889,6 +868,116 @@ class GameTracker {
         }
     }
 }
+class MathHelper {
+    static clamp(number, min, max) {
+        return Math.min(Math.max(number, min), max);
+    }
+    static nearestPower(x, base) {
+        return Math.pow(base, this.nearestRoot(x, base));
+    }
+    static nearestRoot(x, degree) {
+        return Math.ceil(Math.log(x) / Math.log(degree));
+    }
+    static random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+    static randomInt(min, max) {
+        return Math.floor(MathHelper.random(min, max));
+    }
+    static round(number, decimalPlaces) {
+        const multiplier = Math.pow(10, decimalPlaces);
+        return Math.round(number * multiplier) / multiplier;
+    }
+}
+class VectorMath {
+    static zero = {
+        x: 0,
+        y: 0
+    };
+    static add(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x + v2.x,
+            y: v1.y + v2.y
+        });
+    }
+    static angle(v1, v2) {
+        v1 = this.normalize(v1);
+        v2 = this.normalize(v2);
+        return Math.acos(this.dotProduct(v1, v2));
+    }
+    static clamp(v, min, max) {
+        return new VectorCalculator({
+            x: MathHelper.clamp(v.x, min, max),
+            y: MathHelper.clamp(v.y, min, max)
+        });
+    }
+    static direction(v1, v2) {
+        return this.subtract(v2, v1).normalize();
+    }
+    static distance(v1, v2) {
+        const d = this.subtract(v2, v1);
+        return Math.sqrt(Math.pow(d.x, 2) + Math.pow(d.y, 2));
+    }
+    static divide(v, number) {
+        return new VectorCalculator({
+            x: v.x / number,
+            y: v.y / number
+        });
+    }
+    static dotProduct(v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+    static hadamardProduct(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x * v2.x,
+            y: v1.y * v2.y
+        });
+    }
+    static invert(v) {
+        return this.multiply(v, -1);
+    }
+    static isEqual(v1, v2) {
+        return v1.x === v2.x && v1.y === v2.y;
+    }
+    static magnitude(v) {
+        return Math.sqrt(v.x * v.x + v.y * v.y);
+    }
+    static multiply(v, number) {
+        return new VectorCalculator({
+            x: v.x * number,
+            y: v.y * number
+        });
+    }
+    static normalize(v) {
+        const m = this.magnitude(v);
+        return this.divide(v, m);
+    }
+    static rotate(v, rad) {
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        return new VectorCalculator({
+            x: cos * v.x - sin * v.y,
+            y: sin * v.x + cos * v.y
+        });
+    }
+    static round(v, decimalPlaces) {
+        return new VectorCalculator({
+            x: MathHelper.round(v.x, decimalPlaces),
+            y: MathHelper.round(v.y, decimalPlaces)
+        });
+    }
+    static shift(v, direction, magnitude) {
+        return new VectorCalculator({
+            x: v.x + Math.cos(direction) * magnitude,
+            y: v.y + Math.sin(direction) * magnitude
+        });
+    }
+    static subtract(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x - v2.x,
+            y: v1.y - v2.y
+        });
+    }
+}
 class AttackerFactory {
     game;
     orchestrator;
@@ -969,97 +1058,55 @@ class Scheduler {
         this.timeLastClient = 1 - this.spawnRate;
     }
     createServer(zone) {
-        const width = this.canvas.width, height = this.canvas.height, serverSize = Defaults.serverSize;
-        let x, y, minX, minY, maxX, maxY;
+        const width = this.canvas.width, height = this.canvas.height, serverSize = Defaults.serverSize, padding = { x: serverSize, y: serverSize }, zoneSize = { x: width / 3, y: height / 3 };
+        let scale;
         switch (zone) {
             case 'nw':
-                minX = serverSize;
-                minY = serverSize;
-                maxX = width / 3;
-                maxY = height / 3;
+                scale = { x: 0, y: 0 };
                 break;
             case 'n':
-                minX = width / 3;
-                minY = serverSize;
-                maxX = width * 2 / 3;
-                maxY = height / 3;
+                scale = { x: 1, y: 0 };
                 break;
             case 'ne':
-                minX = width * 2 / 3;
-                minY = serverSize;
-                maxX = width - serverSize;
-                maxY = height / 3;
+                scale = { x: 2, y: 0 };
                 break;
             case 'w':
-                minX = serverSize;
-                minY = height / 3;
-                maxX = width / 3;
-                maxY = height * 2 / 3;
+                scale = { x: 0, y: 1 };
                 break;
             case 'c':
-                minX = width / 3;
-                minY = height / 3;
-                maxX = width * 2 / 3;
-                maxY = height * 2 / 3;
+                scale = { x: 1, y: 1 };
                 break;
             case 'e':
-                minX = width * 2 / 3;
-                minY = height / 3;
-                maxX = width - serverSize;
-                maxY = height * 2 / 3;
+                scale = { x: 2, y: 1 };
                 break;
             case 'sw':
-                minX = serverSize;
-                minY = height * 2 / 3;
-                maxX = width / 3;
-                maxY = height - serverSize;
+                scale = { x: 0, y: 2 };
                 break;
             case 's':
-                minX = width / 3;
-                minY = height * 2 / 3;
-                maxX = width * 2 / 3;
-                maxY = height - serverSize;
+                scale = { x: 1, y: 2 };
                 break;
             case 'se':
-                minX = width * 2 / 3;
-                minY = height * 2 / 3;
-                maxX = width - serverSize;
-                maxY = height - serverSize;
+                scale = { x: 2, y: 2 };
                 break;
             default:
                 throw `Invalid zone: ${zone}.`;
         }
-        x = Utilities.random(minX, maxX);
-        y = Utilities.random(minY, maxY);
-        while (this.checkCollisions({ x, y })) {
-            x = Utilities.random(minX, maxX);
-            y = Utilities.random(minY, maxY);
-        }
-        this.serverFactory.create({ x, y });
+        const shift = VectorMath.hadamardProduct(zoneSize, scale), min = VectorMath.add(VectorMath.zero, shift).add(padding), max = VectorMath.add(zoneSize, shift).subtract(padding), position = this.getRandomPositionBounded(min, max);
+        this.serverFactory.create(position);
     }
     ;
     createClient() {
-        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100);
-        let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
-        while (this.checkCollisions({ x, y })) {
-            x = Utilities.random(minX, maxX);
-            y = Utilities.random(minY, maxY);
-        }
-        this.clientFactory.create({ x, y }, messages);
+        const elapsedTime = this.game.elapsedTime, messages = MathHelper.randomInt(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100), position = this.getRandomPosition(Defaults.clientSize);
+        this.clientFactory.create(position, messages);
         this.timeLastClient = elapsedTime;
     }
     ;
     initiateDDoS() {
-        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, modifier = Math.floor(this.popularityTracker.popularity / 400), messages = this.attackersMessages + modifier, number = this.attackersNumber + modifier;
+        const elapsedTime = this.game.elapsedTime, modifier = Math.floor(this.popularityTracker.popularity / 400), messages = this.attackersMessages + modifier, number = this.attackersNumber + modifier;
         for (let i = 0; i < number; i += 1) {
-            let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
-            while (this.checkCollisions({ x, y })) {
-                x = Utilities.random(minX, maxX);
-                y = Utilities.random(minY, maxY);
-            }
-            const server = this.findClosestServer({ x, y });
+            const position = this.getRandomPosition(Defaults.clientSize), server = this.findClosestServer(position);
             if (server) {
-                this.attackerFactory.create({ x, y }, messages, server);
+                this.attackerFactory.create(position, messages, server);
             }
         }
         this.timeLastDDoS = elapsedTime;
@@ -1089,13 +1136,31 @@ class Scheduler {
     findClosestServer(position) {
         let closest, currentDistance = this.canvas.width;
         this.game.servers.forEach((server) => {
-            const newDistance = Utilities.getDistance(position, server.position);
+            const newDistance = VectorMath.distance(position, server.position);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;
                 closest = server;
             }
         });
         return closest;
+    }
+    getRandomPosition(size) {
+        const width = this.canvas.width, height = this.canvas.height, min = {
+            x: size,
+            y: size,
+        }, max = {
+            x: width - size,
+            y: height - size
+        };
+        return this.getRandomPositionBounded(min, max);
+    }
+    getRandomPositionBounded(min, max) {
+        let x, y;
+        do {
+            x = MathHelper.randomInt(min.x, max.x);
+            y = MathHelper.randomInt(min.y, max.y);
+        } while (this.checkCollisions({ x, y }));
+        return { x, y };
     }
 }
 class NewGame {
@@ -2108,14 +2173,7 @@ class ClientExplanation extends TutorialStep {
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, text = {
-            position: {
-                x: x + textSpacing + iconRadius,
-                y
-            },
-            fontSize: 10,
-            fontFamily: 'sans-serif'
-        };
+        const w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5;
         canvas.drawCircle({
             position: { x, y },
             radius: iconRadius,
@@ -2934,7 +2992,7 @@ class Application {
         }
     }
     createCloud(x, y) {
-        const w = Utilities.random(350, 500), h = Utilities.random(w, 700), circles = Utilities.random(15, 30), n = Utilities.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = Utilities.random(100, 200);
+        const w = MathHelper.random(350, 500), h = MathHelper.random(w, 700), circles = MathHelper.random(15, 30), n = MathHelper.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = MathHelper.random(100, 200);
         this.clouds.add(x, y, w, h, circles, color, speed);
     }
     drawButtons() {
@@ -2964,5 +3022,59 @@ class Application {
                     game.switchMode(Defaults.gameModes.GAME);
                 }
         }
+    }
+}
+class VectorCalculator {
+    v;
+    constructor(v) {
+        this.v = v;
+    }
+    get x() {
+        return this.v.x;
+    }
+    get y() {
+        return this.v.y;
+    }
+    add(v) {
+        return VectorMath.add(this, v);
+    }
+    angle(v) {
+        return VectorMath.angle(this, v);
+    }
+    clamp(min, max) {
+        return VectorMath.clamp(this, min, max);
+    }
+    direction(v) {
+        return VectorMath.direction(this, v);
+    }
+    divide(n) {
+        return VectorMath.divide(this, n);
+    }
+    dotProduct(v) {
+        return VectorMath.dotProduct(this, v);
+    }
+    invert() {
+        return VectorMath.invert(this);
+    }
+    isEqual(v) {
+        return VectorMath.isEqual(this, v);
+    }
+    magnitude() {
+        return VectorMath.magnitude(this);
+    }
+    multiply(n) {
+        return VectorMath.multiply(this, n);
+    }
+    normalize() {
+        return VectorMath.normalize(this);
+    }
+    rotate(rad) {
+        return VectorMath.rotate(this, rad);
+    }
+    round(places) {
+        return VectorMath.round(this, places);
+    }
+    subtract(v) {
+        return VectorMath.subtract(this, v);
     }
 }
