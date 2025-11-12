@@ -31,16 +31,16 @@ class Pause implements Scene {
             y = h / 2 + 150;
 
         this.buttons = [
-            Utilities.defaultButton(w / 2, 150, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
-            Utilities.defaultButton(w / 2, 210, 'New game', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, 270, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
+            Utilities.defaultButton({ x: w / 2, y: 150 }, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
+            Utilities.defaultButton({ x: w / 2, y: 210 }, 'New game', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: 270 }, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
             ui.volumeButton
         ];
 
         this.upgradeButtons = [
-            new ServerUpgradeButton(250, y, () => this.selectUpgrade('server')),
-            new CapacityUpgradeButton(w / 2, y, () => this.selectUpgrade('capacity')),
-            new SpeedUpgradeButton(w - 250, y, () => this.selectUpgrade('speed'))
+            new ServerUpgradeButton({ x: 250, y }, () => this.selectUpgrade('server')),
+            new CapacityUpgradeButton({ x: w / 2, y }, () => this.selectUpgrade('capacity')),
+            new SpeedUpgradeButton({ x: w - 250, y }, () => this.selectUpgrade('speed'))
         ];
     }
 
@@ -60,8 +60,10 @@ class Pause implements Scene {
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             this.canvas.drawText({
-                x,
-                y: h / 2 + 60,
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
@@ -69,8 +71,10 @@ class Pause implements Scene {
             });
         } else {
             this.canvas.drawText({
-                x,
-                y: h / 2 + 60,
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
@@ -79,8 +83,10 @@ class Pause implements Scene {
         }
 
         this.canvas.drawText({
-            x,
-            y: 60,
+            position: {
+                x,
+                y: 60
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',

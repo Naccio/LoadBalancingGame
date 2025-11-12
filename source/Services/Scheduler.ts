@@ -115,12 +115,12 @@ class Scheduler {
 
         x = Utilities.random(minX, maxX);
         y = Utilities.random(minY, maxY);
-        while (this.checkCollisions(x, y)) {
+        while (this.checkCollisions({ x, y })) {
             x = Utilities.random(minX, maxX);
             y = Utilities.random(minY, maxY);
         }
 
-        this.serverFactory.create(x, y);
+        this.serverFactory.create({ x, y });
     };
 
     createClient() {
@@ -136,12 +136,12 @@ class Scheduler {
 
         let x = Utilities.random(minX, maxX),
             y = Utilities.random(minY, maxY);
-        while (this.checkCollisions(x, y)) {
+        while (this.checkCollisions({ x, y })) {
             x = Utilities.random(minX, maxX);
             y = Utilities.random(minY, maxY);
         }
 
-        this.clientFactory.create(x, y, messages);
+        this.clientFactory.create({ x, y }, messages);
         this.timeLastClient = elapsedTime;
     };
 
@@ -161,54 +161,55 @@ class Scheduler {
         for (let i = 0; i < number; i += 1) {
             let x = Utilities.random(minX, maxX),
                 y = Utilities.random(minY, maxY);
-            while (this.checkCollisions(x, y)) {
+            while (this.checkCollisions({ x, y })) {
                 x = Utilities.random(minX, maxX);
                 y = Utilities.random(minY, maxY);
             }
 
-            const server = this.findClosestServer(x, y);
+            const server = this.findClosestServer({ x, y });
 
             if (server) {
-                this.attackerFactory.create(x, y, messages, server);
+                this.attackerFactory.create({ x, y }, messages, server);
             }
         }
 
         this.timeLastDDoS = elapsedTime;
     };
 
-    private checkCollisions(x: number, y: number) {
+    private checkCollisions(position: Point) {
         const serverSize = Defaults.serverSize,
             clientSize = Defaults.clientSize,
             servers = this.game.servers,
             clients = this.game.clients,
-            attackers = this.game.attackers;
+            attackers = this.game.attackers,
+            { x, y } = position;
 
         for (let i = 0; i < servers.length; i += 1) {
-            const s = servers[i];
-            if (Math.abs(x - s.x) < serverSize && Math.abs(y - s.y) < 2 * serverSize) {
+            const p = servers[i].position;
+            if (Math.abs(x - p.x) < serverSize && Math.abs(y - p.y) < 2 * serverSize) {
                 return true;
             }
         }
         for (let i = 0; i < clients.length; i += 1) {
-            const c = clients[i];
-            if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
+            const p = clients[i].position;
+            if (Math.abs(x - p.x) < clientSize && Math.abs(y - p.y) < clientSize) {
                 return true;
             }
         }
         for (let i = 0; i < attackers.length; i += 1) {
-            const a = attackers[i];
-            if (Math.abs(x - a.x) < clientSize && Math.abs(y - a.y) < clientSize) {
+            const p = attackers[i].position;
+            if (Math.abs(x - p.x) < clientSize && Math.abs(y - p.y) < clientSize) {
                 return true;
             }
         }
     }
 
-    private findClosestServer(x: number, y: number) {
+    private findClosestServer(position: Point) {
         let closest,
             currentDistance = this.canvas.width;
 
         this.game.servers.forEach((server) => {
-            const newDistance = Utilities.getDistance(x, y, server.x, server.y);
+            const newDistance = Utilities.getDistance(position, server.position);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;
                 closest = server;

@@ -27,8 +27,8 @@ class GameOver implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            Utilities.defaultButton(w / 2, h - 110, 'Restart', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, h - 60, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
+            Utilities.defaultButton({ x: w / 2, y: h - 110 }, 'Restart', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: h - 60 }, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
 
@@ -42,8 +42,10 @@ class GameOver implements Scene {
 
         this.clouds.draw();
         this.canvas.drawText({
-            x: w / 2,
-            y: 100,
+            position: {
+                x: w / 2,
+                y: 100
+            },
             text: 'Game Over',
             fontSize: 60,
             fontVariant: 'small-caps',
@@ -58,16 +60,20 @@ class GameOver implements Scene {
 
         const fontSize = 30;
         this.canvas.drawText({
-            x: w / 2 + 68,
-            y: h / 2 + 50,
+            position: {
+                x: w / 2 + 68,
+                y: h / 2 + 50
+            },
             text: 'Popularity:',
             fontSize,
             align: 'end',
             color: this.color
         });
         this.canvas.drawText({
-            x: w / 2 + 75,
-            y: h / 2 + 50,
+            position: {
+                x: w / 2 + 75,
+                y: h / 2 + 50
+            },
             text: this.popularity.popularity.toString(),
             fontSize,
             align: 'start',
@@ -75,10 +81,14 @@ class GameOver implements Scene {
         });
 
         this.canvas.drawLine({
-            x1: w / 2 - 130,
-            y1: h / 2 + 20,
-            x2: w / 2 + 130,
-            y2: h / 2 + 20,
+            from: {
+                x: w / 2 - 130,
+                y: h / 2 + 20
+            },
+            to: {
+                x: w / 2 + 130,
+                y: h / 2 + 20
+            },
             color: Defaults.accentColor
         });
     }
@@ -94,8 +104,10 @@ class GameOver implements Scene {
         const x = this.canvas.width / 2 + 80;
 
         this.canvas.drawText({
-            x,
-            y,
+            position: {
+                x,
+                y
+            },
             text: text + ':',
             fontSize: 15,
             align: 'end',
@@ -107,8 +119,10 @@ class GameOver implements Scene {
         const x = this.canvas.width / 2 + 90;
 
         this.canvas.drawText({
-            x,
-            y,
+            position: {
+                x,
+                y
+            },
             text: value.toString(),
             fontSize: 15,
             align: 'start',

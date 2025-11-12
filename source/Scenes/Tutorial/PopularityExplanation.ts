@@ -31,11 +31,15 @@ class PopularityExplanation extends TutorialStep {
     }
 
     draw() {
-        const h = this.canvas.height;
+        const h = this.canvas.height,
+            position = {
+                x: 70,
+                y: h - 95
+            };
 
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
 
-        Utilities.drawCircleHighlight(70, h - 95, 67, this.canvas);
+        Utilities.drawCircleHighlight(position, 67, this.canvas);
     }
 }

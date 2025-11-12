@@ -1,11 +1,11 @@
+/// <reference path='../Model/Point.ts' />
 /// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='Button.ts' />
 
 class SimpleButton implements Button {
     constructor(
-        public x: number,
-        public y: number,
+        public position: Point,
         public width: number,
         public height: number,
         public text: string,
@@ -16,8 +16,7 @@ class SimpleButton implements Button {
         const color = hovered ? Utilities.invertColor(this.color) : this.color;
 
         canvas.drawRect({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             width: this.width,
             height: this.height,
             color: hovered ? this.color : undefined,
@@ -25,8 +24,7 @@ class SimpleButton implements Button {
             borderWidth: 2
         });
         canvas.drawText({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             text: this.text,
             fontSize: 15,
             align: 'center',

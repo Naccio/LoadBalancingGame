@@ -85,7 +85,7 @@ class Application {
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui, orchestrator);
         const attackerFactory = new AttackerFactory(game, orchestrator);
-        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
+        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker);
         const serverFactory = new ServerFactory(game);
         const cursor = new CursorTracker(game, canvasElement, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
@@ -165,15 +165,15 @@ class Application {
     }
 
     private drawButtons() {
-        const mouseX = this.cursor.mouseX,
-            mouseY = this.cursor.mouseY;
+        const mp = this.cursor.mousePosition;
 
         this.ui.buttons.forEach((button) => {
-            const hovered =
-                mouseX > button.x - (button.width + 2) / 2 &&
-                mouseX < button.x + (button.width + 2) / 2 &&
-                mouseY > button.y - (button.height + 4) / 2 &&
-                mouseY < button.y + (button.height + 2) / 2;
+            const bp = button.position,
+                hovered =
+                    mp.x > bp.x - (button.width + 2) / 2 &&
+                    mp.x < bp.x + (button.width + 2) / 2 &&
+                    mp.y > bp.y - (button.height + 4) / 2 &&
+                    mp.y < bp.y + (button.height + 2) / 2;
 
             button.draw(hovered, this.canvas);
         });

@@ -25,9 +25,12 @@ class SpeedUpgradeExample extends TutorialStep {
             y = h / 2 + 150;
 
         this.extraButtons = [
-            new ServerUpgradeButton(250, y),
-            new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y, () => {
+            new ServerUpgradeButton({ x: 250, y }),
+            new CapacityUpgradeButton({ x: w / 2, y }),
+            new SpeedUpgradeButton({
+                x: w - 250,
+                y
+            }, () => {
                 this.game.servers[0].speed += Defaults.serverSpeed;
                 this.advance = true;
             })
@@ -43,22 +46,25 @@ class SpeedUpgradeExample extends TutorialStep {
             h = this.canvas.height;
 
         this.canvas.drawRect({
-            x: w / 2,
-            y: h / 2,
+            position: this.canvas.center,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: h / 2 + 60,
+            position: {
+                x: w / 2,
+                y: h / 2 + 60
+            },
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: h / 3,
+            position: {
+                x: w / 2,
+                y: h / 3
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',

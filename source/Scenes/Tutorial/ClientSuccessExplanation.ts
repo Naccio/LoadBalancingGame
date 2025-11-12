@@ -51,11 +51,15 @@ class ClientSuccessExplanation extends TutorialStep {
     draw() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            serverSize = Defaults.serverSize;
+            serverSize = Defaults.serverSize,
+            position = {
+                x: w / 2 - serverSize / 2 + 7,
+                y: h / 2 + serverSize / 4
+            };
 
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, this.canvas);
+        Utilities.drawCircleHighlight(position, 15, this.canvas);
     }
 }

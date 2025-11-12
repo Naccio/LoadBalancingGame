@@ -1,14 +1,15 @@
-class Message {
-    public x: number;
-    public y: number;
+/// <reference path='GameObject.ts' />
+/// <reference path='Point.ts' />
+
+class Message implements GameObject {
+    public position: Point;
     public dx: number;
     public dy: number;
     public status: 'req' | 'ack' | 'nack' | 'queued' | 'done';
     public life: number;
 
     constructor(public sender: MessageTransmitter, public receiver: MessageTransmitter) {
-        this.x = sender.x;
-        this.y = sender.y;
+        this.position = { ...sender.position };
         this.dx = 0;
         this.dy = 0;
         this.sender = sender;
@@ -19,18 +20,24 @@ class Message {
     }
 
     computeVelocity() {
-        var xDiff = this.receiver.x - this.x,
-            yDiff = this.receiver.y - this.y,
+        const rp = this.receiver.position,
+            p = this.position,
+            xDiff = rp.x - p.x,
+            yDiff = rp.y - p.y,
             angle = Math.atan2(yDiff, xDiff),
             v = Defaults.messageVelocity / Defaults.frameRate;
         this.dx = Math.cos(angle) * v;
         this.dy = Math.sin(angle) * v;
-    };
+    }
 
     move() {
-        this.x += this.dx;
-        this.y += this.dy;
-    };
+        const p = this.position;
+
+        this.position = {
+            x: p.x + this.dx,
+            y: p.y + this.dy
+        };
+    }
 
     invertDirection() {
         const tmp = this.sender;

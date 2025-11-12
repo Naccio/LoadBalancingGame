@@ -54,8 +54,8 @@ class ConnectMoreClients extends TutorialStep {
     private spawnClients() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            client1 = this.clientFactory.create(w / 4, h / 4, 10000),
-            client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
+            client1 = this.clientFactory.create({ x: w / 4, y: h / 4 }, 10000),
+            client2 = this.clientFactory.create({ x: w / 4, y: h * 3 / 4 }, 10000);
 
         client1.life = - 21;
         client2.life = - 21;

@@ -31,8 +31,14 @@ class Tutorial implements Scene {
 
         this.currentStep = steps[0];
         this.currentStepIndex = 0;
-        this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
-        this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = Utilities.defaultButton({
+            x: w / 3,
+            y: h - 40
+        }, 'Next', () => this.advance());
+        this.homeButton = Utilities.defaultButton({
+            x: w * 2 / 3,
+            y: h - 40
+        }, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
 
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));
@@ -57,8 +63,6 @@ class Tutorial implements Scene {
             h = this.canvas.height,
             texts = this.currentStep.texts,
             rectangle = {
-                x: w / 2,
-                y: 0,
                 width: w,
                 height: 80,
                 color: Defaults.backgroundColor,
@@ -68,12 +72,20 @@ class Tutorial implements Scene {
         this.canvas.clear();
         this.gameArea.draw();
         this.fader.draw();
-        this.canvas.drawRect({ ...rectangle, y: 40 });
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: 40
+            },
+            ...rectangle
+        });
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
             this.canvas.drawText({
-                x: w / 2,
-                y: 18 + 20 * i,
+                position: {
+                    x: w / 2,
+                    y: 18 + 20 * i
+                },
                 text,
                 fontWeight: 'bold',
                 fontSize: 18,
@@ -81,7 +93,13 @@ class Tutorial implements Scene {
                 color: Defaults.primaryColor
             });
         }
-        this.canvas.drawRect({ ...rectangle, y: h - 40 });
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: h - 40
+            },
+            ...rectangle
+        });
         this.currentStep.draw();
     }
 
@@ -98,6 +116,7 @@ class Tutorial implements Scene {
         this.game.reset();
         this.orchestrator.reset();
         this.fader.emptyQueues();
+        this.currentStepIndex = 0;
         this.currentStep = this.steps[0];
         this.currentStep.setup();
         this.game.switchMode(Defaults.gameModes.TUTORIAL);

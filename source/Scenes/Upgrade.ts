@@ -25,7 +25,7 @@ class Upgrade implements Scene {
     getButtons() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
+            button = Utilities.defaultButton({ x: w / 2, y: h - 100 }, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
 
         button.color = Defaults.secondaryColor;
 
@@ -73,8 +73,10 @@ class Upgrade implements Scene {
                 break;
         }
         this.canvas.drawText({
-            x: w / 2,
-            y: 60,
+            position: {
+                x: w / 2,
+                y: 60
+            },
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
@@ -89,7 +91,7 @@ class Upgrade implements Scene {
             h = this.canvas.height,
             borderWidth = Defaults.highlightWidth;
 
-        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton({ x, y }, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
@@ -99,7 +101,7 @@ class Upgrade implements Scene {
         const borderWidth = Defaults.highlightWidth,
             size = Defaults.serverSize + borderWidth;
 
-        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton(server.position, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });

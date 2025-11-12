@@ -25,7 +25,10 @@ class TutorialFinished extends TutorialStep {
         this.hasHome = true;
 
         this.extraButtons = [
-            Utilities.defaultButton(w / 3, h - 40, 'New game', () => newGame.execute())
+            Utilities.defaultButton({
+                x: w / 3,
+                y: h - 40
+            }, 'New game', () => newGame.execute())
         ]
     }
 

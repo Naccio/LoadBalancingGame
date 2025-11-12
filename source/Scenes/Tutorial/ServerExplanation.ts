@@ -16,9 +16,6 @@ class ServerExplanation extends TutorialStep {
     }
 
     draw() {
-        const w = this.canvas.width,
-            h = this.canvas.height;
-
-        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, this.canvas);
+        Utilities.drawCircleHighlight(this.canvas.center, Defaults.serverSize + 9, this.canvas);
     }
 }

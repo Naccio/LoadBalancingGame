@@ -10,48 +10,59 @@ class TutorialHelper {
             iconRadius = 3,
             textSpacing = 2,
             lineSpacing = iconRadius + 5,
-            circle = {
-                x,
-                y,
-                radius: iconRadius
-            },
             text = {
-                x: x + textSpacing + iconRadius,
-                y,
+                position: {
+                    x: x + textSpacing + iconRadius,
+                    y
+                },
                 fontSize: 10,
                 fontFamily: 'sans-serif'
             };
 
         canvas.drawCircle({
-            ...circle,
+            position: { x, y },
+            radius: iconRadius,
             color: Defaults.messageReqColor,
             borderColor: Defaults.messageReqBorderColor
         });
         canvas.drawText({
-            ...text,
+            position: {
+                x: x + textSpacing + iconRadius,
+                y
+            },
+            fontSize: 10,
+            fontFamily: 'sans-serif',
             text: ': Request'
         });
         canvas.drawCircle({
-            ...circle,
-            y: y + lineSpacing,
+            position: { x, y: y + lineSpacing },
+            radius: iconRadius,
             color: Defaults.messageAckColor,
             borderColor: Defaults.messageAckBorderColor
         });
         canvas.drawText({
-            ...text,
-            y: y + lineSpacing,
+            position: {
+                x: x + textSpacing + iconRadius,
+                y: y + lineSpacing
+            },
+            fontSize: 10,
+            fontFamily: 'sans-serif',
             text: ': Response (+1)'
         });
         if (includeNACK) {
             canvas.drawCircle({
-                ...circle,
-                y: y + lineSpacing * 2,
+                position: { x, y: y + lineSpacing * 2 },
+                radius: iconRadius,
                 color: Defaults.messageNackColor,
                 borderColor: Defaults.messageNackBorderColor
             });
             canvas.drawText({
-                ...text,
-                y: y + lineSpacing * 2,
+                position: {
+                    x: x + textSpacing + iconRadius,
+                    y: y + lineSpacing * 2
+                },
+                fontSize: 10,
+                fontFamily: 'sans-serif',
                 text: ': Datacenter busy (-1)'
             });
         }

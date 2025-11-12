@@ -1,4 +1,5 @@
 /// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../Model/Point.ts' />
 /// <reference path='../UI/Button.ts' />
 /// <reference path='../Utilities.ts' />
 
@@ -6,7 +7,7 @@ abstract class UpgradeButton implements Button {
     public width: number;
     public height: number;
 
-    constructor(public x: number, public y: number, private text: string, onClick?: () => void) {
+    constructor(public position: Point, private text: string, onClick?: () => void) {
         this.width = 100;
         this.height = 100;
 
@@ -21,8 +22,7 @@ abstract class UpgradeButton implements Button {
 
     draw(hovered: boolean, canvas: Canvas) {
         canvas.drawRect({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             width: this.width,
             height: this.height,
             color: Defaults.secondaryColor,
@@ -34,8 +34,10 @@ abstract class UpgradeButton implements Button {
 
         if (hovered) {
             canvas.drawText({
-                x: canvas.width / 2,
-                y: canvas.height - 50,
+                position: {
+                    x: canvas.width / 2,
+                    y: canvas.height - 50
+                },
                 text: this.text,
                 fontSize: 20,
                 align: 'center',

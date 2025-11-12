@@ -13,9 +13,14 @@ class Credits implements Scene {
         const w = canvas.width,
             h = canvas.height;
 
-        this.buttons = [Utilities.defaultButton(w / 2, h - 60, 'Back', () => {
-            game.switchMode(Defaults.gameModes.MENU);
-        })];
+        this.buttons = [Utilities.defaultButton({
+            x: w / 2,
+            y: h - 60
+        },
+            'Back',
+            () => {
+                game.switchMode(Defaults.gameModes.MENU);
+            })];
     }
 
     getButtons() {
@@ -43,8 +48,10 @@ class Credits implements Scene {
         const w = this.canvas.width;
 
         this.canvas.drawRect({
-            x: w / 2,
-            y,
+            position: {
+                x: w / 2,
+                y
+            },
             width: w,
             height: 100,
             color: Defaults.secondaryColorTransparent,
@@ -68,8 +75,10 @@ class Credits implements Scene {
         const w = this.canvas.width;
 
         this.canvas.drawText({
-            x: w / 2,
-            y,
+            position: {
+                x: w / 2,
+                y
+            },
             text,
             fontSize,
             fontWeight,

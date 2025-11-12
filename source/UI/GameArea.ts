@@ -24,21 +24,18 @@ class GameArea {
     ) { }
 
     draw() {
-        const sc = this.game.selectedClient;
+        const position = this.game.selectedClient?.position;
 
         //draw a line connecting the selected client to the mouse pointer
-        if (sc !== undefined) {
+        if (position !== undefined) {
             this.canvas.drawLine({
-                x1: sc.x,
-                y1: sc.y,
-                x2: this.cursor.mouseX,
-                y2: this.cursor.mouseY,
+                from: position,
+                to: this.cursor.mousePosition,
                 color: Defaults.highlightColor,
                 width: Defaults.highlightWidth
             });
             this.canvas.drawCircle({
-                x: sc.x,
-                y: sc.y,
+                position,
                 radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
                 color: Defaults.highlightColor
             });
@@ -83,8 +80,10 @@ class GameArea {
 
         //bottom center
         this.canvas.drawText({
-            x: w / 2,
-            y: h - 14,
+            position: {
+                x: w / 2,
+                y: h - 14
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
@@ -95,8 +94,10 @@ class GameArea {
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
-                x: w / 2,
-                y: h - 35,
+                position: {
+                    x: w / 2,
+                    y: h - 35
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgrade',
@@ -131,8 +132,10 @@ class GameArea {
             color = Defaults.dangerColor;
         }
         this.canvas.drawText({
-            x: w - 10,
-            y: h - 14,
+            position: {
+                x: w - 10,
+                y: h - 14
+            },
             text,
             fontSize: 18,
             fontFamily: 'sans-serif',
@@ -144,12 +147,10 @@ class GameArea {
 
     private drawAttacker(attacker: Attacker) {
         const size = Defaults.clientSize,
-            x = attacker.x,
-            y = attacker.y;
+            position = attacker.position;
 
         this.canvas.drawTriangle({
-            x,
-            y,
+            position,
             base: size * 2 / Math.sqrt(3),
             height: size,
             color: Defaults.attackerColor,
@@ -157,8 +158,10 @@ class GameArea {
             borderWidth: 2
         });
         this.canvas.drawText({
-            x,
-            y: y + 8,
+            position: {
+                x: position.x,
+                y: position.y + 8
+            },
             text: 'DoS',
             fontWeight: 'bold',
             fontSize: 9,
@@ -171,11 +174,9 @@ class GameArea {
     private drawClient(client: Client) {
         const clientSize = Defaults.clientSize,
             maxClientWaitTime = Defaults.maxClientWaitTime,
-            x = client.x,
-            y = client.y,
+            position = client.position,
             circle = {
-                x,
-                y,
+                position,
                 radius: clientSize / 2,
                 color: Defaults.clientColor,
                 borderColor: Defaults.clientBorderColor
@@ -199,8 +200,7 @@ class GameArea {
             }
 
             this.canvas.drawText({
-                x,
-                y,
+                position,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
                 fontWeight: 'bold',
                 fontSize: 15,
@@ -217,10 +217,8 @@ class GameArea {
     private drawConnection(t: MessageTransmitter, color: string) {
         if (t.connectedTo) {
             this.canvas.drawLine({
-                x1: t.x,
-                y1: t.y,
-                x2: t.connectedTo.x,
-                y2: t.connectedTo.y,
+                from: t.position,
+                to: t.connectedTo.position,
                 color
             });
         }
@@ -250,8 +248,7 @@ class GameArea {
         }
 
         this.canvas.drawCircle({
-            x: message.x,
-            y: message.y,
+            position: message.position,
             radius: Defaults.messageSize / 2,
             color,
             borderColor

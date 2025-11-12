@@ -10,10 +10,12 @@ class GameUI {
     constructor(music: HTMLAudioElement, canvas: Canvas) {
         const w = canvas.width,
             h = canvas.height,
-            x = w - 40,
-            y = h - 40;
+            p = {
+                x: w - 40,
+                y: h - 40
+            };
 
-        this.volumeButton = new VolumeButton(x, y, 20, () => {
+        this.volumeButton = new VolumeButton(p, 20, () => {
             if (music.paused) {
                 music.play();
             } else {
@@ -25,8 +27,9 @@ class GameUI {
 
     click(x: number, y: number) {
         this.buttons.some((button) => {
-            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
+            const p = button.position;
+            if (x > p.x - button.width / 2 && x < p.x + button.width / 2 &&
+                y > p.y - button.height / 2 && y < p.y + button.height / 2) {
                 button.onClick();
                 return true;
             }

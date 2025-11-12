@@ -93,7 +93,7 @@ class GameTracker {
                         this.selectedClient = undefined;
                     }
                     this.failedConnections += 1;
-                    this.popularityTracker.updatePopularity(-10, c.x, c.y);
+                    this.popularityTracker.updatePopularity(c, -10);
                 }
             } else {
                 if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {

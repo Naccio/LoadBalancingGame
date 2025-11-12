@@ -1,4 +1,5 @@
+/// <reference path='Point.ts' />
+
 interface GameObject {
-    x: number;
-    y: number;
+    position: Point;
 }

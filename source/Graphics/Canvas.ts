@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Model/Point.ts' />
 /// <reference path='../UI/UIText.ts' />
 /// <reference path='Arrow.ts' />
 /// <reference path='Circle.ts' />
@@ -21,6 +22,13 @@ class Canvas {
         this.context = context;
     }
 
+    public get center(): Point {
+        return {
+            x: this.width / 2,
+            y: this.height / 2
+        }
+    }
+
     public get height() {
         return this.canvasElement.height;
     }
@@ -40,10 +48,12 @@ class Canvas {
 
     public drawArrow(arrow: Arrow) {
         const context = this.context,
-            x1 = arrow.x1,
-            y1 = arrow.y1,
-            x2 = arrow.x2,
-            y2 = arrow.y2,
+            from = arrow.from,
+            to = arrow.to,
+            x1 = from.x,
+            y1 = from.y,
+            x2 = to.x,
+            y2 = to.y,
             angle = Math.atan2(y2 - y1, x2 - x1),
             inverseAngle = Math.PI - angle,
             barbsAngle = arrow.barbsAngle ?? Math.PI / 5,
@@ -68,29 +78,32 @@ class Canvas {
     }
 
     public drawCircle(circle: Circle) {
-        const context = this.context;
+        const context = this.context,
+            p = circle.position;
 
         context.beginPath();
-        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
+        context.arc(p.x, p.y, circle.radius, 0, Math.PI * 2, true);
         context.closePath();
 
         this.draw(circle);
     }
 
     public drawLine(line: Line) {
-        const context = this.context;
+        const context = this.context,
+            from = line.from,
+            to = line.to;
 
         context.strokeStyle = line?.color ?? Defaults.defaultColor;
         context.lineWidth = line?.width ?? 1;
         context.beginPath();
-        context.moveTo(line.x1, line.y1);
-        context.lineTo(line.x2, line.y2);
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
         context.stroke();
     }
 
     public drawPolygon(polygon: Polygon) {
         const context = this.context,
-            points = polygon.points,
+            points = [...polygon.points],
             start = points.shift()!;
 
         context.beginPath();
@@ -103,13 +116,12 @@ class Canvas {
 
     public drawRect(rectangle: Rectangle) {
         const context = this.context,
-            x = rectangle.x,
-            y = rectangle.y,
+            p = rectangle.position,
             w = rectangle.width,
             h = rectangle.height;
 
         context.beginPath();
-        context.rect(x - w / 2, y - h / 2, w, h);
+        context.rect(p.x - w / 2, p.y - h / 2, w, h);
         context.closePath();
 
         this.draw(rectangle);
@@ -117,8 +129,8 @@ class Canvas {
 
     public drawStar(star: Star) {
         const context = this.context,
-            centerX = star.x,
-            centerY = star.y,
+            centerX = star.position.x,
+            centerY = star.position.y,
             spikes = star.spikes ?? 5,
             outerRadius = star.outerRadius,
             innerRadius = star.innerRadius,
@@ -149,6 +161,7 @@ class Canvas {
 
     public drawText(text: UIText) {
         const context = this.context,
+            p = text.position,
             fontFamily = text.fontFamily ?? 'monospace';
 
         let font = `${text.fontSize}px ${fontFamily}`;
@@ -165,13 +178,13 @@ class Canvas {
         context.textAlign = text.align ?? 'start';
         context.textBaseline = text.baseline ?? 'middle';
         context.fillStyle = text.color ?? Defaults.defaultColor;
-        context.fillText(text.text, text.x, text.y);
+        context.fillText(text.text, p.x, p.y);
     }
 
     public drawTriangle(triangle: Triangle) {
         const context = this.context,
-            x = triangle.x,
-            y = triangle.y,
+            x = triangle.position.x,
+            y = triangle.position.y,
             b = triangle.base,
             h = triangle.height;
 

@@ -28,8 +28,10 @@ class UpgradesIntroduction extends TutorialStep {
         const w = this.canvas.width,
             h = this.canvas.height,
             text = {
-                x: w / 2,
-                y: h - 116,
+                position: {
+                    x: w / 2,
+                    y: h - 116
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgradeTut',
@@ -54,8 +56,10 @@ class UpgradesIntroduction extends TutorialStep {
         TutorialHelper.drawLegend(this.canvas, true);
 
         this.canvas.drawText({
-            x: w / 2,
-            y: h - 95,
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',

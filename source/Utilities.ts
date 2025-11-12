@@ -1,17 +1,17 @@
+/// <reference path='Model/Point.ts' />
 /// <reference path='Model/ServerOptions.ts' />
 /// <reference path='Graphics/Canvas.ts' />
 
 class Utilities {
 
-    public static defaultButton(x: number, y: number, text: string, onClick: () => void) {
-        return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
+    public static defaultButton(position: Point, text: string, onClick: () => void) {
+        return new SimpleButton(position, 120, 40, text, Defaults.primaryColor, onClick);
     }
 
-    public static drawCircleHighlight(x: number, y: number, radius: number, canvas: Canvas) {
+    public static drawCircleHighlight(position: Point, radius: number, canvas: Canvas) {
         const
             innerCircle = {
-                x,
-                y,
+                position,
                 radius,
                 borderColor: 'fireBrick',
                 borderWidth: 2
@@ -30,14 +30,17 @@ class Utilities {
             ...Defaults.serverDefaults,
             ...options
         };
-        const size = options.size!;
+        const size = options.size!,
+            p = server.position;
 
         let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
 
         for (; i > -1; i -= 1) {
             canvas.drawRect({
-                x: server.x + 3 * i,
-                y: server.y - 3 * i,
+                position: {
+                    x: p.x + 3 * i,
+                    y: p.y - 3 * i
+                },
                 width: size,
                 height: size,
                 color: options.color,
@@ -49,8 +52,8 @@ class Utilities {
         const speed = Defaults.serverSpeed,
             queueWidth = 5,
             queueHeight = size - 10,
-            queueX = server.x + size / 2 - 7,
-            queueY = server.y + 1,
+            queueX = p.x + size / 2 - 7,
+            queueY = p.y + 1,
             fillPercentage = (server.queue.length / server.capacity) * 100,
             gradientWidth = 5,
             gradientHeight = fillPercentage * queueHeight / 100,
@@ -58,8 +61,10 @@ class Utilities {
             gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
 
         canvas.drawRect({
-            x: queueX,
-            y: queueY,
+            position: {
+                x: queueX,
+                y: queueY
+            },
             width: queueWidth + 2,
             height: queueHeight + 2,
             color: options.queueColor,
@@ -70,8 +75,10 @@ class Utilities {
         gradient.addColorStop(0.5, Defaults.successColor);
         gradient.addColorStop(1, Defaults.dangerColor);
         canvas.drawRect({
-            x: gradientX,
-            y: gradientY,
+            position: {
+                x: gradientX,
+                y: gradientY
+            },
             width: gradientWidth,
             height: gradientHeight,
             color: gradient
@@ -79,11 +86,14 @@ class Utilities {
 
         //draw server's speed
         for (i = server.speed; i > 0; i -= speed) {
-            const starX = server.x - size / 2 + 7,
-                starY = server.y + size / 2 - 4 - 5 * (i / speed)
+            const starX = p.x - size / 2 + 7,
+                starY = p.y + size / 2 - 4 - 5 * (i / speed);
+
             canvas.drawStar({
-                x: starX,
-                y: starY,
+                position: {
+                    x: starX,
+                    y: starY
+                },
                 outerRadius: 4,
                 innerRadius: 2,
                 color: options.speedColor,
@@ -92,9 +102,9 @@ class Utilities {
         }
     }
 
-    public static getDistance(x1: number, y1: number, x2: number, y2: number) {
-        var xs = x2 - x1,
-            ys = y2 - y1;
+    public static getDistance(p1: Point, p2: Point) {
+        var xs = p2.x - p1.x,
+            ys = p2.y - p1.y;
 
         return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
     }

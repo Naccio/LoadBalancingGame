@@ -18,9 +18,7 @@ class Welcome extends TutorialStep {
     }
 
     setup() {
-        const w = this.canvas.width,
-            h = this.canvas.height,
-            server = this.serverFactory.create(w / 2, h / 2);
+        const server = this.serverFactory.create(this.canvas.center);
 
         server.capacity = 20;
     }

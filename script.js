@@ -2,8 +2,7 @@
 class Message {
     sender;
     receiver;
-    x;
-    y;
+    position;
     dx;
     dy;
     status;
@@ -11,8 +10,7 @@ class Message {
     constructor(sender, receiver) {
         this.sender = sender;
         this.receiver = receiver;
-        this.x = sender.x;
-        this.y = sender.y;
+        this.position = { ...sender.position };
         this.dx = 0;
         this.dy = 0;
         this.sender = sender;
@@ -22,16 +20,17 @@ class Message {
         this.computeVelocity();
     }
     computeVelocity() {
-        var xDiff = this.receiver.x - this.x, yDiff = this.receiver.y - this.y, angle = Math.atan2(yDiff, xDiff), v = Defaults.messageVelocity / Defaults.frameRate;
+        const rp = this.receiver.position, p = this.position, xDiff = rp.x - p.x, yDiff = rp.y - p.y, angle = Math.atan2(yDiff, xDiff), v = Defaults.messageVelocity / Defaults.frameRate;
         this.dx = Math.cos(angle) * v;
         this.dy = Math.sin(angle) * v;
     }
-    ;
     move() {
-        this.x += this.dx;
-        this.y += this.dy;
+        const p = this.position;
+        this.position = {
+            x: p.x + this.dx,
+            y: p.y + this.dy
+        };
     }
-    ;
     invertDirection() {
         const tmp = this.sender;
         this.sender = this.receiver;
@@ -80,9 +79,9 @@ class MessageOrchestrator {
                 continue;
             }
             if (m.status != 'queued') {
-                var r = m.receiver;
-                if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
-                    m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
+                const r = m.receiver, mp = m.position, rp = r.position;
+                if (mp.x < rp.x + clientSize / 2 && mp.x > rp.x - clientSize / 2 &&
+                    mp.y < rp.y + clientSize / 2 && mp.y > rp.y - clientSize / 2)
                     r.receiveMessage(m);
                 else
                     m.move();
@@ -92,21 +91,17 @@ class MessageOrchestrator {
 }
 class Attacker {
     orchestrator;
-    x;
-    y;
+    position;
     messages;
     connectedTo;
     lastMessageTime;
     messagesToSend;
     messagesToReceive;
-    constructor(orchestrator, x, y, messages, connectedTo) {
+    constructor(orchestrator, position, messages, connectedTo) {
         this.orchestrator = orchestrator;
-        this.x = x;
-        this.y = y;
+        this.position = position;
         this.messages = messages;
         this.connectedTo = connectedTo;
-        this.x = x;
-        this.y = y;
         this.connectedTo = connectedTo;
         this.lastMessageTime = 0;
         this.messagesToSend = messages;
@@ -201,6 +196,12 @@ class Canvas {
         }
         this.context = context;
     }
+    get center() {
+        return {
+            x: this.width / 2,
+            y: this.height / 2
+        };
+    }
     get height() {
         return this.canvasElement.height;
     }
@@ -214,7 +215,7 @@ class Canvas {
         return this.context.createLinearGradient(x1, y1, x2, y2);
     }
     drawArrow(arrow) {
-        const context = this.context, x1 = arrow.x1, y1 = arrow.y1, x2 = arrow.x2, y2 = arrow.y2, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
+        const context = this.context, from = arrow.from, to = arrow.to, x1 = from.x, y1 = from.y, x2 = to.x, y2 = to.y, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
         context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
         context.lineWidth = arrow?.width ?? 1;
         context.lineJoin = 'round';
@@ -227,23 +228,23 @@ class Canvas {
         context.stroke();
     }
     drawCircle(circle) {
-        const context = this.context;
+        const context = this.context, p = circle.position;
         context.beginPath();
-        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
+        context.arc(p.x, p.y, circle.radius, 0, Math.PI * 2, true);
         context.closePath();
         this.draw(circle);
     }
     drawLine(line) {
-        const context = this.context;
+        const context = this.context, from = line.from, to = line.to;
         context.strokeStyle = line?.color ?? Defaults.defaultColor;
         context.lineWidth = line?.width ?? 1;
         context.beginPath();
-        context.moveTo(line.x1, line.y1);
-        context.lineTo(line.x2, line.y2);
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
         context.stroke();
     }
     drawPolygon(polygon) {
-        const context = this.context, points = polygon.points, start = points.shift();
+        const context = this.context, points = [...polygon.points], start = points.shift();
         context.beginPath();
         context.moveTo(start.x, start.y);
         points.forEach(p => context.lineTo(p.x, p.y));
@@ -251,14 +252,14 @@ class Canvas {
         this.draw(polygon);
     }
     drawRect(rectangle) {
-        const context = this.context, x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
+        const context = this.context, p = rectangle.position, w = rectangle.width, h = rectangle.height;
         context.beginPath();
-        context.rect(x - w / 2, y - h / 2, w, h);
+        context.rect(p.x - w / 2, p.y - h / 2, w, h);
         context.closePath();
         this.draw(rectangle);
     }
     drawStar(star) {
-        const context = this.context, centerX = star.x, centerY = star.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
+        const context = this.context, centerX = star.position.x, centerY = star.position.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
         let x, y, rot = Math.PI / 2 * 3;
         context.beginPath();
         context.moveTo(centerX, centerY - outerRadius);
@@ -277,7 +278,7 @@ class Canvas {
         this.draw(star);
     }
     drawText(text) {
-        const context = this.context, fontFamily = text.fontFamily ?? 'monospace';
+        const context = this.context, p = text.position, fontFamily = text.fontFamily ?? 'monospace';
         let font = `${text.fontSize}px ${fontFamily}`;
         if (text.fontVariant) {
             font = `${text.fontVariant} ${font}`;
@@ -289,10 +290,10 @@ class Canvas {
         context.textAlign = text.align ?? 'start';
         context.textBaseline = text.baseline ?? 'middle';
         context.fillStyle = text.color ?? Defaults.defaultColor;
-        context.fillText(text.text, text.x, text.y);
+        context.fillText(text.text, p.x, p.y);
     }
     drawTriangle(triangle) {
-        const context = this.context, x = triangle.x, y = triangle.y, b = triangle.base, h = triangle.height;
+        const context = this.context, x = triangle.position.x, y = triangle.position.y, b = triangle.base, h = triangle.height;
         context.beginPath();
         context.moveTo(x, y - h / 2);
         context.lineTo(x + b / 2, y + h / 2);
@@ -324,15 +325,14 @@ class TextFader {
             const queue = this.queues.temporary[i];
             for (let j = 0; j < queue.activeTexts.length; j++) {
                 const text = queue.activeTexts[j];
-                this.drawText(text, queue.x, queue.y);
+                this.drawText(text, queue.position);
             }
         }
         for (let i = 0; i < this.queues.permanent.length; i += 1) {
             const text = this.queues.permanent[i];
-            this.drawText(text, text.x ?? 0, text.y ?? 0);
+            this.drawText(text, text.position);
         }
     }
-    ;
     update(deltaTime) {
         for (let i = 0; i < this.queues.temporary.length; i++) {
             const queue = this.queues.temporary[i];
@@ -378,20 +378,17 @@ class TextFader {
             }
         }
     }
-    addText(text, queueId) {
-        if (!text.life) {
-            text.life = 1000;
+    addText(text) {
+        const id = this.getId(text.position);
+        let queue = this.queues.temporary.find(q => q.id == id);
+        if (!queue) {
+            queue = this.createQueue(text.position);
         }
-        if (text.fadeIn) {
-            text.alpha = 0;
-        }
-        else {
-            text.alpha = 1;
-        }
+        text.life ??= 1000;
+        text.alpha = text.fadeIn ? 0 : 1;
         text.delta = 0;
-        this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
+        queue.queuedTexts.push(text);
     }
-    ;
     addPermanentText(text) {
         for (let i = 0; i < this.queues.permanent.length; i++) {
             if (this.queues.permanent[i].id === text.id) {
@@ -405,7 +402,6 @@ class TextFader {
         text.fadeIn = true;
         this.queues.permanent.push(text);
     }
-    ;
     removeFromPermanentQueue(id) {
         for (let i = 0; i < this.queues.permanent.length; i++) {
             if (this.queues.permanent[i].id === id) {
@@ -414,41 +410,43 @@ class TextFader {
             }
         }
     }
-    ;
-    createQueue(id, x, y) {
-        this.queues.temporary.push({
-            id: id,
-            x: x,
-            y: y,
-            activeTexts: [],
-            queuedTexts: []
-        });
-    }
-    ;
     emptyQueues() {
         this.queues = { permanent: [], temporary: [] };
     }
-    ;
-    drawText(text, x, y) {
+    createQueue(position) {
+        const queue = {
+            id: this.getId(position),
+            position: { ...position },
+            activeTexts: [],
+            queuedTexts: []
+        };
+        this.queues.temporary.push(queue);
+        return queue;
+    }
+    drawText(text, position) {
         const delta = text.delta ?? 0, { r, g, b } = text.rgbColor, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
         this.canvas.drawText({
             ...text,
-            x,
-            y: y - delta,
+            position: {
+                x: position.x,
+                y: position.y - delta
+            },
             fontFamily: 'Arial',
             align: 'center',
             color
         });
     }
+    getId(position) {
+        return position.x.toString() + position.y.toString();
+    }
 }
 class Utilities {
-    static defaultButton(x, y, text, onClick) {
-        return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
+    static defaultButton(position, text, onClick) {
+        return new SimpleButton(position, 120, 40, text, Defaults.primaryColor, onClick);
     }
-    static drawCircleHighlight(x, y, radius, canvas) {
+    static drawCircleHighlight(position, radius, canvas) {
         const innerCircle = {
-            x,
-            y,
+            position,
             radius,
             borderColor: 'fireBrick',
             borderWidth: 2
@@ -465,22 +463,26 @@ class Utilities {
             ...Defaults.serverDefaults,
             ...options
         };
-        const size = options.size;
+        const size = options.size, p = server.position;
         let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
         for (; i > -1; i -= 1) {
             canvas.drawRect({
-                x: server.x + 3 * i,
-                y: server.y - 3 * i,
+                position: {
+                    x: p.x + 3 * i,
+                    y: p.y - 3 * i
+                },
                 width: size,
                 height: size,
                 color: options.color,
                 borderColor: options.borderColor
             });
         }
-        const speed = Defaults.serverSpeed, queueWidth = 5, queueHeight = size - 10, queueX = server.x + size / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
+        const speed = Defaults.serverSpeed, queueWidth = 5, queueHeight = size - 10, queueX = p.x + size / 2 - 7, queueY = p.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
         canvas.drawRect({
-            x: queueX,
-            y: queueY,
+            position: {
+                x: queueX,
+                y: queueY
+            },
             width: queueWidth + 2,
             height: queueHeight + 2,
             color: options.queueColor,
@@ -490,17 +492,21 @@ class Utilities {
         gradient.addColorStop(0.5, Defaults.successColor);
         gradient.addColorStop(1, Defaults.dangerColor);
         canvas.drawRect({
-            x: gradientX,
-            y: gradientY,
+            position: {
+                x: gradientX,
+                y: gradientY
+            },
             width: gradientWidth,
             height: gradientHeight,
             color: gradient
         });
         for (i = server.speed; i > 0; i -= speed) {
-            const starX = server.x - size / 2 + 7, starY = server.y + size / 2 - 4 - 5 * (i / speed);
+            const starX = p.x - size / 2 + 7, starY = p.y + size / 2 - 4 - 5 * (i / speed);
             canvas.drawStar({
-                x: starX,
-                y: starY,
+                position: {
+                    x: starX,
+                    y: starY
+                },
                 outerRadius: 4,
                 innerRadius: 2,
                 color: options.speedColor,
@@ -508,8 +514,8 @@ class Utilities {
             });
         }
     }
-    static getDistance(x1, y1, x2, y2) {
-        var xs = x2 - x1, ys = y2 - y1;
+    static getDistance(p1, p2) {
+        var xs = p2.x - p1.x, ys = p2.y - p1.y;
         return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
     }
     static invertColor(color) {
@@ -560,8 +566,10 @@ class PopularityTracker {
     }
     draw(y) {
         this.canvas.drawText({
-            x: 10,
-            y,
+            position: {
+                x: 10,
+                y
+            },
             text: 'Popularity: ' + this.popularity,
             fontSize: 18,
             fontFamily: 'sans-serif'
@@ -570,10 +578,13 @@ class PopularityTracker {
     reset() {
         this.popularity = 0;
     }
-    updatePopularity(amount, x, y) {
+    updatePopularity(client, amount) {
         let fontSize = amount >= 5 ? 16 : 12, color = amount < 0
             ? { r: 150, g: 0, b: 0 }
-            : { r: 0, g: 150, b: 0 };
+            : { r: 0, g: 150, b: 0 }, position = {
+            x: client.position.x,
+            y: client.position.y - 8 - Defaults.clientSize / 2
+        };
         this.fader.addText({
             text: amount.toString(),
             rgbColor: color,
@@ -581,9 +592,8 @@ class PopularityTracker {
             fontWeight: 'bold',
             alpha: 1,
             delta: 0,
-            x,
-            y
-        }, x.toString() + y.toString());
+            position
+        });
         this.popularity += amount;
         if (this.popularity >= this.upgrades.nextUpgrade) {
             this.upgrades.increaseUpgrades();
@@ -593,8 +603,7 @@ class PopularityTracker {
 class Client {
     orchestrator;
     popularity;
-    x;
-    y;
+    position;
     messages;
     life;
     connectedTo;
@@ -602,14 +611,11 @@ class Client {
     messagesToSend;
     ACKsToReceive;
     NACKsToDie;
-    constructor(orchestrator, popularity, x, y, messages) {
+    constructor(orchestrator, popularity, position, messages) {
         this.orchestrator = orchestrator;
         this.popularity = popularity;
-        this.x = x;
-        this.y = y;
+        this.position = position;
         this.messages = messages;
-        this.x = x;
-        this.y = y;
         this.life = 0;
         this.lastMessageTime = 0;
         this.messagesToSend = messages;
@@ -634,7 +640,7 @@ class Client {
                 n += 5;
             }
             this.orchestrator.registerAck(message);
-            this.popularity.updatePopularity(n, this.x, this.y);
+            this.popularity.updatePopularity(this, n);
         }
         else {
             this.NACKsToDie -= 1;
@@ -645,24 +651,20 @@ class Client {
             else {
                 n -= 5;
             }
-            this.popularity.updatePopularity(n, this.x, this.y);
+            this.popularity.updatePopularity(this, n);
         }
         message.status = 'done';
     }
     ;
 }
 class Server {
-    x;
-    y;
+    position;
     queue;
     lastMessageTime;
     capacity;
     speed;
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.x = x;
-        this.y = y;
+    constructor(position) {
+        this.position = position;
         this.queue = [];
         this.lastMessageTime = 0;
         this.capacity = Defaults.serverCapacity;
@@ -678,8 +680,7 @@ class Server {
     }
     ;
     receiveMessage(message) {
-        message.x = this.x;
-        message.y = this.y;
+        message.position = { ...this.position };
         if (this.queue.length < this.capacity) {
             this.queue.push(message);
             message.status = 'queued';
@@ -692,60 +693,65 @@ class Server {
     ;
 }
 class VolumeButton {
-    x;
-    y;
+    position;
     onClick;
     width;
     height;
     isOn = false;
-    constructor(x, y, size, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, size, onClick) {
+        this.position = position;
         this.onClick = onClick;
         this.width = size;
         this.height = size;
     }
     draw(hovered, canvas) {
-        const x = this.x, y = this.y, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent, status = this.isOn ? 'On' : 'Off';
+        const p = this.position, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent, status = this.isOn ? 'On' : 'Off';
         canvas.drawRect({
-            x: x - w / 4 + 1,
-            y,
+            position: {
+                x: p.x - w / 4 + 1,
+                y: p.y
+            },
             width: w / 4 + 1,
             height: h / 2 - 1,
             color
         });
         canvas.drawPolygon({
-            x,
-            y,
+            position: p,
             points: [{
-                    x: x - 1,
-                    y: y - h / 4
+                    x: p.x - 1,
+                    y: p.y - h / 4
                 }, {
-                    x: x + w / 4,
-                    y: y - h / 2 + 1
+                    x: p.x + w / 4,
+                    y: p.y - h / 2 + 1
                 }, {
-                    x: x + w / 4,
-                    y: y + h / 2 - 1
+                    x: p.x + w / 4,
+                    y: p.y + h / 2 - 1
                 }, {
-                    x: x - 1,
-                    y: y + h / 4
+                    x: p.x - 1,
+                    y: p.y + h / 4
                 }],
             color
         });
         if (!this.isOn) {
             canvas.drawLine({
-                x1: x - w / 2,
-                y1: y + h / 2,
-                x2: x + w / 2,
-                y2: y - h / 2,
+                from: {
+                    x: p.x - w / 2,
+                    y: p.y + h / 2
+                },
+                to: {
+                    x: p.x + w / 2,
+                    y: p.y - h / 2
+                },
                 color: Defaults.accentColor,
                 width: 2
             });
         }
         if (hovered) {
             canvas.drawText({
-                x,
-                y: y + w / 2 + 2,
+                position: {
+                    x: p.x,
+                    y: p.y + w / 2 + 2
+                },
                 text: 'Music: ' + status,
                 fontSize: 10,
                 align: 'center',
@@ -759,8 +765,11 @@ class GameUI {
     buttons = [];
     volumeButton;
     constructor(music, canvas) {
-        const w = canvas.width, h = canvas.height, x = w - 40, y = h - 40;
-        this.volumeButton = new VolumeButton(x, y, 20, () => {
+        const w = canvas.width, h = canvas.height, p = {
+            x: w - 40,
+            y: h - 40
+        };
+        this.volumeButton = new VolumeButton(p, 20, () => {
             if (music.paused) {
                 music.play();
             }
@@ -772,8 +781,9 @@ class GameUI {
     }
     click(x, y) {
         this.buttons.some((button) => {
-            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
+            const p = button.position;
+            if (x > p.x - button.width / 2 && x < p.x + button.width / 2 &&
+                y > p.y - button.height / 2 && y < p.y + button.height / 2) {
                 button.onClick();
                 return true;
             }
@@ -855,7 +865,7 @@ class GameTracker {
                         this.selectedClient = undefined;
                     }
                     this.failedConnections += 1;
-                    this.popularityTracker.updatePopularity(-10, c.x, c.y);
+                    this.popularityTracker.updatePopularity(c, -10);
                 }
             }
             else {
@@ -886,8 +896,8 @@ class AttackerFactory {
         this.game = game;
         this.orchestrator = orchestrator;
     }
-    create(x, y, messages, server) {
-        const attacker = new Attacker(this.orchestrator, x, y, messages, server);
+    create(position, messages, server) {
+        const attacker = new Attacker(this.orchestrator, position, messages, server);
         this.game.attackers.push(attacker);
         return attacker;
     }
@@ -896,17 +906,14 @@ class ClientFactory {
     game;
     orchestrator;
     popularityTracker;
-    fader;
-    constructor(game, orchestrator, popularityTracker, fader) {
+    constructor(game, orchestrator, popularityTracker) {
         this.game = game;
         this.orchestrator = orchestrator;
         this.popularityTracker = popularityTracker;
-        this.fader = fader;
     }
-    create(x, y, messages) {
-        const clientSize = Defaults.clientSize, client = new Client(this.orchestrator, this.popularityTracker, x, y, messages);
+    create(position, messages) {
+        const client = new Client(this.orchestrator, this.popularityTracker, position, messages);
         this.game.clients.push(client);
-        this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
         return client;
     }
 }
@@ -915,8 +922,8 @@ class ServerFactory {
     constructor(game) {
         this.game = game;
     }
-    create(x, y) {
-        const server = new Server(x, y);
+    create(position) {
+        const server = new Server(position);
         this.game.servers.push(server);
         return server;
     }
@@ -1024,21 +1031,21 @@ class Scheduler {
         }
         x = Utilities.random(minX, maxX);
         y = Utilities.random(minY, maxY);
-        while (this.checkCollisions(x, y)) {
+        while (this.checkCollisions({ x, y })) {
             x = Utilities.random(minX, maxX);
             y = Utilities.random(minY, maxY);
         }
-        this.serverFactory.create(x, y);
+        this.serverFactory.create({ x, y });
     }
     ;
     createClient() {
         const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100);
         let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
-        while (this.checkCollisions(x, y)) {
+        while (this.checkCollisions({ x, y })) {
             x = Utilities.random(minX, maxX);
             y = Utilities.random(minY, maxY);
         }
-        this.clientFactory.create(x, y, messages);
+        this.clientFactory.create({ x, y }, messages);
         this.timeLastClient = elapsedTime;
     }
     ;
@@ -1046,43 +1053,43 @@ class Scheduler {
         const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, modifier = Math.floor(this.popularityTracker.popularity / 400), messages = this.attackersMessages + modifier, number = this.attackersNumber + modifier;
         for (let i = 0; i < number; i += 1) {
             let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
-            while (this.checkCollisions(x, y)) {
+            while (this.checkCollisions({ x, y })) {
                 x = Utilities.random(minX, maxX);
                 y = Utilities.random(minY, maxY);
             }
-            const server = this.findClosestServer(x, y);
+            const server = this.findClosestServer({ x, y });
             if (server) {
-                this.attackerFactory.create(x, y, messages, server);
+                this.attackerFactory.create({ x, y }, messages, server);
             }
         }
         this.timeLastDDoS = elapsedTime;
     }
     ;
-    checkCollisions(x, y) {
-        const serverSize = Defaults.serverSize, clientSize = Defaults.clientSize, servers = this.game.servers, clients = this.game.clients, attackers = this.game.attackers;
+    checkCollisions(position) {
+        const serverSize = Defaults.serverSize, clientSize = Defaults.clientSize, servers = this.game.servers, clients = this.game.clients, attackers = this.game.attackers, { x, y } = position;
         for (let i = 0; i < servers.length; i += 1) {
-            const s = servers[i];
-            if (Math.abs(x - s.x) < serverSize && Math.abs(y - s.y) < 2 * serverSize) {
+            const p = servers[i].position;
+            if (Math.abs(x - p.x) < serverSize && Math.abs(y - p.y) < 2 * serverSize) {
                 return true;
             }
         }
         for (let i = 0; i < clients.length; i += 1) {
-            const c = clients[i];
-            if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
+            const p = clients[i].position;
+            if (Math.abs(x - p.x) < clientSize && Math.abs(y - p.y) < clientSize) {
                 return true;
             }
         }
         for (let i = 0; i < attackers.length; i += 1) {
-            const a = attackers[i];
-            if (Math.abs(x - a.x) < clientSize && Math.abs(y - a.y) < clientSize) {
+            const p = attackers[i].position;
+            if (Math.abs(x - p.x) < clientSize && Math.abs(y - p.y) < clientSize) {
                 return true;
             }
         }
     }
-    findClosestServer(x, y) {
+    findClosestServer(position) {
         let closest, currentDistance = this.canvas.width;
         this.game.servers.forEach((server) => {
-            const newDistance = Utilities.getDistance(x, y, server.x, server.y);
+            const newDistance = Utilities.getDistance(position, server.position);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;
                 closest = server;
@@ -1116,16 +1123,14 @@ class NewGame {
     }
 }
 class SimpleButton {
-    x;
-    y;
+    position;
     width;
     height;
     text;
     color;
     onClick;
-    constructor(x, y, width, height, text, color, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, width, height, text, color, onClick) {
+        this.position = position;
         this.width = width;
         this.height = height;
         this.text = text;
@@ -1135,8 +1140,7 @@ class SimpleButton {
     draw(hovered, canvas) {
         const color = hovered ? Utilities.invertColor(this.color) : this.color;
         canvas.drawRect({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             width: this.width,
             height: this.height,
             color: hovered ? this.color : undefined,
@@ -1144,8 +1148,7 @@ class SimpleButton {
             borderWidth: 2
         });
         canvas.drawText({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             text: this.text,
             fontSize: 15,
             align: 'center',
@@ -1163,7 +1166,10 @@ class Credits {
         this.canvas = canvas;
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
-        this.buttons = [Utilities.defaultButton(w / 2, h - 60, 'Back', () => {
+        this.buttons = [Utilities.defaultButton({
+                x: w / 2,
+                y: h - 60
+            }, 'Back', () => {
                 game.switchMode(Defaults.gameModes.MENU);
             })];
     }
@@ -1186,8 +1192,10 @@ class Credits {
     drawRect(y) {
         const w = this.canvas.width;
         this.canvas.drawRect({
-            x: w / 2,
-            y,
+            position: {
+                x: w / 2,
+                y
+            },
             width: w,
             height: 100,
             color: Defaults.secondaryColorTransparent,
@@ -1206,8 +1214,10 @@ class Credits {
     drawText(y, text, fontSize, color, fontWeight) {
         const w = this.canvas.width;
         this.canvas.drawText({
-            x: w / 2,
-            y,
+            position: {
+                x: w / 2,
+                y
+            },
             text,
             fontSize,
             fontWeight,
@@ -1220,20 +1230,22 @@ class CursorTracker {
     game;
     canvas;
     ui;
-    mouseX = 0;
-    mouseY = 0;
+    mousePosition;
     constructor(game, canvas, ui) {
         this.game = game;
         this.canvas = canvas;
         this.ui = ui;
+        this.mousePosition = { x: 0, y: 0 };
     }
     bind() {
         this.canvas.onmousedown = (e) => this.mouseDownHandler(e);
         this.canvas.onmouseup = (e) => this.mouseUpHandler(e);
         this.canvas.onclick = (e) => this.clickHandler(e);
         this.canvas.onmousemove = (e) => {
-            this.mouseX = e.clientX - this.canvas.offsetLeft;
-            this.mouseY = e.clientY - this.canvas.offsetTop;
+            this.mousePosition = {
+                x: e.clientX - this.canvas.offsetLeft,
+                y: e.clientY - this.canvas.offsetTop
+            };
         };
         this.canvas.ontouchstart = (e) => this.touchHandler(e);
         this.canvas.ontouchmove = (e) => this.touchHandler(e);
@@ -1249,20 +1261,21 @@ class CursorTracker {
         if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
             if (game.selectedClient !== undefined) {
                 game.servers.forEach(function (server) {
-                    if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
-                        y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
+                    const p = server.position;
+                    if (x > p.x - serverSize / 2 - 5 && x < p.x + serverSize / 2 + 5 &&
+                        y > p.y - serverSize / 2 - 5 && y < p.y + serverSize / 2 + 5) {
                         game.selectedClient.connectedTo = server;
                     }
                 });
             }
             game.selectedClient = undefined;
             game.clients.forEach((client) => {
-                if (x > client.x - clientSize / 2 - 5 && x < client.x + clientSize / 2 + 5 &&
-                    y > client.y - serverSize / 2 - 5 && y < client.y + serverSize / 2 + 5) {
+                const p = client.position;
+                if (x > p.x - clientSize / 2 - 5 && x < p.x + clientSize / 2 + 5 &&
+                    y > p.y - serverSize / 2 - 5 && y < p.y + serverSize / 2 + 5) {
                     if (client.connectedTo === undefined) {
                         game.selectedClient = client;
-                        this.mouseX = client.x;
-                        this.mouseY = client.y;
+                        this.mousePosition = { ...p };
                     }
                 }
             });
@@ -1278,8 +1291,9 @@ class CursorTracker {
             const x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
             if (game.selectedClient !== undefined) {
                 game.servers.forEach(function (server) {
-                    if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
-                        y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
+                    const p = server.position;
+                    if (x > p.x - serverSize / 2 - 5 && x < p.x + serverSize / 2 + 5 &&
+                        y > p.y - serverSize / 2 - 5 && y < p.y + serverSize / 2 + 5) {
                         game.selectedClient.connectedTo = server;
                         game.selectedClient = undefined;
                     }
@@ -1291,26 +1305,25 @@ class CursorTracker {
         const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], x = touch.pageX - canvas.offsetLeft, y = touch.pageY - canvas.offsetTop;
         event.preventDefault();
         if (event.type == 'touchstart') {
-            this.mouseX = x;
-            this.mouseY = y;
+            this.mousePosition = { x, y };
             this.ui.click(x, y);
             this.cursorPositionHandler(x, y);
         }
         else if (event.type == 'touchmove') {
-            this.mouseX = x;
-            this.mouseY = y;
+            this.mousePosition = { x, y };
         }
         else if (event.type == 'touchend') {
             if (game.selectedClient !== undefined) {
-                const mouseX = this.mouseX, mouseY = this.mouseY, serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
+                const mp = this.mousePosition, cp = game.selectedClient.position, serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
                 game.servers.forEach(function (server) {
-                    if (mouseX > server.x - serverSize / 2 - 5 && mouseX < server.x + serverSize / 2 + 5
-                        && mouseY > server.y - serverSize / 2 - 5 && mouseY < server.y + serverSize / 2 + 5) {
+                    const sp = server.position;
+                    if (mp.x > sp.x - serverSize / 2 - 5 && mp.x < sp.x + serverSize / 2 + 5
+                        && mp.y > sp.y - serverSize / 2 - 5 && mp.y < sp.y + serverSize / 2 + 5) {
                         game.selectedClient.connectedTo = server;
                     }
                 });
-                if (mouseX < game.selectedClient.x - clientSize / 2 - 5 || mouseX > game.selectedClient.x + clientSize / 2 + 5
-                    || mouseY < game.selectedClient.y - clientSize / 2 - 5 || mouseY > game.selectedClient.y + clientSize / 2 + 5) {
+                if (mp.x < cp.x - clientSize / 2 - 5 || mp.x > cp.x + clientSize / 2 + 5
+                    || mp.y < cp.y - clientSize / 2 - 5 || mp.y > cp.y + clientSize / 2 + 5) {
                     game.selectedClient = undefined;
                 }
             }
@@ -1335,19 +1348,16 @@ class GameArea {
         this.fader = fader;
     }
     draw() {
-        const sc = this.game.selectedClient;
-        if (sc !== undefined) {
+        const position = this.game.selectedClient?.position;
+        if (position !== undefined) {
             this.canvas.drawLine({
-                x1: sc.x,
-                y1: sc.y,
-                x2: this.cursor.mouseX,
-                y2: this.cursor.mouseY,
+                from: position,
+                to: this.cursor.mousePosition,
                 color: Defaults.highlightColor,
                 width: Defaults.highlightWidth
             });
             this.canvas.drawCircle({
-                x: sc.x,
-                y: sc.y,
+                position,
                 radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
                 color: Defaults.highlightColor
             });
@@ -1380,8 +1390,10 @@ class GameArea {
         this.fader.draw();
         this.popularityTracker.draw(h - 14);
         this.canvas.drawText({
-            x: w / 2,
-            y: h - 14,
+            position: {
+                x: w / 2,
+                y: h - 14
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
@@ -1391,8 +1403,10 @@ class GameArea {
         });
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
-                x: w / 2,
-                y: h - 35,
+                position: {
+                    x: w / 2,
+                    y: h - 35
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgrade',
@@ -1421,8 +1435,10 @@ class GameArea {
             color = Defaults.dangerColor;
         }
         this.canvas.drawText({
-            x: w - 10,
-            y: h - 14,
+            position: {
+                x: w - 10,
+                y: h - 14
+            },
             text,
             fontSize: 18,
             fontFamily: 'sans-serif',
@@ -1432,10 +1448,9 @@ class GameArea {
         });
     }
     drawAttacker(attacker) {
-        const size = Defaults.clientSize, x = attacker.x, y = attacker.y;
+        const size = Defaults.clientSize, position = attacker.position;
         this.canvas.drawTriangle({
-            x,
-            y,
+            position,
             base: size * 2 / Math.sqrt(3),
             height: size,
             color: Defaults.attackerColor,
@@ -1443,8 +1458,10 @@ class GameArea {
             borderWidth: 2
         });
         this.canvas.drawText({
-            x,
-            y: y + 8,
+            position: {
+                x: position.x,
+                y: position.y + 8
+            },
             text: 'DoS',
             fontWeight: 'bold',
             fontSize: 9,
@@ -1454,9 +1471,8 @@ class GameArea {
         });
     }
     drawClient(client) {
-        const clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y, circle = {
-            x,
-            y,
+        const clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, position = client.position, circle = {
+            position,
             radius: clientSize / 2,
             color: Defaults.clientColor,
             borderColor: Defaults.clientBorderColor
@@ -1480,8 +1496,7 @@ class GameArea {
                 this.canvas.drawCircle(circle);
             }
             this.canvas.drawText({
-                x,
-                y,
+                position,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
                 fontWeight: 'bold',
                 fontSize: 15,
@@ -1497,10 +1512,8 @@ class GameArea {
     drawConnection(t, color) {
         if (t.connectedTo) {
             this.canvas.drawLine({
-                x1: t.x,
-                y1: t.y,
-                x2: t.connectedTo.x,
-                y2: t.connectedTo.y,
+                from: t.position,
+                to: t.connectedTo.position,
                 color
             });
         }
@@ -1527,8 +1540,7 @@ class GameArea {
                 throw 'Invalid message status: ' + message.status;
         }
         this.canvas.drawCircle({
-            x: message.x,
-            y: message.y,
+            position: message.position,
             radius: Defaults.messageSize / 2,
             color,
             borderColor
@@ -1589,8 +1601,8 @@ class GameOver {
         this.popularity = popularity;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            Utilities.defaultButton(w / 2, h - 110, 'Restart', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, h - 60, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
+            Utilities.defaultButton({ x: w / 2, y: h - 110 }, 'Restart', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: h - 60 }, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
     getButtons() {
@@ -1600,8 +1612,10 @@ class GameOver {
         var w = this.canvas.width, h = this.canvas.height;
         this.clouds.draw();
         this.canvas.drawText({
-            x: w / 2,
-            y: 100,
+            position: {
+                x: w / 2,
+                y: 100
+            },
             text: 'Game Over',
             fontSize: 60,
             fontVariant: 'small-caps',
@@ -1614,26 +1628,34 @@ class GameOver {
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
         const fontSize = 30;
         this.canvas.drawText({
-            x: w / 2 + 68,
-            y: h / 2 + 50,
+            position: {
+                x: w / 2 + 68,
+                y: h / 2 + 50
+            },
             text: 'Popularity:',
             fontSize,
             align: 'end',
             color: this.color
         });
         this.canvas.drawText({
-            x: w / 2 + 75,
-            y: h / 2 + 50,
+            position: {
+                x: w / 2 + 75,
+                y: h / 2 + 50
+            },
             text: this.popularity.popularity.toString(),
             fontSize,
             align: 'start',
             color: this.color
         });
         this.canvas.drawLine({
-            x1: w / 2 - 130,
-            y1: h / 2 + 20,
-            x2: w / 2 + 130,
-            y2: h / 2 + 20,
+            from: {
+                x: w / 2 - 130,
+                y: h / 2 + 20
+            },
+            to: {
+                x: w / 2 + 130,
+                y: h / 2 + 20
+            },
             color: Defaults.accentColor
         });
     }
@@ -1645,8 +1667,10 @@ class GameOver {
     drawStatTitle(y, text) {
         const x = this.canvas.width / 2 + 80;
         this.canvas.drawText({
-            x,
-            y,
+            position: {
+                x,
+                y
+            },
             text: text + ':',
             fontSize: 15,
             align: 'end',
@@ -1656,8 +1680,10 @@ class GameOver {
     drawStatValue(y, value) {
         const x = this.canvas.width / 2 + 90;
         this.canvas.drawText({
-            x,
-            y,
+            position: {
+                x,
+                y
+            },
             text: value.toString(),
             fontSize: 15,
             align: 'start',
@@ -1701,8 +1727,14 @@ class Tutorial {
         const w = canvas.width, h = canvas.height;
         this.currentStep = steps[0];
         this.currentStepIndex = 0;
-        this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
-        this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = Utilities.defaultButton({
+            x: w / 3,
+            y: h - 40
+        }, 'Next', () => this.advance());
+        this.homeButton = Utilities.defaultButton({
+            x: w * 2 / 3,
+            y: h - 40
+        }, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));
     }
@@ -1718,8 +1750,6 @@ class Tutorial {
     }
     draw() {
         const w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts, rectangle = {
-            x: w / 2,
-            y: 0,
             width: w,
             height: 80,
             color: Defaults.backgroundColor,
@@ -1728,12 +1758,20 @@ class Tutorial {
         this.canvas.clear();
         this.gameArea.draw();
         this.fader.draw();
-        this.canvas.drawRect({ ...rectangle, y: 40 });
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: 40
+            },
+            ...rectangle
+        });
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
             this.canvas.drawText({
-                x: w / 2,
-                y: 18 + 20 * i,
+                position: {
+                    x: w / 2,
+                    y: 18 + 20 * i
+                },
                 text,
                 fontWeight: 'bold',
                 fontSize: 18,
@@ -1741,7 +1779,13 @@ class Tutorial {
                 color: Defaults.primaryColor
             });
         }
-        this.canvas.drawRect({ ...rectangle, y: h - 40 });
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: h - 40
+            },
+            ...rectangle
+        });
         this.currentStep.draw();
     }
     update() {
@@ -1755,6 +1799,7 @@ class Tutorial {
         this.game.reset();
         this.orchestrator.reset();
         this.fader.emptyQueues();
+        this.currentStepIndex = 0;
         this.currentStep = this.steps[0];
         this.currentStep.setup();
         this.game.switchMode(Defaults.gameModes.TUTORIAL);
@@ -1780,9 +1825,9 @@ class Menu {
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            Utilities.defaultButton(w / 2, h / 2, 'Tutorial', () => tutorial.reset()),
-            Utilities.defaultButton(w / 2, h / 2 + 60, 'New Game', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, h / 2 + 120, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
+            Utilities.defaultButton({ x: w / 2, y: h / 2 }, 'Tutorial', () => tutorial.reset()),
+            Utilities.defaultButton({ x: w / 2, y: h / 2 + 60 }, 'New Game', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: h / 2 + 120 }, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
             ui.volumeButton
         ];
     }
@@ -1793,16 +1838,20 @@ class Menu {
         const w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
         this.clouds.draw();
         this.canvas.drawRect({
-            x: w / 2,
-            y: 140,
+            position: {
+                x: w / 2,
+                y: 140
+            },
             width: w,
             height: 180,
             color: Defaults.secondaryColorTransparent,
             borderColor: Defaults.primaryColorMutedTransparent
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: 110,
+            position: {
+                x: w / 2,
+                y: 110
+            },
             text: 'Load Balancing',
             fontVariant: 'small-caps',
             fontWeight: 'bold',
@@ -1811,18 +1860,24 @@ class Menu {
             color
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: 185,
+            position: {
+                x: w / 2,
+                y: 185
+            },
             text: 'The Game',
             fontSize: 45,
             align,
             color
         });
         this.canvas.drawLine({
-            x1: 120,
-            y1: 160,
-            x2: w - 118,
-            y2: 160,
+            from: {
+                x: 120,
+                y: 160
+            },
+            to: {
+                x: w - 118,
+                y: 160
+            },
             color: Defaults.accentColor,
             width: 2
         });
@@ -1830,14 +1885,12 @@ class Menu {
     update() { }
 }
 class UpgradeButton {
-    x;
-    y;
+    position;
     text;
     width;
     height;
-    constructor(x, y, text, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, text, onClick) {
+        this.position = position;
         this.text = text;
         this.width = 100;
         this.height = 100;
@@ -1848,8 +1901,7 @@ class UpgradeButton {
     onClick() { }
     draw(hovered, canvas) {
         canvas.drawRect({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             width: this.width,
             height: this.height,
             color: Defaults.secondaryColor,
@@ -1859,8 +1911,10 @@ class UpgradeButton {
         this.drawIcon(canvas);
         if (hovered) {
             canvas.drawText({
-                x: canvas.width / 2,
-                y: canvas.height - 50,
+                position: {
+                    x: canvas.width / 2,
+                    y: canvas.height - 50
+                },
                 text: this.text,
                 fontSize: 20,
                 align: 'center',
@@ -1870,64 +1924,77 @@ class UpgradeButton {
     }
 }
 class CapacityUpgradeButton extends UpgradeButton {
-    constructor(x, y, onClick) {
-        super(x, y, 'Scale off at one location', onClick);
+    constructor(position, onClick) {
+        super(position, 'Scale off at one location', onClick);
     }
     drawIcon(canvas) {
-        const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, color = Defaults.accentColor, lineWidth = 3;
-        Utilities.drawServer(new Server(x, y), {
+        const p = this.position, serverSize = Defaults.serverSize;
+        var queueX = p.x + serverSize / 2 - 7, queueY = p.y + 1, color = Defaults.accentColor, lineWidth = 3;
+        Utilities.drawServer(new Server(p), {
             ...Defaults.serverDisabledDefaults,
             queueColor: Defaults.accentColorMuted,
             queueBorderColor: Defaults.accentColor
         }, canvas);
         canvas.drawArrow({
-            x1: queueX,
-            y1: queueY - serverSize / 2 + 2,
-            x2: queueX,
-            y2: queueY - serverSize / 2 - 13,
+            from: {
+                x: queueX,
+                y: queueY - serverSize / 2 + 2
+            },
+            to: {
+                x: queueX,
+                y: queueY - serverSize / 2 - 13
+            },
             color,
             width: lineWidth
         });
     }
 }
 class ServerUpgradeButton extends UpgradeButton {
-    constructor(x, y, onClick) {
-        super(x, y, 'Buy new datacenter', onClick);
+    constructor(position, onClick) {
+        super(position, 'Buy new datacenter', onClick);
     }
     drawIcon(canvas) {
-        const x = this.x, y = this.y;
+        const p = this.position;
         canvas.drawText({
-            x: x - 25,
-            y,
+            position: {
+                x: p.x - 25,
+                y: p.y
+            },
             text: '+',
             fontSize: 45,
             align: 'center',
             color: Defaults.accentColor
         });
-        Utilities.drawServer(new Server(x + 15, y), {
+        Utilities.drawServer(new Server({
+            x: p.x + 15,
+            y: p.y
+        }), {
             ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
         }, canvas);
     }
 }
 class SpeedUpgradeButton extends UpgradeButton {
-    constructor(x, y, onClick) {
-        super(x, y, 'Improve speed at one location', onClick);
+    constructor(position, onClick) {
+        super(position, 'Improve speed at one location', onClick);
     }
     drawIcon(canvas) {
-        const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
-        Utilities.drawServer(new Server(x, y), {
+        const p = this.position, serverSize = Defaults.serverSize;
+        var starX = p.x - serverSize / 2 + 7, starY = p.y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
+        Utilities.drawServer(new Server(p), {
             ...Defaults.serverDisabledDefaults,
             speedColor: Defaults.accentColorMuted,
             speedBorderColor: Defaults.accentColor
         }, canvas);
         canvas.drawArrow({
-            x1: starX,
-            y1: starY - 6,
-            x2: starX,
-            y2: starY - 21,
+            from: {
+                x: starX,
+                y: starY - 6
+            },
+            to: {
+                x: starX,
+                y: starY - 21
+            },
             color,
             width: lineWidth
         });
@@ -1948,15 +2015,15 @@ class Pause {
         this.upgradesTracker = upgradesTracker;
         const w = canvas.width, h = this.canvas.height, y = h / 2 + 150;
         this.buttons = [
-            Utilities.defaultButton(w / 2, 150, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
-            Utilities.defaultButton(w / 2, 210, 'New game', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, 270, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
+            Utilities.defaultButton({ x: w / 2, y: 150 }, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
+            Utilities.defaultButton({ x: w / 2, y: 210 }, 'New game', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: 270 }, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
             ui.volumeButton
         ];
         this.upgradeButtons = [
-            new ServerUpgradeButton(250, y, () => this.selectUpgrade('server')),
-            new CapacityUpgradeButton(w / 2, y, () => this.selectUpgrade('capacity')),
-            new SpeedUpgradeButton(w - 250, y, () => this.selectUpgrade('speed'))
+            new ServerUpgradeButton({ x: 250, y }, () => this.selectUpgrade('server')),
+            new CapacityUpgradeButton({ x: w / 2, y }, () => this.selectUpgrade('capacity')),
+            new SpeedUpgradeButton({ x: w - 250, y }, () => this.selectUpgrade('speed'))
         ];
     }
     getButtons() {
@@ -1969,8 +2036,10 @@ class Pause {
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
             this.canvas.drawText({
-                x,
-                y: h / 2 + 60,
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
@@ -1979,8 +2048,10 @@ class Pause {
         }
         else {
             this.canvas.drawText({
-                x,
-                y: h / 2 + 60,
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
@@ -1988,8 +2059,10 @@ class Pause {
             });
         }
         this.canvas.drawText({
-            x,
-            y: 60,
+            position: {
+                x,
+                y: 60
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
@@ -2017,15 +2090,17 @@ class ClientExplanation extends TutorialStep {
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height, client = this.clientFactory.create(w * 3 / 4, h / 2, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client = this.clientFactory.create({ x: w * 3 / 4, y: h / 2 }, 10000);
         client.life = -31;
     }
     draw() {
-        const w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, this.canvas);
-        this.canvas.drawCircle({
+        const w = this.canvas.width, h = this.canvas.height, position = {
             x: w * 3 / 4,
-            y: h / 2,
+            y: h / 2
+        };
+        Utilities.drawCircleHighlight(position, Defaults.clientSize + 9, this.canvas);
+        this.canvas.drawCircle({
+            position,
             radius: Defaults.clientSize / 2,
             color: 'gray'
         });
@@ -2033,46 +2108,58 @@ class ClientExplanation extends TutorialStep {
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, circle = {
-            x,
-            y,
-            radius: iconRadius
-        }, text = {
-            x: x + textSpacing + iconRadius,
-            y,
+        const w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, text = {
+            position: {
+                x: x + textSpacing + iconRadius,
+                y
+            },
             fontSize: 10,
             fontFamily: 'sans-serif'
         };
         canvas.drawCircle({
-            ...circle,
+            position: { x, y },
+            radius: iconRadius,
             color: Defaults.messageReqColor,
             borderColor: Defaults.messageReqBorderColor
         });
         canvas.drawText({
-            ...text,
+            position: {
+                x: x + textSpacing + iconRadius,
+                y
+            },
+            fontSize: 10,
+            fontFamily: 'sans-serif',
             text: ': Request'
         });
         canvas.drawCircle({
-            ...circle,
-            y: y + lineSpacing,
+            position: { x, y: y + lineSpacing },
+            radius: iconRadius,
             color: Defaults.messageAckColor,
             borderColor: Defaults.messageAckBorderColor
         });
         canvas.drawText({
-            ...text,
-            y: y + lineSpacing,
+            position: {
+                x: x + textSpacing + iconRadius,
+                y: y + lineSpacing
+            },
+            fontSize: 10,
+            fontFamily: 'sans-serif',
             text: ': Response (+1)'
         });
         if (includeNACK) {
             canvas.drawCircle({
-                ...circle,
-                y: y + lineSpacing * 2,
+                position: { x, y: y + lineSpacing * 2 },
+                radius: iconRadius,
                 color: Defaults.messageNackColor,
                 borderColor: Defaults.messageNackBorderColor
             });
             canvas.drawText({
-                ...text,
-                y: y + lineSpacing * 2,
+                position: {
+                    x: x + textSpacing + iconRadius,
+                    y: y + lineSpacing * 2
+                },
+                fontSize: 10,
+                fontFamily: 'sans-serif',
                 text: ': Datacenter busy (-1)'
             });
         }
@@ -2118,10 +2205,13 @@ class ClientSuccessExplanation extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize, position = {
+            x: w / 2 - serverSize / 2 + 7,
+            y: h / 2 + serverSize / 4
+        };
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, this.canvas);
+        Utilities.drawCircleHighlight(position, 15, this.canvas);
     }
 }
 class ConnectionExplanation extends TutorialStep {
@@ -2192,7 +2282,7 @@ class ConnectMoreClients extends TutorialStep {
         TutorialHelper.drawLegend(this.canvas, false);
     }
     spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create(w / 4, h / 4, 10000), client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create({ x: w / 4, y: h / 4 }, 10000), client2 = this.clientFactory.create({ x: w / 4, y: h * 3 / 4 }, 10000);
         client1.life = -21;
         client2.life = -21;
     }
@@ -2220,7 +2310,7 @@ class ConnectToNewServer extends TutorialStep {
     }
     update() {
         if (this.game.clients.length === 0) {
-            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000), client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
             client0.life = -21;
             client1.life = -21;
         }
@@ -2257,8 +2347,10 @@ class DdosAttackExample extends TutorialStep {
     }
     setup() {
         const w = this.canvas.width, h = this.canvas.height, server = this.game.servers[0], text = {
-            x: w / 2,
-            y: h - 116,
+            position: {
+                x: w / 2,
+                y: h - 116
+            },
             fontSize: 20,
             rgbColor: { r: 255, g: 0, b: 0 },
             id: 'upgradeTut',
@@ -2267,9 +2359,9 @@ class DdosAttackExample extends TutorialStep {
             alpha: 0,
             delta: 0
         };
-        this.attackerFactory.create(w / 2, h * 3 / 4, 10000, server);
-        this.attackerFactory.create(w / 3, h * 2 / 3, 10000, server);
-        this.attackerFactory.create(w * 2 / 3, h * 2 / 3, 10000, server);
+        this.attackerFactory.create({ x: w / 2, y: h * 3 / 4 }, 10000, server);
+        this.attackerFactory.create({ x: w / 3, y: h * 2 / 3 }, 10000, server);
+        this.attackerFactory.create({ x: w * 2 / 3, y: h * 2 / 3 }, 10000, server);
         this.spawnClients();
         this.fader.addPermanentText(text);
     }
@@ -2286,8 +2378,10 @@ class DdosAttackExample extends TutorialStep {
         const w = this.canvas.width, h = this.canvas.height;
         TutorialHelper.drawLegend(this.canvas, true);
         this.canvas.drawText({
-            x: w / 2,
-            y: h - 95,
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
@@ -2296,7 +2390,7 @@ class DdosAttackExample extends TutorialStep {
         });
     }
     spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000), client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
         client0.life = -21;
         client1.life = -21;
     }
@@ -2314,13 +2408,16 @@ class NewServerUpgradeExample extends TutorialStep {
         this.fader = fader;
         const w = canvas.width, h = canvas.height, y = h / 2 + 150;
         this.extraButtons = [
-            new ServerUpgradeButton(250, y, () => {
-                const server = serverFactory.create(w / 2, h / 4);
+            new ServerUpgradeButton({
+                x: 250,
+                y
+            }, () => {
+                const server = serverFactory.create({ x: w / 2, y: h / 4 });
                 server.capacity = 20;
                 this.advance = true;
             }),
-            new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y)
+            new CapacityUpgradeButton({ x: w / 2, y }),
+            new SpeedUpgradeButton({ x: w - 250, y })
         ];
     }
     setup() {
@@ -2329,22 +2426,25 @@ class NewServerUpgradeExample extends TutorialStep {
     draw() {
         const w = this.canvas.width, h = this.canvas.height;
         this.canvas.drawRect({
-            x: w / 2,
-            y: h / 2,
+            position: this.canvas.center,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: h / 2 + 60,
+            position: {
+                x: w / 2,
+                y: h / 2 + 60
+            },
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: h / 3,
+            position: {
+                x: w / 2,
+                y: h / 3
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
@@ -2375,10 +2475,13 @@ class PopularityExplanation extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const h = this.canvas.height;
+        const h = this.canvas.height, position = {
+            x: 70,
+            y: h - 95
+        };
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
-        Utilities.drawCircleHighlight(70, h - 95, 67, this.canvas);
+        Utilities.drawCircleHighlight(position, 67, this.canvas);
     }
 }
 class ServerBusyExample extends TutorialStep {
@@ -2401,10 +2504,13 @@ class ServerBusyExample extends TutorialStep {
         this.game.update();
     }
     draw() {
-        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize, position = {
+            x: w / 2 + serverSize / 2 - 7,
+            y: h / 2 + 1
+        };
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, this.canvas);
+        Utilities.drawCircleHighlight(position, serverSize / 2, this.canvas);
     }
 }
 class ServerExplanation extends TutorialStep {
@@ -2420,8 +2526,7 @@ class ServerExplanation extends TutorialStep {
         this.hasHome = true;
     }
     draw() {
-        const w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, this.canvas);
+        Utilities.drawCircleHighlight(this.canvas.center, Defaults.serverSize + 9, this.canvas);
     }
 }
 class SpeedUpgradeExample extends TutorialStep {
@@ -2439,9 +2544,12 @@ class SpeedUpgradeExample extends TutorialStep {
         this.fader = fader;
         const w = canvas.width, h = canvas.height, y = h / 2 + 150;
         this.extraButtons = [
-            new ServerUpgradeButton(250, y),
-            new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y, () => {
+            new ServerUpgradeButton({ x: 250, y }),
+            new CapacityUpgradeButton({ x: w / 2, y }),
+            new SpeedUpgradeButton({
+                x: w - 250,
+                y
+            }, () => {
                 this.game.servers[0].speed += Defaults.serverSpeed;
                 this.advance = true;
             })
@@ -2453,22 +2561,25 @@ class SpeedUpgradeExample extends TutorialStep {
     draw() {
         const w = this.canvas.width, h = this.canvas.height;
         this.canvas.drawRect({
-            x: w / 2,
-            y: h / 2,
+            position: this.canvas.center,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: h / 2 + 60,
+            position: {
+                x: w / 2,
+                y: h / 2 + 60
+            },
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
         });
         this.canvas.drawText({
-            x: w / 2,
-            y: h / 3,
+            position: {
+                x: w / 2,
+                y: h / 3
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
@@ -2492,7 +2603,10 @@ class TutorialFinished extends TutorialStep {
         const w = canvas.width, h = canvas.height;
         this.hasHome = true;
         this.extraButtons = [
-            Utilities.defaultButton(w / 3, h - 40, 'New game', () => newGame.execute())
+            Utilities.defaultButton({
+                x: w / 3,
+                y: h - 40
+            }, 'New game', () => newGame.execute())
         ];
     }
     update() {
@@ -2524,8 +2638,10 @@ class UpgradesIntroduction extends TutorialStep {
     }
     setup() {
         const w = this.canvas.width, h = this.canvas.height, text = {
-            x: w / 2,
-            y: h - 116,
+            position: {
+                x: w / 2,
+                y: h - 116
+            },
             fontSize: 20,
             rgbColor: { r: 255, g: 0, b: 0 },
             id: 'upgradeTut',
@@ -2544,8 +2660,10 @@ class UpgradesIntroduction extends TutorialStep {
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
         this.canvas.drawText({
-            x: w / 2,
-            y: h - 95,
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
@@ -2569,22 +2687,20 @@ class Welcome extends TutorialStep {
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height, server = this.serverFactory.create(w / 2, h / 2);
+        const server = this.serverFactory.create(this.canvas.center);
         server.capacity = 20;
     }
 }
 class BorderButton {
-    x;
-    y;
+    position;
     width;
     height;
     color;
     hoverColor;
     borderWidth;
     onClick;
-    constructor(x, y, width, height, color, hoverColor, borderWidth, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, width, height, color, hoverColor, borderWidth, onClick) {
+        this.position = position;
         this.width = width;
         this.height = height;
         this.color = color;
@@ -2595,8 +2711,7 @@ class BorderButton {
     draw(hovered, canvas) {
         const color = hovered ? this.hoverColor : this.color;
         canvas.drawRect({
-            x: this.x,
-            y: this.y,
+            position: this.position,
             width: this.width,
             height: this.height,
             borderColor: color,
@@ -2621,7 +2736,7 @@ class Upgrade {
         this.fader = fader;
     }
     getButtons() {
-        const w = this.canvas.width, h = this.canvas.height, button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
+        const w = this.canvas.width, h = this.canvas.height, button = Utilities.defaultButton({ x: w / 2, y: h - 100 }, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
         button.color = Defaults.secondaryColor;
         let buttons = [button];
         switch (this.upgradesTracker.selectedUpgrade) {
@@ -2662,8 +2777,10 @@ class Upgrade {
                 break;
         }
         this.canvas.drawText({
-            x: w / 2,
-            y: 60,
+            position: {
+                x: w / 2,
+                y: 60
+            },
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
@@ -2673,14 +2790,14 @@ class Upgrade {
     update() { }
     createAreaButton(x, y, area) {
         const w = this.canvas.width, h = this.canvas.height, borderWidth = Defaults.highlightWidth;
-        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton({ x, y }, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
     createServerButton(server, action) {
         const borderWidth = Defaults.highlightWidth, size = Defaults.serverSize + borderWidth;
-        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton(server.position, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });
@@ -2759,7 +2876,7 @@ class Application {
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui, orchestrator);
         const attackerFactory = new AttackerFactory(game, orchestrator);
-        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
+        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker);
         const serverFactory = new ServerFactory(game);
         const cursor = new CursorTracker(game, canvasElement, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
@@ -2821,12 +2938,12 @@ class Application {
         this.clouds.add(x, y, w, h, circles, color, speed);
     }
     drawButtons() {
-        const mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
+        const mp = this.cursor.mousePosition;
         this.ui.buttons.forEach((button) => {
-            const hovered = mouseX > button.x - (button.width + 2) / 2 &&
-                mouseX < button.x + (button.width + 2) / 2 &&
-                mouseY > button.y - (button.height + 4) / 2 &&
-                mouseY < button.y + (button.height + 2) / 2;
+            const bp = button.position, hovered = mp.x > bp.x - (button.width + 2) / 2 &&
+                mp.x < bp.x + (button.width + 2) / 2 &&
+                mp.y > bp.y - (button.height + 4) / 2 &&
+                mp.y < bp.y + (button.height + 2) / 2;
             button.draw(hovered, this.canvas);
         });
     }

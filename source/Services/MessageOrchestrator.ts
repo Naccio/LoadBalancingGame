@@ -54,9 +54,11 @@ class MessageOrchestrator {
 
             //update message
             if (m.status != 'queued') {
-                var r = m.receiver;
-                if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
-                    m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
+                const r = m.receiver,
+                    mp = m.position,
+                    rp = r.position;
+                if (mp.x < rp.x + clientSize / 2 && mp.x > rp.x - clientSize / 2 &&
+                    mp.y < rp.y + clientSize / 2 && mp.y > rp.y - clientSize / 2)
                     r.receiveMessage(m);
                 else
                     m.move();
