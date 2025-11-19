@@ -15,9 +15,9 @@ class Message {
         this.speed = VectorMath.direction(sender.position, receiver.position)
             .multiply(Defaults.messageVelocity);
     }
-    move() {
+    update(elapsed) {
         this.position = this.speed
-            .divide(Defaults.frameRate)
+            .divide(1000 / elapsed)
             .add(this.position);
     }
     invertDirection() {
@@ -45,11 +45,11 @@ class MessageOrchestrator {
         this.totalACKs = 0;
         this.avgResponseTime = 0;
     }
-    updateMessages() {
+    updateMessages(elapsed) {
         const clientSize = Defaults.clientSize;
         for (let i = 0; i < this.messages.length; i += 1) {
             var m = this.messages[i];
-            m.life += 1 / Defaults.frameRate;
+            m.life += elapsed / 1000;
             if (m.status === 'req') {
                 if (m.sender.connectedTo === undefined) {
                     this.messages.splice(i--, 1);
@@ -72,7 +72,7 @@ class MessageOrchestrator {
                     mp.y < rp.y + clientSize / 2 && mp.y > rp.y - clientSize / 2)
                     r.receiveMessage(m);
                 else
-                    m.move();
+                    m.update(elapsed);
             }
         }
     }
@@ -319,12 +319,12 @@ class TextFader {
             this.drawText(text, text.position);
         }
     }
-    update(deltaTime) {
+    update(elapsed) {
         for (let i = 0; i < this.queues.temporary.length; i++) {
             const queue = this.queues.temporary[i];
             for (let j = 0; j < queue.activeTexts.length; j++) {
                 const text = queue.activeTexts[j];
-                text.delta += 70 * deltaTime;
+                text.delta += 70 * elapsed / 1000;
                 if (text.fadeIn) {
                     text.alpha += 0.02;
                     if (text.alpha >= 1) {
@@ -802,10 +802,10 @@ class GameTracker {
         this.attackers = [];
         this.switchMode(Defaults.gameModes.GAME);
     }
-    update() {
-        this.elapsedTime += 1 / Defaults.frameRate;
-        this.orchestrator.updateMessages();
-        this.updateClients();
+    update(elapsed) {
+        this.elapsedTime += elapsed / 1000;
+        this.orchestrator.updateMessages(elapsed);
+        this.updateClients(elapsed);
         this.updateServers();
         this.updateAttackers();
     }
@@ -817,7 +817,7 @@ class GameTracker {
             }
         });
     }
-    updateClients() {
+    updateClients(elapsed) {
         const elapsedTime = this.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
         for (let i = 0; i < this.clients.length; i++) {
             var c = this.clients[i];
@@ -837,7 +837,7 @@ class GameTracker {
                 continue;
             }
             if (c.connectedTo === undefined) {
-                c.life += 1 / Defaults.frameRate;
+                c.life += elapsed / 1000;
                 if (remaining <= 0 || c.life > Defaults.maxClientWaitTime) {
                     this.clients.splice(i--, 1);
                     if (c === this.selectedClient) {
@@ -1636,12 +1636,12 @@ class Game {
         this.canvas.clear();
         this.gameArea.draw();
     }
-    update() {
+    update(elapsed) {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
         }
-        this.game.update();
-        this.fader.update(1 / Defaults.frameRate);
+        this.game.update(elapsed);
+        this.fader.update(elapsed);
         this.scheduler.schedule();
         var m = Math.floor(this.game.elapsedTime / 60);
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
@@ -1767,7 +1767,7 @@ class TutorialStep {
         this.texts = texts;
     }
     setup() { }
-    update() { }
+    update(elapsed) { }
     draw() { }
 }
 class Tutorial {
@@ -1853,9 +1853,9 @@ class Tutorial {
         });
         this.currentStep.draw();
     }
-    update() {
-        this.currentStep.update();
-        this.fader.update(1 / Defaults.frameRate);
+    update(elapsed) {
+        this.currentStep.update(elapsed);
+        this.fader.update(elapsed);
         if (this.currentStep.advance) {
             this.advance();
         }
@@ -2256,11 +2256,11 @@ class ClientSuccessExplanation extends TutorialStep {
             }
         });
     }
-    update() {
+    update(elapsed) {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
         const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize, position = {
@@ -2283,7 +2283,7 @@ class ConnectionExplanation extends TutorialStep {
         this.game = game;
         this.hasHome = true;
     }
-    update() {
+    update(elapsed) {
         const client = this.game.clients[0];
         if (client.connectedTo !== undefined) {
             this.advance = true;
@@ -2296,7 +2296,7 @@ class ConnectionExplanation extends TutorialStep {
             ];
             client.life = -31;
         }
-        this.game.updateClients();
+        this.game.updateClients(elapsed);
     }
 }
 class ConnectMoreClients extends TutorialStep {
@@ -2319,7 +2319,7 @@ class ConnectMoreClients extends TutorialStep {
     setup() {
         this.spawnClients();
     }
-    update() {
+    update(elapsed) {
         const server = this.game.servers[0];
         if (server.queue.length > server.capacity / 2) {
             this.advance = true;
@@ -2332,7 +2332,7 @@ class ConnectMoreClients extends TutorialStep {
             ];
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height;
@@ -2366,7 +2366,7 @@ class ConnectToNewServer extends TutorialStep {
         this.game.clients[0].life = -21;
         this.game.clients[1].life = -21;
     }
-    update() {
+    update(elapsed) {
         if (this.game.clients.length === 0) {
             const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000), client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
             client0.life = -21;
@@ -2375,7 +2375,7 @@ class ConnectToNewServer extends TutorialStep {
         if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
             this.advance = true;
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height;
@@ -2423,14 +2423,14 @@ class DdosAttackExample extends TutorialStep {
         this.spawnClients();
         this.fader.addPermanentText(text);
     }
-    update() {
+    update(elapsed) {
         if (this.game.selectedClient) {
             this.game.selectedClient = undefined;
         }
         if (this.game.clients.length === 0) {
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
         const w = this.canvas.width, h = this.canvas.height;
@@ -2529,8 +2529,8 @@ class PopularityExplanation extends TutorialStep {
     setup() {
         this.popularityTracker.popularity = 0;
     }
-    update() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height, position = {
@@ -2558,8 +2558,8 @@ class ServerBusyExample extends TutorialStep {
         this.hasNext = true;
         this.hasHome = true;
     }
-    update() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
         const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize, position = {
@@ -2667,8 +2667,8 @@ class TutorialFinished extends TutorialStep {
             }, 'New game', () => newGame.execute())
         ];
     }
-    update() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height;
@@ -2710,8 +2710,8 @@ class UpgradesIntroduction extends TutorialStep {
         };
         this.fader.addPermanentText(text);
     }
-    update() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
         const w = this.canvas.width, h = this.canvas.height;
@@ -2975,14 +2975,15 @@ class Application {
         ], game, ui, cursor, canvas, fpsCounter, clouds);
     }
     run() {
-        setInterval(() => this.mainLoop(), 1000 / Defaults.frameRate);
+        const elapsed = 1000 / Defaults.frameRate;
+        setInterval(() => this.mainLoop(elapsed), elapsed);
     }
-    mainLoop() {
+    mainLoop(elapsed) {
         if (this.activeScene.id !== this.game.currentGameMode) {
             this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode);
         }
-        this.clouds.update(1000 / Defaults.frameRate);
-        this.activeScene.update();
+        this.clouds.update(elapsed);
+        this.activeScene.update(elapsed);
         this.activeScene.draw();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();

@@ -22,13 +22,13 @@ class MessageOrchestrator {
         this.avgResponseTime = 0;
     }
 
-    updateMessages() {
+    updateMessages(elapsed: number) {
         const clientSize = Defaults.clientSize;
 
         for (let i = 0; i < this.messages.length; i += 1) {
             var m = this.messages[i];
 
-            m.life += 1 / Defaults.frameRate;
+            m.life += elapsed / 1000;
 
             //check if connection has been dropped while message was still traveling
             if (m.status === 'req') {
@@ -60,7 +60,7 @@ class MessageOrchestrator {
                     mp.y < rp.y + clientSize / 2 && mp.y > rp.y - clientSize / 2)
                     r.receiveMessage(m);
                 else
-                    m.move();
+                    m.update(elapsed);
             }
         }
     }

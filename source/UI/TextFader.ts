@@ -34,14 +34,14 @@ class TextFader {
         }
     }
 
-    update(deltaTime: number) {
+    update(elapsed: number) {
         // Normal text
         for (let i = 0; i < this.queues.temporary.length; i++) {
             const queue = this.queues.temporary[i];
 
             for (let j = 0; j < queue.activeTexts.length; j++) {
                 const text = queue.activeTexts[j];
-                text.delta += 70 * deltaTime;
+                text.delta += 70 * elapsed / 1000;
 
                 if (text.fadeIn) {
                     text.alpha += 0.02/*4 * Math.floor(100 * deltaTime / text.life) / 100*/;

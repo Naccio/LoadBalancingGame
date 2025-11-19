@@ -14,7 +14,7 @@ class ConnectionExplanation extends TutorialStep {
         this.hasHome = true;
     }
 
-    update() {
+    update(elapsed: number) {
         const client = this.game.clients[0];
 
         if (client.connectedTo !== undefined) {
@@ -27,6 +27,6 @@ class ConnectionExplanation extends TutorialStep {
                 'Create a CONNECTION to continue.'];
             client.life = -31;
         }
-        this.game.updateClients();
+        this.game.updateClients(elapsed);
     }
 }

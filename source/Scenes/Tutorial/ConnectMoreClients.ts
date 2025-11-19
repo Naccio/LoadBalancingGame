@@ -28,7 +28,7 @@ class ConnectMoreClients extends TutorialStep {
         this.spawnClients();
     }
 
-    update() {
+    update(elapsed: number) {
         const server = this.game.servers[0];
 
         if (server.queue.length > server.capacity / 2) {
@@ -41,7 +41,7 @@ class ConnectMoreClients extends TutorialStep {
                 'Connect the two clients to continue.'];
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
 
     draw() {

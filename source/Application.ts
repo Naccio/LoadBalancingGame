@@ -133,16 +133,18 @@ class Application {
     }
 
     public run() {
-        setInterval(() => this.mainLoop(), 1000 / Defaults.frameRate);
+        const elapsed = 1000 / Defaults.frameRate;
+
+        setInterval(() => this.mainLoop(elapsed), elapsed);
     }
 
-    private mainLoop() {
+    private mainLoop(elapsed: number) {
         if (this.activeScene.id !== this.game.currentGameMode) {
             this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode)!;
         }
 
-        this.clouds.update(1000 / Defaults.frameRate);
-        this.activeScene.update();
+        this.clouds.update(elapsed);
+        this.activeScene.update(elapsed);
         this.activeScene.draw();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();

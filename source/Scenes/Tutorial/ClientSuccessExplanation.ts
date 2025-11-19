@@ -41,11 +41,11 @@ class ClientSuccessExplanation extends TutorialStep {
         });
     }
 
-    update() {
+    update(elapsed: number) {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
 
     draw() {

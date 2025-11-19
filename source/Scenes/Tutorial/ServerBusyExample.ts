@@ -23,8 +23,8 @@ class ServerBusyExample extends TutorialStep {
         this.hasHome = true;
     }
 
-    update() {
-        this.game.update();
+    update(elapsed: number) {
+        this.game.update(elapsed);
     }
 
     draw() {

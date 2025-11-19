@@ -32,8 +32,8 @@ class TutorialFinished extends TutorialStep {
         ]
     }
 
-    update() {
-        this.game.update();
+    update(elapsed: number) {
+        this.game.update(elapsed);
     }
 
     draw() {

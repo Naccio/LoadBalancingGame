@@ -26,8 +26,8 @@ class PopularityExplanation extends TutorialStep {
         this.popularityTracker.popularity = 0;
     }
 
-    update() {
-        this.game.update();
+    update(elapsed: number) {
+        this.game.update(elapsed);
     }
 
     draw() {

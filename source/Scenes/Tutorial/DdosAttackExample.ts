@@ -50,14 +50,14 @@ class DdosAttackExample extends TutorialStep {
         this.fader.addPermanentText(text);
     }
 
-    update() {
+    update(elapsed: number) {
         if (this.game.selectedClient) {
             this.game.selectedClient = undefined;
         }
         if (this.game.clients.length === 0) {
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
 
     draw() {

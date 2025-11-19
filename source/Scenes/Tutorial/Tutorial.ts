@@ -103,9 +103,9 @@ class Tutorial implements Scene {
         this.currentStep.draw();
     }
 
-    update() {
-        this.currentStep.update();
-        this.fader.update(1 / Defaults.frameRate);
+    update(elapsed: number) {
+        this.currentStep.update(elapsed);
+        this.fader.update(elapsed);
 
         if (this.currentStep.advance) {
             this.advance();

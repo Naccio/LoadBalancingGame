@@ -28,12 +28,12 @@ class Game implements Scene {
         this.gameArea.draw();
     }
 
-    update() {
+    update(elapsed: number) {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
         }
-        this.game.update();
-        this.fader.update(1 / Defaults.frameRate);
+        this.game.update(elapsed);
+        this.fader.update(elapsed);
         this.scheduler.schedule();
 
         var m = Math.floor(this.game.elapsedTime / 60);

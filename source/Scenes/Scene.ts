@@ -4,5 +4,5 @@ interface Scene {
     id: number;
     getButtons(): Button[];
     draw(): void;
-    update(): void;
+    update(elapsed: number): void;
 }

@@ -17,9 +17,9 @@ class Message implements GameObject {
             .multiply(Defaults.messageVelocity);
     }
 
-    move() {
+    update(elapsed: number) {
         this.position = this.speed
-            .divide(Defaults.frameRate)
+            .divide(1000 / elapsed)
             .add(this.position);
     }
 
