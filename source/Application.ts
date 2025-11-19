@@ -87,7 +87,7 @@ class Application {
         const attackerFactory = new AttackerFactory(game, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker);
         const serverFactory = new ServerFactory(game);
-        const cursor = new CursorTracker(game, canvasElement, ui);
+        const cursor = new CursorTracker(game, canvas, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
 
@@ -156,14 +156,15 @@ class Application {
     }
 
     private createCloud(x: number, y: number) {
-        const w = MathHelper.random(350, 500),
-            h = MathHelper.random(w, 700),
+        const p = this.canvas.getActualPosition({ x, y }),
+            w = this.canvas.getActualMeasure(MathHelper.random(350, 500)),
+            h = this.canvas.getActualMeasure(MathHelper.random(w, 700)),
             circles = MathHelper.random(15, 30),
             n = MathHelper.random(180, 255),
             color = { r: n, g: n, b: n, a: .1 },
             speed = MathHelper.random(100, 200);
 
-        this.clouds.add(x, y, w, h, circles, color, speed);
+        this.clouds.add(p.x, p.y, w, h, circles, color, speed);
     }
 
     private drawButtons() {

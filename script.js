@@ -176,13 +176,19 @@ class Defaults {
 class Canvas {
     canvasElement;
     context;
+    scale;
+    width = 800;
+    height = 600;
     constructor(canvasElement) {
         this.canvasElement = canvasElement;
-        const context = canvasElement.getContext('2d');
+        const scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height), context = canvasElement.getContext('2d');
         if (!context) {
             throw 'Could not get 2D context from canvas';
         }
+        this.scale = scale;
         this.context = context;
+        canvasElement.width = this.getActualMeasure(this.width);
+        canvasElement.height = this.getActualMeasure(this.height);
     }
     get center() {
         return {
@@ -190,20 +196,20 @@ class Canvas {
             y: this.height / 2
         };
     }
-    get height() {
-        return this.canvasElement.height;
-    }
-    get width() {
-        return this.canvasElement.width;
-    }
     clear() {
-        this.context.clearRect(0, 0, this.width, this.height);
+        const width = this.getActualMeasure(this.width), height = this.getActualMeasure(this.height);
+        this.context.fillStyle = '#ffffff';
+        this.context.fillRect(0, 0, width, height);
     }
     createLinearGradient(x1, y1, x2, y2) {
+        x1 = this.getActualMeasure(x1);
+        y1 = this.getActualMeasure(y1);
+        x2 = this.getActualMeasure(x2);
+        y2 = this.getActualMeasure(y2);
         return this.context.createLinearGradient(x1, y1, x2, y2);
     }
     drawArrow(arrow) {
-        const context = this.context, from = arrow.from, to = arrow.to, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, direction = VectorMath.direction(to, from), rightBarb = direction.rotate(barbsAngle).multiply(barbsLength).add(to), leftBarb = direction.rotate(-barbsAngle).multiply(barbsLength).add(to);
+        const context = this.context, from = this.getActualPosition(arrow.from), to = this.getActualPosition(arrow.to), barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = this.getActualMeasure(arrow.barbsLength ?? 8), direction = VectorMath.direction(to, from), rightBarb = direction.rotate(barbsAngle).multiply(barbsLength).add(to), leftBarb = direction.rotate(-barbsAngle).multiply(barbsLength).add(to);
         context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
         context.lineWidth = arrow?.width ?? 1;
         context.lineJoin = 'round';
@@ -216,38 +222,41 @@ class Canvas {
         context.stroke();
     }
     drawCircle(circle) {
-        const context = this.context, p = circle.position;
+        const context = this.context, p = this.getActualPosition(circle.position), r = this.getActualMeasure(circle.radius);
         context.beginPath();
-        context.arc(p.x, p.y, circle.radius, 0, Math.PI * 2, true);
+        context.arc(p.x, p.y, r, 0, Math.PI * 2, true);
         context.closePath();
         this.draw(circle);
     }
     drawLine(line) {
-        const context = this.context, from = line.from, to = line.to;
+        const context = this.context, from = this.getActualPosition(line.from), to = this.getActualPosition(line.to);
         context.strokeStyle = line?.color ?? Defaults.defaultColor;
-        context.lineWidth = line?.width ?? 1;
+        context.lineWidth = this.getActualMeasure(line?.width ?? 1);
         context.beginPath();
         context.moveTo(from.x, from.y);
         context.lineTo(to.x, to.y);
         context.stroke();
     }
     drawPolygon(polygon) {
-        const context = this.context, points = [...polygon.points], start = points.shift();
+        const context = this.context, points = [...polygon.points], start = this.getActualPosition(points.shift());
         context.beginPath();
         context.moveTo(start.x, start.y);
-        points.forEach(p => context.lineTo(p.x, p.y));
+        points.forEach(p => {
+            p = this.getActualPosition(p);
+            context.lineTo(p.x, p.y);
+        });
         context.closePath();
         this.draw(polygon);
     }
     drawRect(rectangle) {
-        const context = this.context, p = rectangle.position, w = rectangle.width, h = rectangle.height;
+        const context = this.context, p = this.getActualPosition(rectangle.position), w = this.getActualMeasure(rectangle.width), h = this.getActualMeasure(rectangle.height);
         context.beginPath();
         context.rect(p.x - w / 2, p.y - h / 2, w, h);
         context.closePath();
         this.draw(rectangle);
     }
     drawStar(star) {
-        const context = this.context, center = star.position, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
+        const context = this.context, center = this.getActualPosition(star.position), spikes = star.spikes ?? 5, outerRadius = this.getActualMeasure(star.outerRadius), innerRadius = this.getActualMeasure(star.innerRadius), step = Math.PI / spikes;
         let rot = Math.PI / 2 * 3;
         context.beginPath();
         context.moveTo(center.x, center.y - outerRadius);
@@ -264,8 +273,8 @@ class Canvas {
         this.draw(star);
     }
     drawText(text) {
-        const context = this.context, p = text.position, fontFamily = text.fontFamily ?? 'monospace';
-        let font = `${text.fontSize}px ${fontFamily}`;
+        const context = this.context, p = this.getActualPosition(text.position), fontSize = this.getActualMeasure(text.fontSize), fontFamily = text.fontFamily ?? 'monospace';
+        let font = `${fontSize}px ${fontFamily}`;
         if (text.fontVariant) {
             font = `${text.fontVariant} ${font}`;
         }
@@ -279,12 +288,25 @@ class Canvas {
         context.fillText(text.text, p.x, p.y);
     }
     drawTriangle(triangle) {
-        const context = this.context, x = triangle.position.x, y = triangle.position.y, b = triangle.base, h = triangle.height;
+        const context = this.context, p = this.getActualPosition(triangle.position), x = p.x, y = p.y, b = this.getActualMeasure(triangle.base), h = this.getActualMeasure(triangle.height);
         context.beginPath();
         context.moveTo(x, y - h / 2);
         context.lineTo(x + b / 2, y + h / 2);
         context.lineTo(x - b / 2, y + h / 2);
         this.draw(triangle);
+    }
+    getActualMeasure(value) {
+        return Math.floor(value * this.scale);
+    }
+    getActualPosition(point) {
+        return VectorMath.multiply(point, this.scale).round(0);
+    }
+    getRelativePosition(point) {
+        const offset = {
+            x: this.canvasElement.offsetLeft,
+            y: this.canvasElement.offsetTop
+        };
+        return VectorMath.subtract(point, offset).divide(this.scale);
     }
     draw(shape) {
         const context = this.context;
@@ -758,9 +780,9 @@ class GameUI {
             this.volumeButton.isOn = !music.paused;
         });
     }
-    click(x, y) {
+    click(position) {
         this.buttons.some((button) => {
-            const p = button.position;
+            const { x, y } = position, p = button.position;
             if (x > p.x - button.width / 2 && x < p.x + button.width / 2 &&
                 y > p.y - button.height / 2 && y < p.y + button.height / 2) {
                 button.onClick();
@@ -1303,26 +1325,29 @@ class CursorTracker {
         this.mousePosition = { x: 0, y: 0 };
     }
     bind() {
-        this.canvas.onmousedown = (e) => this.mouseDownHandler(e);
-        this.canvas.onmouseup = (e) => this.mouseUpHandler(e);
-        this.canvas.onclick = (e) => this.clickHandler(e);
-        this.canvas.onmousemove = (e) => {
-            this.mousePosition = {
-                x: e.clientX - this.canvas.offsetLeft,
-                y: e.clientY - this.canvas.offsetTop
-            };
+        document.onmousedown = (e) => this.mouseDownHandler(e);
+        document.onmouseup = (e) => this.mouseUpHandler(e);
+        document.onclick = (e) => this.clickHandler(e);
+        document.onmousemove = (e) => {
+            this.mousePosition = this.canvas.getRelativePosition({
+                x: e.clientX,
+                y: e.clientY
+            });
         };
-        this.canvas.ontouchstart = (e) => this.touchHandler(e);
-        this.canvas.ontouchmove = (e) => this.touchHandler(e);
-        this.canvas.ontouchend = (e) => this.touchHandler(e);
-        this.canvas.ontouchcancel = (e) => this.touchHandler(e);
+        document.ontouchstart = (e) => this.touchHandler(e);
+        document.ontouchmove = (e) => this.touchHandler(e);
+        document.ontouchend = (e) => this.touchHandler(e);
+        document.ontouchcancel = (e) => this.touchHandler(e);
     }
     clickHandler(event) {
-        const canvas = this.canvas, x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
-        this.ui.click(x, y);
+        const mousePosition = this.canvas.getRelativePosition({
+            x: event.clientX,
+            y: event.clientY
+        });
+        this.ui.click(mousePosition);
     }
-    cursorPositionHandler(x, y) {
-        const game = this.game, gameModes = Defaults.gameModes, clientSize = Defaults.clientSize, serverSize = Defaults.serverSize;
+    cursorPositionHandler(position) {
+        const game = this.game, { x, y } = position, gameModes = Defaults.gameModes, clientSize = Defaults.clientSize, serverSize = Defaults.serverSize;
         if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
             if (game.selectedClient !== undefined) {
                 game.servers.forEach(function (server) {
@@ -1347,13 +1372,19 @@ class CursorTracker {
         }
     }
     mouseDownHandler(event) {
-        const canvas = this.canvas, x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
-        this.cursorPositionHandler(x, y);
+        const mousePosition = this.canvas.getRelativePosition({
+            x: event.clientX,
+            y: event.clientY
+        });
+        this.cursorPositionHandler(mousePosition);
     }
     mouseUpHandler(event) {
-        const game = this.game, canvas = this.canvas, gameModes = Defaults.gameModes, serverSize = Defaults.serverSize;
+        const game = this.game, gameModes = Defaults.gameModes, serverSize = Defaults.serverSize;
         if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
-            const x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
+            const { x, y } = this.canvas.getRelativePosition({
+                x: event.clientX,
+                y: event.clientY
+            });
             if (game.selectedClient !== undefined) {
                 game.servers.forEach(function (server) {
                     const p = server.position;
@@ -1367,15 +1398,18 @@ class CursorTracker {
         }
     }
     touchHandler(event) {
-        const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], x = touch.pageX - canvas.offsetLeft, y = touch.pageY - canvas.offsetTop;
+        const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], mousePosition = this.canvas.getRelativePosition({
+            x: touch.clientX,
+            y: touch.clientY
+        });
         event.preventDefault();
         if (event.type == 'touchstart') {
-            this.mousePosition = { x, y };
-            this.ui.click(x, y);
-            this.cursorPositionHandler(x, y);
+            this.mousePosition = mousePosition;
+            this.ui.click(mousePosition);
+            this.cursorPositionHandler(mousePosition);
         }
         else if (event.type == 'touchmove') {
-            this.mousePosition = { x, y };
+            this.mousePosition = mousePosition;
         }
         else if (event.type == 'touchend') {
             if (game.selectedClient !== undefined) {
@@ -2936,7 +2970,7 @@ class Application {
         const attackerFactory = new AttackerFactory(game, orchestrator);
         const clientFactory = new ClientFactory(game, orchestrator, popularityTracker);
         const serverFactory = new ServerFactory(game);
-        const cursor = new CursorTracker(game, canvasElement, ui);
+        const cursor = new CursorTracker(game, canvas, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
         const gameArea = new GameArea(canvas, game, orchestrator, popularityTracker, upgradesTracker, cursor, fader);
         const newGame = new NewGame(orchestrator, upgradesTracker, popularityTracker, game, scheduler, fader);
@@ -2993,8 +3027,8 @@ class Application {
         }
     }
     createCloud(x, y) {
-        const w = MathHelper.random(350, 500), h = MathHelper.random(w, 700), circles = MathHelper.random(15, 30), n = MathHelper.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = MathHelper.random(100, 200);
-        this.clouds.add(x, y, w, h, circles, color, speed);
+        const p = this.canvas.getActualPosition({ x, y }), w = this.canvas.getActualMeasure(MathHelper.random(350, 500)), h = this.canvas.getActualMeasure(MathHelper.random(w, 700)), circles = MathHelper.random(15, 30), n = MathHelper.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = MathHelper.random(100, 200);
+        this.clouds.add(p.x, p.y, w, h, circles, color, speed);
     }
     drawButtons() {
         const mp = this.cursor.mousePosition;

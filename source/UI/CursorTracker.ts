@@ -5,37 +5,39 @@
 class CursorTracker {
     public mousePosition: Point;
 
-    public constructor(private game: GameTracker, private canvas: HTMLCanvasElement, private ui: GameUI) {
+    public constructor(private game: GameTracker, private canvas: Canvas, private ui: GameUI) {
         this.mousePosition = { x: 0, y: 0 };
     }
 
     bind() {
-        this.canvas.onmousedown = (e) => this.mouseDownHandler(e);
-        this.canvas.onmouseup = (e) => this.mouseUpHandler(e);
-        this.canvas.onclick = (e) => this.clickHandler(e);
-        this.canvas.onmousemove = (e) => {
-            this.mousePosition = {
-                x: e.clientX - this.canvas.offsetLeft,
-                y: e.clientY - this.canvas.offsetTop
-            };
+        document.onmousedown = (e) => this.mouseDownHandler(e);
+        document.onmouseup = (e) => this.mouseUpHandler(e);
+        document.onclick = (e) => this.clickHandler(e);
+        document.onmousemove = (e) => {
+            this.mousePosition = this.canvas.getRelativePosition({
+                x: e.clientX,
+                y: e.clientY
+            });
         };
 
-        this.canvas.ontouchstart = (e) => this.touchHandler(e);
-        this.canvas.ontouchmove = (e) => this.touchHandler(e);
-        this.canvas.ontouchend = (e) => this.touchHandler(e);
-        this.canvas.ontouchcancel = (e) => this.touchHandler(e);
+        document.ontouchstart = (e) => this.touchHandler(e);
+        document.ontouchmove = (e) => this.touchHandler(e);
+        document.ontouchend = (e) => this.touchHandler(e);
+        document.ontouchcancel = (e) => this.touchHandler(e);
     }
 
     private clickHandler(event: MouseEvent) {
-        const canvas = this.canvas,
-            x = event.pageX - canvas.offsetLeft,
-            y = event.pageY - canvas.offsetTop;
+        const mousePosition = this.canvas.getRelativePosition({
+                x: event.clientX,
+                y: event.clientY
+            });
 
-        this.ui.click(x, y);
+        this.ui.click(mousePosition);
     }
 
-    private cursorPositionHandler(x: number, y: number) {
+    private cursorPositionHandler(position: Point) {
         const game = this.game,
+            { x, y } = position,
             gameModes = Defaults.gameModes,
             clientSize = Defaults.clientSize,
             serverSize = Defaults.serverSize;
@@ -70,22 +72,24 @@ class CursorTracker {
     }
 
     private mouseDownHandler(event: MouseEvent) {
-        const canvas = this.canvas,
-            x = event.pageX - canvas.offsetLeft,
-            y = event.pageY - canvas.offsetTop;
+        const mousePosition = this.canvas.getRelativePosition({
+            x: event.clientX,
+            y: event.clientY
+        });
 
-        this.cursorPositionHandler(x, y);
+        this.cursorPositionHandler(mousePosition);
     }
 
     private mouseUpHandler(event: MouseEvent) {
         const game = this.game,
-            canvas = this.canvas,
             gameModes = Defaults.gameModes,
             serverSize = Defaults.serverSize;
 
         if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
-            const x = event.pageX - canvas.offsetLeft,
-                y = event.pageY - canvas.offsetTop;
+            const { x, y } = this.canvas.getRelativePosition({
+                x: event.clientX,
+                y: event.clientY
+            });
 
             //check if a server has been clicked
             if (game.selectedClient !== undefined) {
@@ -105,19 +109,21 @@ class CursorTracker {
         const game = this.game,
             canvas = this.canvas,
             touch = event.targetTouches[0],
-            x = touch.pageX - canvas.offsetLeft,
-            y = touch.pageY - canvas.offsetTop;
+            mousePosition = this.canvas.getRelativePosition({
+                x: touch.clientX,
+                y: touch.clientY
+            });
 
         event.preventDefault();
 
         if (event.type == 'touchstart') {
-            this.mousePosition = { x, y };
+            this.mousePosition = mousePosition;
 
-            this.ui.click(x, y);
-            this.cursorPositionHandler(x, y);
+            this.ui.click(mousePosition);
+            this.cursorPositionHandler(mousePosition);
         }
         else if (event.type == 'touchmove') {
-            this.mousePosition = { x, y };
+            this.mousePosition = mousePosition;
         }
         else if (event.type == 'touchend') {
             if (game.selectedClient !== undefined) {

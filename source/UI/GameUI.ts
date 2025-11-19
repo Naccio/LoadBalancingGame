@@ -25,9 +25,10 @@ class GameUI {
         });
     }
 
-    click(x: number, y: number) {
+    click(position: Point) {
         this.buttons.some((button) => {
-            const p = button.position;
+            const { x, y } = position,
+                p = button.position;
             if (x > p.x - button.width / 2 && x < p.x + button.width / 2 &&
                 y > p.y - button.height / 2 && y < p.y + button.height / 2) {
                 button.onClick();
