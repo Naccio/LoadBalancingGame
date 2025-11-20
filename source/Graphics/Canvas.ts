@@ -11,23 +11,22 @@
 
 class Canvas {
     private context: CanvasRenderingContext2D;
-    private scale;
+    private scale = 0;
 
     public readonly width = 800;
     public readonly height = 600;
 
     constructor(private canvasElement: HTMLCanvasElement) {
-        const scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height),
-            context = canvasElement.getContext('2d');
+        const context = canvasElement.getContext('2d');
 
         if (!context) {
             throw 'Could not get 2D context from canvas';
         }
 
-        this.scale = scale;
+        window.addEventListener('resize', () => this.resize());
+
         this.context = context;
-        canvasElement.width = this.getActualMeasure(this.width);
-        canvasElement.height = this.getActualMeasure(this.height);
+        this.resize();
     }
 
     public get center(): Point {
@@ -226,5 +225,13 @@ class Canvas {
             context.lineWidth = shape.borderWidth ?? 1;
             context.stroke();
         }
+    }
+
+    private resize() {
+        const scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+
+        this.scale = scale;
+        this.canvasElement.width = this.getActualMeasure(this.width);
+        this.canvasElement.height = this.getActualMeasure(this.height);
     }
 }

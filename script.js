@@ -176,19 +176,18 @@ class Defaults {
 class Canvas {
     canvasElement;
     context;
-    scale;
+    scale = 0;
     width = 800;
     height = 600;
     constructor(canvasElement) {
         this.canvasElement = canvasElement;
-        const scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height), context = canvasElement.getContext('2d');
+        const context = canvasElement.getContext('2d');
         if (!context) {
             throw 'Could not get 2D context from canvas';
         }
-        this.scale = scale;
+        window.addEventListener('resize', () => this.resize());
         this.context = context;
-        canvasElement.width = this.getActualMeasure(this.width);
-        canvasElement.height = this.getActualMeasure(this.height);
+        this.resize();
     }
     get center() {
         return {
@@ -319,6 +318,12 @@ class Canvas {
             context.lineWidth = shape.borderWidth ?? 1;
             context.stroke();
         }
+    }
+    resize() {
+        const scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+        this.scale = scale;
+        this.canvasElement.width = this.getActualMeasure(this.width);
+        this.canvasElement.height = this.getActualMeasure(this.height);
     }
 }
 class TextFader {
