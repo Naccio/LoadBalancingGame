@@ -1,24 +1,20 @@
 /// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Model/Point.ts' />
 /// <reference path='../Utilities.ts' />
-/// <reference path='Button.ts' />
+/// <reference path='SettingButton.ts' />
 
-class VolumeButton implements Button {
-    public width: number;
-    public height: number;
-    public isOn = false;
+class VolumeButton extends SettingButton {
+    protected isOn = false;
 
-    constructor(public position: Point, size: number, public onClick: () => void) {
-        this.width = size;
-        this.height = size;
+    public constructor(position: Point, size: number, private target: HTMLAudioElement) {
+        super(position, size, 'Music');
     }
 
     draw(hovered: boolean, canvas: Canvas) {
         const p = this.position,
             w = this.width,
             h = this.height,
-            color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent,
-            status = this.isOn ? 'On' : 'Off';
+            color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent;
 
         canvas.drawRect({
             position: {
@@ -47,33 +43,17 @@ class VolumeButton implements Button {
             color
         });
 
-        if (!this.isOn) {
-            canvas.drawLine({
-                from: {
-                    x: p.x - w / 2,
-                    y: p.y + h / 2
-                },
-                to: {
-                    x: p.x + w / 2,
-                    y: p.y - h / 2
-                },
-                color: Defaults.accentColor,
-                width: 2
-            });
-        }
+        super.draw(hovered, canvas);
+    }
 
-        if (hovered) {
-            canvas.drawText({
-                position: {
-                    x: p.x,
-                    y: p.y + w / 2 + 2
-                },
-                text: 'Music: ' + status,
-                fontSize: 10,
-                align: 'center',
-                baseline: 'top',
-                color: Defaults.primaryColor
-            });
+    public onClick() {
+        const music = this.target;
+
+        if (music.paused) {
+            music.play();
+        } else {
+            music.pause();
         }
+        this.isOn = !music.paused;
     }
 }

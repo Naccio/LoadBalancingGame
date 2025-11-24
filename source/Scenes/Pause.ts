@@ -34,7 +34,7 @@ class Pause implements Scene {
             Utilities.defaultButton({ x: w / 2, y: 150 }, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
             Utilities.defaultButton({ x: w / 2, y: 210 }, 'New game', () => newGame.execute()),
             Utilities.defaultButton({ x: w / 2, y: 270 }, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
-            ui.volumeButton
+            ...ui.settingsButtons
         ];
 
         this.upgradeButtons = [

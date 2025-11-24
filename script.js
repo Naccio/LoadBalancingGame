@@ -698,20 +698,234 @@ class Server {
     }
     ;
 }
-class VolumeButton {
+class MathHelper {
+    static clamp(number, min, max) {
+        return Math.min(Math.max(number, min), max);
+    }
+    static nearestPower(x, base) {
+        return Math.pow(base, this.nearestRoot(x, base));
+    }
+    static nearestRoot(x, degree) {
+        return Math.ceil(Math.log(x) / Math.log(degree));
+    }
+    static random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+    static randomInt(min, max) {
+        return Math.floor(MathHelper.random(min, max));
+    }
+    static round(number, decimalPlaces) {
+        const multiplier = Math.pow(10, decimalPlaces);
+        return Math.round(number * multiplier) / multiplier;
+    }
+}
+class VectorMath {
+    static zero = {
+        x: 0,
+        y: 0
+    };
+    static add(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x + v2.x,
+            y: v1.y + v2.y
+        });
+    }
+    static angle(v1, v2) {
+        v1 = this.normalize(v1);
+        v2 = this.normalize(v2);
+        return Math.acos(this.dotProduct(v1, v2));
+    }
+    static clamp(v, min, max) {
+        return new VectorCalculator({
+            x: MathHelper.clamp(v.x, min, max),
+            y: MathHelper.clamp(v.y, min, max)
+        });
+    }
+    static direction(v1, v2) {
+        return this.subtract(v2, v1).normalize();
+    }
+    static distance(v1, v2) {
+        const d = this.subtract(v2, v1);
+        return Math.sqrt(Math.pow(d.x, 2) + Math.pow(d.y, 2));
+    }
+    static divide(v, number) {
+        return new VectorCalculator({
+            x: v.x / number,
+            y: v.y / number
+        });
+    }
+    static dotProduct(v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+    static hadamardProduct(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x * v2.x,
+            y: v1.y * v2.y
+        });
+    }
+    static invert(v) {
+        return this.multiply(v, -1);
+    }
+    static isEqual(v1, v2) {
+        return v1.x === v2.x && v1.y === v2.y;
+    }
+    static magnitude(v) {
+        return Math.sqrt(v.x * v.x + v.y * v.y);
+    }
+    static multiply(v, number) {
+        return new VectorCalculator({
+            x: v.x * number,
+            y: v.y * number
+        });
+    }
+    static normalize(v) {
+        const m = this.magnitude(v);
+        return this.divide(v, m);
+    }
+    static rotate(v, rad) {
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        return new VectorCalculator({
+            x: cos * v.x - sin * v.y,
+            y: sin * v.x + cos * v.y
+        });
+    }
+    static round(v, decimalPlaces) {
+        return new VectorCalculator({
+            x: MathHelper.round(v.x, decimalPlaces),
+            y: MathHelper.round(v.y, decimalPlaces)
+        });
+    }
+    static shift(v, direction, magnitude) {
+        return new VectorCalculator({
+            x: v.x + Math.cos(direction) * magnitude,
+            y: v.y + Math.sin(direction) * magnitude
+        });
+    }
+    static subtract(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x - v2.x,
+            y: v1.y - v2.y
+        });
+    }
+}
+class SettingButton {
     position;
-    onClick;
+    size;
+    text;
     width;
     height;
-    isOn = false;
-    constructor(position, size, onClick) {
+    constructor(position, size, text) {
         this.position = position;
-        this.onClick = onClick;
+        this.size = size;
+        this.text = text;
         this.width = size;
         this.height = size;
     }
     draw(hovered, canvas) {
-        const p = this.position, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent, status = this.isOn ? 'On' : 'Off';
+        const p = this.position, w = this.width, h = this.height;
+        if (!this.isOn) {
+            canvas.drawLine({
+                from: {
+                    x: p.x - w / 2,
+                    y: p.y + h / 2
+                },
+                to: {
+                    x: p.x + w / 2,
+                    y: p.y - h / 2
+                },
+                color: Defaults.accentColor,
+                width: 2
+            });
+        }
+        if (hovered) {
+            canvas.drawText({
+                position: {
+                    x: p.x,
+                    y: p.y + w / 2 + 4
+                },
+                text: this.text,
+                fontSize: 8,
+                align: 'center',
+                baseline: 'top',
+                color: Defaults.primaryColor
+            });
+        }
+    }
+}
+class FullScreenButton extends SettingButton {
+    target;
+    constructor(position, size, target) {
+        super(position, size, 'Fullscreen');
+        this.target = target;
+    }
+    get isOn() {
+        return !!document.fullscreenElement;
+    }
+    draw(hovered, canvas) {
+        const p = this.position, shift = this.size / 2 - 3, segmentLength = Math.floor(this.size / 4), topLeft = VectorMath.add(p, { x: -shift, y: -shift }), topRight = VectorMath.add(p, { x: shift, y: -shift }), bottomLeft = VectorMath.add(p, { x: -shift, y: shift }), bottomRight = VectorMath.add(p, { x: shift, y: shift }), line = {
+            color: hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent,
+            width: 2
+        };
+        canvas.drawLine({
+            ...line,
+            from: topLeft,
+            to: topLeft.add({ x: 0, y: segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: topLeft,
+            to: topLeft.add({ x: segmentLength, y: 0 })
+        });
+        canvas.drawLine({
+            ...line,
+            from: topRight,
+            to: topRight.add({ x: 0, y: segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: topRight,
+            to: topRight.add({ x: -segmentLength, y: 0 })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomRight,
+            to: bottomRight.add({ x: 0, y: -segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomRight,
+            to: bottomRight.add({ x: -segmentLength, y: 0 })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomLeft,
+            to: bottomLeft.add({ x: 0, y: -segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomLeft,
+            to: bottomLeft.add({ x: segmentLength, y: 0 })
+        });
+        super.draw(hovered, canvas);
+    }
+    onClick() {
+        if (this.isOn) {
+            document.exitFullscreen();
+        }
+        else {
+            this.target.requestFullscreen({ navigationUI: 'hide' });
+        }
+    }
+}
+class VolumeButton extends SettingButton {
+    target;
+    isOn = false;
+    constructor(position, size, target) {
+        super(position, size, 'Music');
+        this.target = target;
+    }
+    draw(hovered, canvas) {
+        const p = this.position, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent;
         canvas.drawRect({
             position: {
                 x: p.x - w / 4 + 1,
@@ -738,52 +952,28 @@ class VolumeButton {
                 }],
             color
         });
-        if (!this.isOn) {
-            canvas.drawLine({
-                from: {
-                    x: p.x - w / 2,
-                    y: p.y + h / 2
-                },
-                to: {
-                    x: p.x + w / 2,
-                    y: p.y - h / 2
-                },
-                color: Defaults.accentColor,
-                width: 2
-            });
+        super.draw(hovered, canvas);
+    }
+    onClick() {
+        const music = this.target;
+        if (music.paused) {
+            music.play();
         }
-        if (hovered) {
-            canvas.drawText({
-                position: {
-                    x: p.x,
-                    y: p.y + w / 2 + 2
-                },
-                text: 'Music: ' + status,
-                fontSize: 10,
-                align: 'center',
-                baseline: 'top',
-                color: Defaults.primaryColor
-            });
+        else {
+            music.pause();
         }
+        this.isOn = !music.paused;
     }
 }
 class GameUI {
     buttons = [];
-    volumeButton;
+    settingsButtons;
     constructor(music, canvas) {
-        const w = canvas.width, h = canvas.height, p = {
-            x: w - 40,
-            y: h - 40
-        };
-        this.volumeButton = new VolumeButton(p, 20, () => {
-            if (music.paused) {
-                music.play();
-            }
-            else {
-                music.pause();
-            }
-            this.volumeButton.isOn = !music.paused;
-        });
+        const w = canvas.width, h = canvas.height, size = 20, y = h - 30, p1 = { x: w - 40, y }, p2 = { x: w - 80, y }, volumeButton = new VolumeButton(p2, size, music), fullScreenButton = new FullScreenButton(p1, size, document.documentElement);
+        this.settingsButtons = [
+            fullScreenButton,
+            volumeButton
+        ];
     }
     click(position) {
         this.buttons.some((button) => {
@@ -893,116 +1083,6 @@ class GameTracker {
                 a.sendMessage(elapsedTime);
             }
         }
-    }
-}
-class MathHelper {
-    static clamp(number, min, max) {
-        return Math.min(Math.max(number, min), max);
-    }
-    static nearestPower(x, base) {
-        return Math.pow(base, this.nearestRoot(x, base));
-    }
-    static nearestRoot(x, degree) {
-        return Math.ceil(Math.log(x) / Math.log(degree));
-    }
-    static random(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-    static randomInt(min, max) {
-        return Math.floor(MathHelper.random(min, max));
-    }
-    static round(number, decimalPlaces) {
-        const multiplier = Math.pow(10, decimalPlaces);
-        return Math.round(number * multiplier) / multiplier;
-    }
-}
-class VectorMath {
-    static zero = {
-        x: 0,
-        y: 0
-    };
-    static add(v1, v2) {
-        return new VectorCalculator({
-            x: v1.x + v2.x,
-            y: v1.y + v2.y
-        });
-    }
-    static angle(v1, v2) {
-        v1 = this.normalize(v1);
-        v2 = this.normalize(v2);
-        return Math.acos(this.dotProduct(v1, v2));
-    }
-    static clamp(v, min, max) {
-        return new VectorCalculator({
-            x: MathHelper.clamp(v.x, min, max),
-            y: MathHelper.clamp(v.y, min, max)
-        });
-    }
-    static direction(v1, v2) {
-        return this.subtract(v2, v1).normalize();
-    }
-    static distance(v1, v2) {
-        const d = this.subtract(v2, v1);
-        return Math.sqrt(Math.pow(d.x, 2) + Math.pow(d.y, 2));
-    }
-    static divide(v, number) {
-        return new VectorCalculator({
-            x: v.x / number,
-            y: v.y / number
-        });
-    }
-    static dotProduct(v1, v2) {
-        return v1.x * v2.x + v1.y * v2.y;
-    }
-    static hadamardProduct(v1, v2) {
-        return new VectorCalculator({
-            x: v1.x * v2.x,
-            y: v1.y * v2.y
-        });
-    }
-    static invert(v) {
-        return this.multiply(v, -1);
-    }
-    static isEqual(v1, v2) {
-        return v1.x === v2.x && v1.y === v2.y;
-    }
-    static magnitude(v) {
-        return Math.sqrt(v.x * v.x + v.y * v.y);
-    }
-    static multiply(v, number) {
-        return new VectorCalculator({
-            x: v.x * number,
-            y: v.y * number
-        });
-    }
-    static normalize(v) {
-        const m = this.magnitude(v);
-        return this.divide(v, m);
-    }
-    static rotate(v, rad) {
-        const cos = Math.cos(rad), sin = Math.sin(rad);
-        return new VectorCalculator({
-            x: cos * v.x - sin * v.y,
-            y: sin * v.x + cos * v.y
-        });
-    }
-    static round(v, decimalPlaces) {
-        return new VectorCalculator({
-            x: MathHelper.round(v.x, decimalPlaces),
-            y: MathHelper.round(v.y, decimalPlaces)
-        });
-    }
-    static shift(v, direction, magnitude) {
-        return new VectorCalculator({
-            x: v.x + Math.cos(direction) * magnitude,
-            y: v.y + Math.sin(direction) * magnitude
-        });
-    }
-    static subtract(v1, v2) {
-        return new VectorCalculator({
-            x: v1.x - v2.x,
-            y: v1.y - v2.y
-        });
     }
 }
 class AttackerFactory {
@@ -1932,7 +2012,7 @@ class Menu {
             Utilities.defaultButton({ x: w / 2, y: h / 2 }, 'Tutorial', () => tutorial.reset()),
             Utilities.defaultButton({ x: w / 2, y: h / 2 + 60 }, 'New Game', () => newGame.execute()),
             Utilities.defaultButton({ x: w / 2, y: h / 2 + 120 }, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
-            ui.volumeButton
+            ...ui.settingsButtons
         ];
     }
     getButtons() {
@@ -2122,7 +2202,7 @@ class Pause {
             Utilities.defaultButton({ x: w / 2, y: 150 }, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
             Utilities.defaultButton({ x: w / 2, y: 210 }, 'New game', () => newGame.execute()),
             Utilities.defaultButton({ x: w / 2, y: 270 }, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
-            ui.volumeButton
+            ...ui.settingsButtons
         ];
         this.upgradeButtons = [
             new ServerUpgradeButton({ x: 250, y }, () => this.selectUpgrade('server')),

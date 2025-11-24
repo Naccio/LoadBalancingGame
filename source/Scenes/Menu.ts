@@ -28,7 +28,7 @@ class Menu implements Scene {
             Utilities.defaultButton({ x: w / 2, y: h / 2 }, 'Tutorial', () => tutorial.reset()),
             Utilities.defaultButton({ x: w / 2, y: h / 2 + 60 }, 'New Game', () => newGame.execute()),
             Utilities.defaultButton({ x: w / 2, y: h / 2 + 120 }, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
-            ui.volumeButton
+            ...ui.settingsButtons
         ];
     }
 
