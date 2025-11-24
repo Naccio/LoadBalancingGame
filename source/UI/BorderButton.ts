@@ -1,9 +1,10 @@
+/// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../Model/Point.ts' />
 /// <reference path='Button.ts' />
 
 class BorderButton implements Button {
     constructor(
-        public x: number,
-        public y: number,
+        public position: Point,
         public width: number,
         public height: number,
         private color: string,
@@ -12,16 +13,15 @@ class BorderButton implements Button {
         public onClick: () => void
     ) { }
 
-    public draw(hovered: boolean, context: CanvasRenderingContext2D) {
+    public draw(hovered: boolean, canvas: Canvas) {
         const color = hovered ? this.hoverColor : this.color;
 
-        Utilities.drawRect({
-            x: this.x,
-            y: this.y,
+        canvas.drawRect({
+            position: this.position,
             width: this.width,
             height: this.height,
             borderColor: color,
             borderWidth: this.borderWidth
-        }, context);
+        });
     }
 }

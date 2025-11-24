@@ -1,4 +1,5 @@
 /// <reference path='../../Defaults.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/MessageOrchestrator.ts' />
 /// <reference path='../../UI/SimpleButton.ts' />
@@ -19,7 +20,7 @@ class Tutorial implements Scene {
 
     public constructor(
         private steps: TutorialStep[],
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private gameArea: GameArea,
         private fader: TextFader,
         private game: GameTracker,
@@ -30,8 +31,14 @@ class Tutorial implements Scene {
 
         this.currentStep = steps[0];
         this.currentStepIndex = 0;
-        this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
-        this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = Utilities.defaultButton({
+            x: w / 3,
+            y: h - 40
+        }, 'Next', () => this.advance());
+        this.homeButton = Utilities.defaultButton({
+            x: w * 2 / 3,
+            y: h - 40
+        }, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
 
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));
@@ -51,50 +58,65 @@ class Tutorial implements Scene {
         return buttons;
     }
 
-    update() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+    draw() {
+        const w = this.canvas.width,
             h = this.canvas.height,
             texts = this.currentStep.texts,
             rectangle = {
-                x: w / 2,
-                y: 0,
                 width: w,
                 height: 80,
                 color: Defaults.backgroundColor,
                 borderColor: Defaults.backgroundBorderColor
             };
-        this.currentStep.run();
-        this.fader.update(1 / Defaults.frameRate);
 
-        if (this.currentStep.advance) {
-            this.advance();
-        }
-
-        context.clearRect(0, 0, w, h);
+        this.canvas.clear();
         this.gameArea.draw();
         this.fader.draw();
-        Utilities.drawRect({ ...rectangle, y: 40 }, context);
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: 40
+            },
+            ...rectangle
+        });
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText({
-                x: w / 2,
-                y: 18 + 20 * i,
+            this.canvas.drawText({
+                position: {
+                    x: w / 2,
+                    y: 18 + 20 * i
+                },
                 text,
                 fontWeight: 'bold',
                 fontSize: 18,
                 align: 'center',
                 color: Defaults.primaryColor
-            }, context);
+            });
         }
-        Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: h - 40
+            },
+            ...rectangle
+        });
         this.currentStep.draw();
+    }
+
+    update(elapsed: number) {
+        this.currentStep.update(elapsed);
+        this.fader.update(elapsed);
+
+        if (this.currentStep.advance) {
+            this.advance();
+        }
     }
 
     reset() {
         this.game.reset();
         this.orchestrator.reset();
         this.fader.emptyQueues();
+        this.currentStepIndex = 0;
         this.currentStep = this.steps[0];
         this.currentStep.setup();
         this.game.switchMode(Defaults.gameModes.TUTORIAL);

@@ -1,27 +1,33 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../Model/Point.ts' />
 /// <reference path='../Utilities.ts' />
 /// <reference path='UpgradeButton.ts' />
 
 class ServerUpgradeButton extends UpgradeButton {
-    constructor(x: number, y: number, onClick?: () => void) {
-        super(x, y, 'Buy new datacenter', onClick)
+    constructor(position: Point, onClick?: () => void) {
+        super(position, 'Buy new datacenter', onClick)
     }
 
-    drawIcon(context: CanvasRenderingContext2D) {
-        const x = this.x,
-            y = this.y;
+    drawIcon(canvas: Canvas) {
+        const p = this.position;
 
-        Utilities.drawText({
-            x: x - 25,
-            y,
+        canvas.drawText({
+            position: {
+                x: p.x - 25,
+                y: p.y
+            },
             text: '+',
             fontSize: 45,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
-        Utilities.drawServer(new Server(x + 15, y), {
+        });
+        Utilities.drawServer(new Server({
+            x: p.x + 15,
+            y: p.y
+        }), {
             ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
-        }, context);
+        }, canvas);
     }
 }

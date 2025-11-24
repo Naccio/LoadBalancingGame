@@ -1,4 +1,5 @@
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -8,7 +9,7 @@
 class ConnectToNewServer extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory
@@ -26,12 +27,12 @@ class ConnectToNewServer extends TutorialStep {
         this.game.clients[1].life = - 21;
     }
 
-    run() {
+    update(elapsed: number) {
         if (this.game.clients.length === 0) {
             const w = this.canvas.width,
                 h = this.canvas.height,
-                client0 = this.clientFactory.create(w / 4, h / 3, 10000),
-                client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+                client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000),
+                client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
 
             client0.life = - 21;
             client1.life = - 21;
@@ -39,7 +40,7 @@ class ConnectToNewServer extends TutorialStep {
         if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
             this.advance = true;
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
 
     draw() {

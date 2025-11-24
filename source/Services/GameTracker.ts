@@ -38,10 +38,10 @@ class GameTracker {
         this.switchMode(Defaults.gameModes.GAME);
     }
 
-    update() {
-        this.elapsedTime += 1 / Defaults.frameRate;
-        this.orchestrator.updateMessages();
-        this.updateClients();
+    update(elapsed: number) {
+        this.elapsedTime += elapsed / 1000;
+        this.orchestrator.updateMessages(elapsed);
+        this.updateClients(elapsed);
         this.updateServers();
         this.updateAttackers();
     }
@@ -56,7 +56,7 @@ class GameTracker {
         });
     }
 
-    updateClients() {
+    updateClients(elapsed: number) {
         const elapsedTime = this.elapsedTime,
             remaining = Defaults.gameLength * 60 - elapsedTime;
 
@@ -84,7 +84,7 @@ class GameTracker {
             }
 
             if (c.connectedTo === undefined) {
-                c.life += 1 / Defaults.frameRate;
+                c.life += elapsed / 1000;
 
                 //Check if client waited too much
                 if (remaining <= 0 || c.life > Defaults.maxClientWaitTime) {
@@ -93,7 +93,7 @@ class GameTracker {
                         this.selectedClient = undefined;
                     }
                     this.failedConnections += 1;
-                    this.popularityTracker.updatePopularity(-10, c.x, c.y);
+                    this.popularityTracker.updatePopularity(c, -10);
                 }
             } else {
                 if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {

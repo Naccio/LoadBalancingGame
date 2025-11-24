@@ -1,18 +1,19 @@
+/// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../Model/Point.ts' />
 /// <reference path='FadingText.ts' />
 
 class TextFader {
     private queues: {
         temporary: {
             id: string;
-            x: number;
-            y: number;
+            position: Point;
             activeTexts: FadingText[];
             queuedTexts: FadingText[];
         }[];
         permanent: FadingText[]
     };
 
-    constructor(private context: CanvasRenderingContext2D) {
+    constructor(private canvas: Canvas) {
         this.queues = { permanent: [], temporary: [] }
     }
 
@@ -22,25 +23,25 @@ class TextFader {
             const queue = this.queues.temporary[i];
             for (let j = 0; j < queue.activeTexts.length; j++) {
                 const text = queue.activeTexts[j];
-                this.drawText(text, queue.x, queue.y);
+                this.drawText(text, queue.position);
             }
         }
 
         // Permanent text
         for (let i = 0; i < this.queues.permanent.length; i += 1) {
             const text = this.queues.permanent[i];
-            this.drawText(text, text.x ?? 0, text.y ?? 0);
+            this.drawText(text, text.position);
         }
-    };
+    }
 
-    update(deltaTime: number) {
+    update(elapsed: number) {
         // Normal text
         for (let i = 0; i < this.queues.temporary.length; i++) {
             const queue = this.queues.temporary[i];
 
             for (let j = 0; j < queue.activeTexts.length; j++) {
                 const text = queue.activeTexts[j];
-                text.delta += 70 * deltaTime;
+                text.delta += 70 * elapsed / 1000;
 
                 if (text.fadeIn) {
                     text.alpha += 0.02/*4 * Math.floor(100 * deltaTime / text.life) / 100*/;
@@ -84,18 +85,21 @@ class TextFader {
         }
     }
 
-    addText(text: FadingText, queueId: string) {
-        if (!text.life) {
-            text.life = 1000;
+    addText(text: FadingText) {
+        const id = this.getId(text.position);
+
+        let queue = this.queues.temporary.find(q => q.id == id);
+
+        if (!queue) {
+            queue = this.createQueue(text.position);
         }
-        if (text.fadeIn) {
-            text.alpha = 0;
-        } else {
-            text.alpha = 1;
-        }
+
+        text.life ??= 1000;
+        text.alpha = text.fadeIn ? 0 : 1;
         text.delta = 0;
-        this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
-    };
+
+        queue.queuedTexts.push(text);
+    }
 
     addPermanentText(text: FadingText) {
         for (let i = 0; i < this.queues.permanent.length; i++) {
@@ -109,7 +113,7 @@ class TextFader {
         text.alpha = 0;
         text.fadeIn = true;
         this.queues.permanent.push(text);
-    };
+    }
 
     removeFromPermanentQueue(id: string) {
         for (let i = 0; i < this.queues.permanent.length; i++) {
@@ -118,35 +122,44 @@ class TextFader {
                 return;
             }
         }
-    };
-
-    createQueue(id: string, x: number, y: number) {
-        this.queues.temporary.push({
-            id: id,
-            x: x,
-            y: y,
-            activeTexts: [],
-            queuedTexts: []
-        });
-    };
+    }
 
     emptyQueues() {
         this.queues = { permanent: [], temporary: [] };
-    };
+    }
 
-    private drawText(text: FadingText, x: number, y: number) {
+    private createQueue(position: Point) {
+        const queue = {
+            id: this.getId(position),
+            position: { ...position },
+            activeTexts: [],
+            queuedTexts: []
+        };
+
+        this.queues.temporary.push(queue);
+
+        return queue;
+    }
+
+    private drawText(text: FadingText, position: Point) {
         const delta = text.delta ?? 0,
             { r, g, b } = text.rgbColor,
             a = text.alpha,
             color = `rgba(${r}, ${g}, ${b}, ${a})`;
 
-        Utilities.drawText({
+        this.canvas.drawText({
             ...text,
-            x,
-            y: y - delta,
+            position: {
+                x: position.x,
+                y: position.y - delta
+            },
             fontFamily: 'Arial',
             align: 'center',
             color
-        }, this.context);
+        });
+    }
+
+    private getId(position: Point) {
+        return position.x.toString() + position.y.toString();
     }
 }

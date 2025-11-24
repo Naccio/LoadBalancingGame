@@ -1,5 +1,6 @@
 /// <reference path='../Commands/NewGame.ts' />
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/PopularityTracker.ts' />
@@ -15,7 +16,7 @@ class GameOver implements Scene {
     public id = Defaults.gameModes.GAME_OVER;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private clouds: Clouds,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
@@ -26,8 +27,8 @@ class GameOver implements Scene {
             h = canvas.height;
 
         this.buttons = [
-            Utilities.defaultButton(w / 2, h - 110, 'Restart', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, h - 60, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
+            Utilities.defaultButton({ x: w / 2, y: h - 110 }, 'Restart', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: h - 60 }, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
 
@@ -35,21 +36,22 @@ class GameOver implements Scene {
         return this.buttons;
     }
 
-    update() {
-        var context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+    draw() {
+        var w = this.canvas.width,
             h = this.canvas.height;
 
         this.clouds.draw();
-        Utilities.drawText({
-            x: w / 2,
-            y: 100,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: 100
+            },
             text: 'Game Over',
             fontSize: 60,
             fontVariant: 'small-caps',
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
 
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
@@ -57,31 +59,41 @@ class GameOver implements Scene {
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
 
         const fontSize = 30;
-        Utilities.drawText({
-            x: w / 2 + 68,
-            y: h / 2 + 50,
+        this.canvas.drawText({
+            position: {
+                x: w / 2 + 68,
+                y: h / 2 + 50
+            },
             text: 'Popularity:',
             fontSize,
             align: 'end',
             color: this.color
-        }, context);
-        Utilities.drawText({
-            x: w / 2 + 75,
-            y: h / 2 + 50,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2 + 75,
+                y: h / 2 + 50
+            },
             text: this.popularity.popularity.toString(),
             fontSize,
             align: 'start',
             color: this.color
-        }, context);
+        });
 
-        Utilities.drawLine({
-            x1: w / 2 - 130,
-            y1: h / 2 + 20,
-            x2: w / 2 + 130,
-            y2: h / 2 + 20,
+        this.canvas.drawLine({
+            from: {
+                x: w / 2 - 130,
+                y: h / 2 + 20
+            },
+            to: {
+                x: w / 2 + 130,
+                y: h / 2 + 20
+            },
             color: Defaults.accentColor
-        }, context);
+        });
     }
+
+    update() { }
 
     private drawStat(y: number, text: string, value: number) {
         this.drawStatTitle(y, text);
@@ -89,30 +101,32 @@ class GameOver implements Scene {
     }
 
     private drawStatTitle(y: number, text: string) {
-        const context = this.canvas.getContext('2d')!,
-            x = this.canvas.width / 2 + 80;
+        const x = this.canvas.width / 2 + 80;
 
-        Utilities.drawText({
-            x,
-            y,
+        this.canvas.drawText({
+            position: {
+                x,
+                y
+            },
             text: text + ':',
             fontSize: 15,
             align: 'end',
             color: this.color
-        }, context);
+        });
     }
 
     private drawStatValue(y: number, value: number) {
-        const context = this.canvas.getContext('2d')!,
-            x = this.canvas.width / 2 + 90;
+        const x = this.canvas.width / 2 + 90;
 
-        Utilities.drawText({
-            x,
-            y,
+        this.canvas.drawText({
+            position: {
+                x,
+                y
+            },
             text: value.toString(),
             fontSize: 15,
             align: 'start',
             color: this.color
-        }, context);
+        });
     }
 }

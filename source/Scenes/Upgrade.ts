@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Model/Server.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/Scheduler.ts' />
@@ -13,7 +14,7 @@ class Upgrade implements Scene {
     public id = Defaults.gameModes.UPGRADE;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private upgradesTracker: UpgradesTracker,
         private scheduler: Scheduler,
@@ -24,7 +25,7 @@ class Upgrade implements Scene {
     getButtons() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
+            button = Utilities.defaultButton({ x: w / 2, y: h - 100 }, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
 
         button.color = Defaults.secondaryColor;
 
@@ -55,13 +56,10 @@ class Upgrade implements Scene {
         return buttons;
     }
 
-    update() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height;
+    draw() {
+        const w = this.canvas.width;
 
-        context.clearRect(0, 0, w, h);
-
+        this.canvas.clear();
         this.gameArea.drawServers();
 
         let text;
@@ -74,22 +72,26 @@ class Upgrade implements Scene {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText({
-            x: w / 2,
-            y: 60,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: 60
+            },
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
+
+    update() { }
 
     private createAreaButton(x: number, y: number, area: string) {
         const w = this.canvas.width,
             h = this.canvas.height,
             borderWidth = Defaults.highlightWidth;
 
-        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton({ x, y }, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
@@ -99,7 +101,7 @@ class Upgrade implements Scene {
         const borderWidth = Defaults.highlightWidth,
             size = Defaults.serverSize + borderWidth;
 
-        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton(server.position, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });

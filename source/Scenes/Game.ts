@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/Scheduler.ts' />
@@ -11,7 +12,7 @@ class Game implements Scene {
     public id = Defaults.gameModes.GAME;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private scheduler: Scheduler,
         private gameArea: GameArea,
@@ -22,26 +23,23 @@ class Game implements Scene {
         return [];
     }
 
-    update() {
+    draw() {
+        this.canvas.clear();
+        this.gameArea.draw();
+    }
+
+    update(elapsed: number) {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
         }
-        this.game.update();
-        this.fader.update(1 / Defaults.frameRate);
+        this.game.update(elapsed);
+        this.fader.update(elapsed);
         this.scheduler.schedule();
 
         var m = Math.floor(this.game.elapsedTime / 60);
 
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
             this.game.switchMode(Defaults.gameModes.GAME_OVER);
-            return;
         }
-
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height;
-
-        context.clearRect(0, 0, w, h);
-        this.gameArea.draw();
     }
 }

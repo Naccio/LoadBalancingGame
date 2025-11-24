@@ -2,41 +2,29 @@
 class Message {
     sender;
     receiver;
-    x;
-    y;
-    dx;
-    dy;
+    speed;
+    position;
     status;
     life;
     constructor(sender, receiver) {
         this.sender = sender;
         this.receiver = receiver;
-        this.x = sender.x;
-        this.y = sender.y;
-        this.dx = 0;
-        this.dy = 0;
-        this.sender = sender;
-        this.receiver = receiver;
+        this.position = { ...sender.position };
         this.status = 'req';
         this.life = 0;
-        this.computeVelocity();
+        this.speed = VectorMath.direction(sender.position, receiver.position)
+            .multiply(Defaults.messageVelocity);
     }
-    computeVelocity() {
-        var xDiff = this.receiver.x - this.x, yDiff = this.receiver.y - this.y, angle = Math.atan2(yDiff, xDiff), v = Defaults.messageVelocity / Defaults.frameRate;
-        this.dx = Math.cos(angle) * v;
-        this.dy = Math.sin(angle) * v;
+    update(elapsed) {
+        this.position = this.speed
+            .divide(1000 / elapsed)
+            .add(this.position);
     }
-    ;
-    move() {
-        this.x += this.dx;
-        this.y += this.dy;
-    }
-    ;
     invertDirection() {
         const tmp = this.sender;
         this.sender = this.receiver;
         this.receiver = tmp;
-        this.computeVelocity();
+        this.speed = this.speed.invert();
     }
     ;
 }
@@ -46,7 +34,6 @@ class MessageOrchestrator {
     avgResponseTime = 0;
     createMessage(sender, receiver) {
         const m = new Message(sender, receiver);
-        m.computeVelocity();
         this.messages.push(m);
     }
     registerAck(message) {
@@ -58,11 +45,11 @@ class MessageOrchestrator {
         this.totalACKs = 0;
         this.avgResponseTime = 0;
     }
-    updateMessages() {
+    updateMessages(elapsed) {
         const clientSize = Defaults.clientSize;
         for (let i = 0; i < this.messages.length; i += 1) {
             var m = this.messages[i];
-            m.life += 1 / Defaults.frameRate;
+            m.life += elapsed / 1000;
             if (m.status === 'req') {
                 if (m.sender.connectedTo === undefined) {
                     this.messages.splice(i--, 1);
@@ -80,33 +67,29 @@ class MessageOrchestrator {
                 continue;
             }
             if (m.status != 'queued') {
-                var r = m.receiver;
-                if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
-                    m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
+                const r = m.receiver, mp = m.position, rp = r.position;
+                if (mp.x < rp.x + clientSize / 2 && mp.x > rp.x - clientSize / 2 &&
+                    mp.y < rp.y + clientSize / 2 && mp.y > rp.y - clientSize / 2)
                     r.receiveMessage(m);
                 else
-                    m.move();
+                    m.update(elapsed);
             }
         }
     }
 }
 class Attacker {
     orchestrator;
-    x;
-    y;
+    position;
     messages;
     connectedTo;
     lastMessageTime;
     messagesToSend;
     messagesToReceive;
-    constructor(orchestrator, x, y, messages, connectedTo) {
+    constructor(orchestrator, position, messages, connectedTo) {
         this.orchestrator = orchestrator;
-        this.x = x;
-        this.y = y;
+        this.position = position;
         this.messages = messages;
         this.connectedTo = connectedTo;
-        this.x = x;
-        this.y = y;
         this.connectedTo = connectedTo;
         this.lastMessageTime = 0;
         this.messagesToSend = messages;
@@ -123,664 +106,6 @@ class Attacker {
         this.messagesToReceive -= 1;
     }
     ;
-}
-class TextFader {
-    context;
-    queues;
-    constructor(context) {
-        this.context = context;
-        this.queues = { permanent: [], temporary: [] };
-    }
-    draw() {
-        for (let i = 0; i < this.queues.temporary.length; i++) {
-            const queue = this.queues.temporary[i];
-            for (let j = 0; j < queue.activeTexts.length; j++) {
-                const text = queue.activeTexts[j];
-                this.drawText(text, queue.x, queue.y);
-            }
-        }
-        for (let i = 0; i < this.queues.permanent.length; i += 1) {
-            const text = this.queues.permanent[i];
-            this.drawText(text, text.x ?? 0, text.y ?? 0);
-        }
-    }
-    ;
-    update(deltaTime) {
-        for (let i = 0; i < this.queues.temporary.length; i++) {
-            const queue = this.queues.temporary[i];
-            for (let j = 0; j < queue.activeTexts.length; j++) {
-                const text = queue.activeTexts[j];
-                text.delta += 70 * deltaTime;
-                if (text.fadeIn) {
-                    text.alpha += 0.02;
-                    if (text.alpha >= 1) {
-                        text.fadeIn = false;
-                    }
-                }
-                else {
-                    text.alpha -= 0.02;
-                    if (text.alpha <= 0) {
-                        queue.activeTexts.splice(j--, 1);
-                        continue;
-                    }
-                }
-            }
-            if (queue.queuedTexts.length > 0) {
-                if (queue.activeTexts.length === 0) {
-                    queue.activeTexts.push(queue.queuedTexts.shift());
-                }
-                else if (queue.activeTexts[queue.activeTexts.length - 1].delta > queue.queuedTexts[0].fontSize) {
-                    queue.activeTexts.push(queue.queuedTexts.shift());
-                }
-            }
-        }
-        for (let i = 0; i < this.queues.permanent.length; i += 1) {
-            const text = this.queues.permanent[i];
-            if (text.fadeIn) {
-                text.alpha += 0.05;
-                if (text.alpha >= 1) {
-                    text.fadeIn = false;
-                }
-            }
-            else {
-                text.alpha -= 0.05;
-                if (text.alpha <= 0) {
-                    text.fadeIn = true;
-                }
-            }
-        }
-    }
-    addText(text, queueId) {
-        if (!text.life) {
-            text.life = 1000;
-        }
-        if (text.fadeIn) {
-            text.alpha = 0;
-        }
-        else {
-            text.alpha = 1;
-        }
-        text.delta = 0;
-        this.queues.temporary.find(q => q.id == queueId)?.queuedTexts.push(text);
-    }
-    ;
-    addPermanentText(text) {
-        for (let i = 0; i < this.queues.permanent.length; i++) {
-            if (this.queues.permanent[i].id === text.id) {
-                return;
-            }
-        }
-        if (!text.life) {
-            text.life = 1000;
-        }
-        text.alpha = 0;
-        text.fadeIn = true;
-        this.queues.permanent.push(text);
-    }
-    ;
-    removeFromPermanentQueue(id) {
-        for (let i = 0; i < this.queues.permanent.length; i++) {
-            if (this.queues.permanent[i].id === id) {
-                this.queues.permanent.splice(i, 1);
-                return;
-            }
-        }
-    }
-    ;
-    createQueue(id, x, y) {
-        this.queues.temporary.push({
-            id: id,
-            x: x,
-            y: y,
-            activeTexts: [],
-            queuedTexts: []
-        });
-    }
-    ;
-    emptyQueues() {
-        this.queues = { permanent: [], temporary: [] };
-    }
-    ;
-    drawText(text, x, y) {
-        const delta = text.delta ?? 0, { r, g, b } = text.rgbColor, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
-        Utilities.drawText({
-            ...text,
-            x,
-            y: y - delta,
-            fontFamily: 'Arial',
-            align: 'center',
-            color
-        }, this.context);
-    }
-}
-class Utilities {
-    static defaultButton(x, y, text, onClick) {
-        return new SimpleButton(x, y, 120, 40, text, Defaults.primaryColor, onClick);
-    }
-    static drawArrow(arrow, context) {
-        const x1 = arrow.x1, y1 = arrow.y1, x2 = arrow.x2, y2 = arrow.y2, angle = Math.atan2(y2 - y1, x2 - x1), inverseAngle = Math.PI - angle, barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = arrow.barbsLength ?? 8, rightBarbAngle = barbsAngle - inverseAngle, leftBarbAngle = -barbsAngle - inverseAngle, rightBarbX = x2 + Math.cos(rightBarbAngle) * barbsLength, rightBarbY = y2 + Math.sin(rightBarbAngle) * barbsLength, leftBarbX = x2 + Math.cos(leftBarbAngle) * barbsLength, leftBarbY = y2 + Math.sin(leftBarbAngle) * barbsLength;
-        context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
-        context.lineWidth = arrow?.width ?? 1;
-        context.lineJoin = 'round';
-        context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
-        context.lineTo(rightBarbX, rightBarbY);
-        context.moveTo(x2, y2);
-        context.lineTo(leftBarbX, leftBarbY);
-        context.stroke();
-    }
-    static drawCircle(circle, context) {
-        context.beginPath();
-        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, true);
-        context.closePath();
-        Utilities.draw(circle, context);
-    }
-    static drawCircleHighlight(x, y, radius, context) {
-        const innerCircle = {
-            x,
-            y,
-            radius,
-            borderColor: 'fireBrick',
-            borderWidth: 2
-        }, outerCircle = {
-            ...innerCircle,
-            radius: radius + 1,
-            borderColor: 'red'
-        };
-        Utilities.drawCircle(innerCircle, context);
-        Utilities.drawCircle(outerCircle, context);
-    }
-    static drawLine(line, context) {
-        context.strokeStyle = line?.color ?? Defaults.defaultColor;
-        context.lineWidth = line?.width ?? 1;
-        context.beginPath();
-        context.moveTo(line.x1, line.y1);
-        context.lineTo(line.x2, line.y2);
-        context.stroke();
-    }
-    static drawRect(rectangle, context) {
-        const x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
-        context.beginPath();
-        context.rect(x - w / 2, y - h / 2, w, h);
-        context.closePath();
-        Utilities.draw(rectangle, context);
-    }
-    static drawServer(server, options, context) {
-        options = {
-            ...Defaults.serverDefaults,
-            ...options
-        };
-        const size = options.size;
-        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
-        for (; i > -1; i -= 1) {
-            Utilities.drawRect({
-                x: server.x + 3 * i,
-                y: server.y - 3 * i,
-                width: size,
-                height: size,
-                color: options.color,
-                borderColor: options.borderColor
-            }, context);
-        }
-        const speed = Defaults.serverSpeed, queueWidth = 5, queueHeight = size - 10, queueX = server.x + size / 2 - 7, queueY = server.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
-        Utilities.drawRect({
-            x: queueX,
-            y: queueY,
-            width: queueWidth + 2,
-            height: queueHeight + 2,
-            color: options.queueColor,
-            borderColor: options.queueBorderColor
-        }, context);
-        const gradient = context.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
-        gradient.addColorStop(0.5, Defaults.successColor);
-        gradient.addColorStop(1, Defaults.dangerColor);
-        Utilities.drawRect({
-            x: gradientX,
-            y: gradientY,
-            width: gradientWidth,
-            height: gradientHeight,
-            color: gradient
-        }, context);
-        for (i = server.speed; i > 0; i -= speed) {
-            const starX = server.x - size / 2 + 7, starY = server.y + size / 2 - 4 - 5 * (i / speed);
-            Utilities.drawStar({
-                x: starX,
-                y: starY,
-                outerRadius: 4,
-                innerRadius: 2,
-                color: options.speedColor,
-                borderColor: options.speedBorderColor
-            }, context);
-        }
-    }
-    static drawStar(star, context) {
-        const centerX = star.x, centerY = star.y, spikes = star.spikes ?? 5, outerRadius = star.outerRadius, innerRadius = star.innerRadius, step = Math.PI / spikes;
-        let x, y, rot = Math.PI / 2 * 3;
-        context.beginPath();
-        context.moveTo(centerX, centerY - outerRadius);
-        for (let i = 0; i < spikes; i += 1) {
-            x = centerX + Math.cos(rot) * outerRadius;
-            y = centerY + Math.sin(rot) * outerRadius;
-            context.lineTo(x, y);
-            rot += step;
-            x = centerX + Math.cos(rot) * innerRadius;
-            y = centerY + Math.sin(rot) * innerRadius;
-            context.lineTo(x, y);
-            rot += step;
-        }
-        context.lineTo(centerX, centerY - outerRadius);
-        context.closePath();
-        Utilities.draw(star, context);
-    }
-    static drawText(text, context) {
-        const fontFamily = text.fontFamily ?? 'monospace';
-        let font = `${text.fontSize}px ${fontFamily}`;
-        if (text.fontVariant) {
-            font = `${text.fontVariant} ${font}`;
-        }
-        if (text.fontWeight) {
-            font = `${text.fontWeight} ${font}`;
-        }
-        context.font = font;
-        context.textAlign = text.align ?? 'start';
-        context.textBaseline = text.baseline ?? 'middle';
-        context.fillStyle = text.color ?? Defaults.defaultColor;
-        context.fillText(text.text, text.x, text.y);
-    }
-    static drawTriangle(triangle, context) {
-        const x = triangle.x, y = triangle.y, b = triangle.base, h = triangle.height;
-        context.beginPath();
-        context.moveTo(x, y - h / 2);
-        context.lineTo(x + b / 2, y + h / 2);
-        context.lineTo(x - b / 2, y + h / 2);
-        Utilities.draw(triangle, context);
-    }
-    static getDistance(x1, y1, x2, y2) {
-        var xs = x2 - x1, ys = y2 - y1;
-        return Math.sqrt(Math.pow(xs, 2) + Math.pow(ys, 2));
-    }
-    static invertColor(color) {
-        color = color.substring(1);
-        let colorNumber = parseInt(color, 16);
-        colorNumber = 0xFFFFFF ^ colorNumber;
-        color = colorNumber.toString(16);
-        color = ('000000' + color).slice(-6);
-        color = '#' + color;
-        return color;
-    }
-    static random(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-    static draw(shape, context) {
-        if (shape.color) {
-            context.fillStyle = shape.color;
-            context.fill();
-        }
-        if (shape.borderColor) {
-            context.strokeStyle = shape.borderColor;
-            context.lineWidth = shape.borderWidth ?? 1;
-            context.stroke();
-        }
-    }
-}
-class UpgradesTracker {
-    upgrades = [100, 200, 300, 500, 700, 1000, 1300, 1700, 2100, 2600, 3100, 3700, 4300, 5000];
-    nextUpgradeIndex = 0;
-    upgradesAvailable = 0;
-    selectedUpgrade;
-    get nextUpgrade() {
-        if (this.nextUpgradeIndex >= this.upgrades.length) {
-            return Infinity;
-        }
-        return this.upgrades[this.nextUpgradeIndex];
-    }
-    ;
-    increaseUpgrades() {
-        this.upgradesAvailable += 1;
-        this.nextUpgradeIndex += 1;
-    }
-    reset() {
-        this.nextUpgradeIndex = 0;
-        this.upgradesAvailable = 0;
-        this.selectedUpgrade = undefined;
-    }
-}
-class PopularityTracker {
-    fader;
-    upgrades;
-    canvas;
-    popularity;
-    constructor(fader, upgrades, canvas) {
-        this.fader = fader;
-        this.upgrades = upgrades;
-        this.canvas = canvas;
-        this.popularity = 0;
-    }
-    draw(y) {
-        const context = this.canvas.getContext('2d');
-        Utilities.drawText({
-            x: 10,
-            y,
-            text: 'Popularity: ' + this.popularity,
-            fontSize: 18,
-            fontFamily: 'sans-serif'
-        }, context);
-    }
-    reset() {
-        this.popularity = 0;
-    }
-    updatePopularity(amount, x, y) {
-        let fontSize = amount >= 5 ? 16 : 12, color = amount < 0
-            ? { r: 150, g: 0, b: 0 }
-            : { r: 0, g: 150, b: 0 };
-        this.fader.addText({
-            text: amount.toString(),
-            rgbColor: color,
-            fontSize: fontSize,
-            fontWeight: 'bold',
-            alpha: 1,
-            delta: 0,
-            x,
-            y
-        }, x.toString() + y.toString());
-        this.popularity += amount;
-        if (this.popularity >= this.upgrades.nextUpgrade) {
-            this.upgrades.increaseUpgrades();
-        }
-    }
-}
-class Client {
-    orchestrator;
-    popularity;
-    x;
-    y;
-    messages;
-    life;
-    connectedTo;
-    lastMessageTime;
-    messagesToSend;
-    ACKsToReceive;
-    NACKsToDie;
-    constructor(orchestrator, popularity, x, y, messages) {
-        this.orchestrator = orchestrator;
-        this.popularity = popularity;
-        this.x = x;
-        this.y = y;
-        this.messages = messages;
-        this.x = x;
-        this.y = y;
-        this.life = 0;
-        this.lastMessageTime = 0;
-        this.messagesToSend = messages;
-        this.ACKsToReceive = messages;
-        this.NACKsToDie = Math.floor(messages / 3);
-    }
-    sendMessage(elapsedTime) {
-        if (!this.connectedTo) {
-            throw 'Disconnected client cannot send messages.';
-        }
-        this.orchestrator.createMessage(this, this.connectedTo);
-        this.messagesToSend -= 1;
-        this.lastMessageTime = elapsedTime;
-    }
-    ;
-    receiveMessage(message) {
-        let n;
-        if (message.status === 'ack') {
-            this.ACKsToReceive -= 1;
-            n = 1;
-            if (this.ACKsToReceive === 0) {
-                n += 5;
-            }
-            this.orchestrator.registerAck(message);
-            this.popularity.updatePopularity(n, this.x, this.y);
-        }
-        else {
-            this.NACKsToDie -= 1;
-            n = -1;
-            if (this.NACKsToDie > 0) {
-                this.messagesToSend += 1;
-            }
-            else {
-                n -= 5;
-            }
-            this.popularity.updatePopularity(n, this.x, this.y);
-        }
-        message.status = 'done';
-    }
-    ;
-}
-class Server {
-    x;
-    y;
-    queue;
-    lastMessageTime;
-    capacity;
-    speed;
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.x = x;
-        this.y = y;
-        this.queue = [];
-        this.lastMessageTime = 0;
-        this.capacity = Defaults.serverCapacity;
-        this.speed = Defaults.serverSpeed;
-    }
-    sendMessage(elapsedTime) {
-        const msg = this.queue.shift();
-        if (msg) {
-            msg.status = 'ack';
-            msg.invertDirection();
-            this.lastMessageTime = elapsedTime;
-        }
-    }
-    ;
-    receiveMessage(message) {
-        message.x = this.x;
-        message.y = this.y;
-        if (this.queue.length < this.capacity) {
-            this.queue.push(message);
-            message.status = 'queued';
-        }
-        else {
-            message.status = 'nack';
-            message.invertDirection();
-        }
-    }
-    ;
-}
-class VolumeButton {
-    x;
-    y;
-    onClick;
-    width;
-    height;
-    isOn = false;
-    constructor(x, y, size, onClick) {
-        this.x = x;
-        this.y = y;
-        this.onClick = onClick;
-        this.width = size;
-        this.height = size;
-    }
-    draw(hovered, context) {
-        const x = this.x, y = this.y, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent, status = this.isOn ? 'On' : 'Off';
-        Utilities.drawRect({
-            x: x - w / 4 + 1,
-            y,
-            width: w / 4 + 1,
-            height: h / 2 - 1,
-            color
-        }, context);
-        var path = new Path2D();
-        path.moveTo(x - 1, y - h / 4);
-        path.lineTo(x + w / 4, y - h / 2 + 1);
-        path.lineTo(x + w / 4, y + h / 2 - 1);
-        path.lineTo(x - 1, y + h / 4);
-        path.closePath();
-        context.fillStyle = color;
-        context.fill(path);
-        if (!this.isOn) {
-            Utilities.drawLine({
-                x1: x - w / 2,
-                y1: y + h / 2,
-                x2: x + w / 2,
-                y2: y - h / 2,
-                color: Defaults.accentColor,
-                width: 2
-            }, context);
-        }
-        if (hovered) {
-            Utilities.drawText({
-                x,
-                y: y + w / 2 + 2,
-                text: 'Music: ' + status,
-                fontSize: 10,
-                align: 'center',
-                baseline: 'top',
-                color: Defaults.primaryColor
-            }, context);
-        }
-    }
-}
-class GameUI {
-    buttons = [];
-    volumeButton;
-    constructor(music, canvas) {
-        const w = canvas.width, h = canvas.height, x = w - 40, y = h - 40;
-        this.volumeButton = new VolumeButton(x, y, 20, () => {
-            if (music.paused) {
-                music.play();
-            }
-            else {
-                music.pause();
-            }
-            this.volumeButton.isOn = !music.paused;
-        });
-    }
-    click(x, y) {
-        this.buttons.some((button) => {
-            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
-                button.onClick();
-                return true;
-            }
-        });
-    }
-}
-class GameTracker {
-    popularityTracker;
-    ui;
-    orchestrator;
-    selectedClient;
-    currentGameMode = 0;
-    clientsServed = 0;
-    droppedConnections = 0;
-    failedConnections = 0;
-    elapsedTime = 0;
-    servers = [];
-    clients = [];
-    attackers = [];
-    constructor(popularityTracker, ui, orchestrator) {
-        this.popularityTracker = popularityTracker;
-        this.ui = ui;
-        this.orchestrator = orchestrator;
-    }
-    switchMode(gameMode) {
-        this.ui.buttons = [];
-        this.currentGameMode = gameMode;
-    }
-    reset() {
-        this.selectedClient = undefined;
-        this.clientsServed = 0;
-        this.droppedConnections = 0;
-        this.failedConnections = 0;
-        this.elapsedTime = 0;
-        this.servers = [];
-        this.clients = [];
-        this.attackers = [];
-        this.switchMode(Defaults.gameModes.GAME);
-    }
-    update() {
-        this.elapsedTime += 1 / Defaults.frameRate;
-        this.orchestrator.updateMessages();
-        this.updateClients();
-        this.updateServers();
-        this.updateAttackers();
-    }
-    updateServers() {
-        const elapsedTime = this.elapsedTime;
-        this.servers.forEach(function (s) {
-            if ((elapsedTime - s.lastMessageTime) > 1 / s.speed) {
-                s.sendMessage(elapsedTime);
-            }
-        });
-    }
-    updateClients() {
-        const elapsedTime = this.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
-        for (let i = 0; i < this.clients.length; i++) {
-            var c = this.clients[i];
-            if (remaining <= 0 && c.messagesToSend > 0) {
-                c.ACKsToReceive -= c.messagesToSend;
-                c.messagesToSend = 0;
-            }
-            if (c.messagesToSend === 0 && c.ACKsToReceive === 0) {
-                this.clients.splice(i--, 1);
-                this.clientsServed += 1;
-                continue;
-            }
-            if (c.NACKsToDie === 0) {
-                c.connectedTo = undefined;
-                this.clients.splice(i--, 1);
-                this.droppedConnections += 1;
-                continue;
-            }
-            if (c.connectedTo === undefined) {
-                c.life += 1 / Defaults.frameRate;
-                if (remaining <= 0 || c.life > Defaults.maxClientWaitTime) {
-                    this.clients.splice(i--, 1);
-                    if (c === this.selectedClient) {
-                        this.selectedClient = undefined;
-                    }
-                    this.failedConnections += 1;
-                    this.popularityTracker.updatePopularity(-10, c.x, c.y);
-                }
-            }
-            else {
-                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {
-                    c.sendMessage(elapsedTime);
-                }
-            }
-        }
-    }
-    updateAttackers() {
-        const elapsedTime = this.elapsedTime;
-        for (let i = 0; i < this.attackers.length; i += 1) {
-            var a = this.attackers[i];
-            if (a.messagesToReceive === 0) {
-                this.attackers.splice(i--, 1);
-                continue;
-            }
-            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientSpeed) {
-                a.sendMessage(elapsedTime);
-            }
-        }
-    }
-}
-class AttackerFactory {
-    game;
-    orchestrator;
-    constructor(game, orchestrator) {
-        this.game = game;
-        this.orchestrator = orchestrator;
-    }
-    create(x, y, messages, server) {
-        const attacker = new Attacker(this.orchestrator, x, y, messages, server);
-        this.game.attackers.push(attacker);
-        return attacker;
-    }
 }
 class Defaults {
     static accentColor = '#ff0000';
@@ -848,21 +173,954 @@ class Defaults {
         speedBorderColor: '#999999',
     };
 }
+class Canvas {
+    canvasElement;
+    context;
+    scale = 0;
+    width = 800;
+    height = 600;
+    constructor(canvasElement) {
+        this.canvasElement = canvasElement;
+        const context = canvasElement.getContext('2d');
+        if (!context) {
+            throw 'Could not get 2D context from canvas';
+        }
+        window.addEventListener('resize', () => this.resize());
+        this.context = context;
+        this.resize();
+    }
+    get center() {
+        return {
+            x: this.width / 2,
+            y: this.height / 2
+        };
+    }
+    clear() {
+        const width = this.getActualMeasure(this.width), height = this.getActualMeasure(this.height);
+        this.context.fillStyle = '#ffffff';
+        this.context.fillRect(0, 0, width, height);
+    }
+    createLinearGradient(x1, y1, x2, y2) {
+        x1 = this.getActualMeasure(x1);
+        y1 = this.getActualMeasure(y1);
+        x2 = this.getActualMeasure(x2);
+        y2 = this.getActualMeasure(y2);
+        return this.context.createLinearGradient(x1, y1, x2, y2);
+    }
+    drawArrow(arrow) {
+        const context = this.context, from = this.getActualPosition(arrow.from), to = this.getActualPosition(arrow.to), barbsAngle = arrow.barbsAngle ?? Math.PI / 5, barbsLength = this.getActualMeasure(arrow.barbsLength ?? 8), direction = VectorMath.direction(to, from), rightBarb = direction.rotate(barbsAngle).multiply(barbsLength).add(to), leftBarb = direction.rotate(-barbsAngle).multiply(barbsLength).add(to);
+        context.strokeStyle = arrow?.color ?? Defaults.defaultColor;
+        context.lineWidth = arrow?.width ?? 1;
+        context.lineJoin = 'round';
+        context.beginPath();
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.lineTo(rightBarb.x, rightBarb.y);
+        context.moveTo(to.x, to.y);
+        context.lineTo(leftBarb.x, leftBarb.y);
+        context.stroke();
+    }
+    drawCircle(circle) {
+        const context = this.context, p = this.getActualPosition(circle.position), r = this.getActualMeasure(circle.radius);
+        context.beginPath();
+        context.arc(p.x, p.y, r, 0, Math.PI * 2, true);
+        context.closePath();
+        this.draw(circle);
+    }
+    drawLine(line) {
+        const context = this.context, from = this.getActualPosition(line.from), to = this.getActualPosition(line.to);
+        context.strokeStyle = line?.color ?? Defaults.defaultColor;
+        context.lineWidth = this.getActualMeasure(line?.width ?? 1);
+        context.beginPath();
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.stroke();
+    }
+    drawPolygon(polygon) {
+        const context = this.context, points = [...polygon.points], start = this.getActualPosition(points.shift());
+        context.beginPath();
+        context.moveTo(start.x, start.y);
+        points.forEach(p => {
+            p = this.getActualPosition(p);
+            context.lineTo(p.x, p.y);
+        });
+        context.closePath();
+        this.draw(polygon);
+    }
+    drawRect(rectangle) {
+        const context = this.context, p = this.getActualPosition(rectangle.position), w = this.getActualMeasure(rectangle.width), h = this.getActualMeasure(rectangle.height);
+        context.beginPath();
+        context.rect(p.x - w / 2, p.y - h / 2, w, h);
+        context.closePath();
+        this.draw(rectangle);
+    }
+    drawStar(star) {
+        const context = this.context, center = this.getActualPosition(star.position), spikes = star.spikes ?? 5, outerRadius = this.getActualMeasure(star.outerRadius), innerRadius = this.getActualMeasure(star.innerRadius), step = Math.PI / spikes;
+        let rot = Math.PI / 2 * 3;
+        context.beginPath();
+        context.moveTo(center.x, center.y - outerRadius);
+        for (let i = 0; i < spikes; i += 1) {
+            const outer = VectorMath.shift(center, rot, outerRadius);
+            context.lineTo(outer.x, outer.y);
+            rot += step;
+            const inner = VectorMath.shift(center, rot, innerRadius);
+            context.lineTo(inner.x, inner.y);
+            rot += step;
+        }
+        context.lineTo(center.x, center.y - outerRadius);
+        context.closePath();
+        this.draw(star);
+    }
+    drawText(text) {
+        const context = this.context, p = this.getActualPosition(text.position), fontSize = this.getActualMeasure(text.fontSize), fontFamily = text.fontFamily ?? 'monospace';
+        let font = `${fontSize}px ${fontFamily}`;
+        if (text.fontVariant) {
+            font = `${text.fontVariant} ${font}`;
+        }
+        if (text.fontWeight) {
+            font = `${text.fontWeight} ${font}`;
+        }
+        context.font = font;
+        context.textAlign = text.align ?? 'start';
+        context.textBaseline = text.baseline ?? 'middle';
+        context.fillStyle = text.color ?? Defaults.defaultColor;
+        context.fillText(text.text, p.x, p.y);
+    }
+    drawTriangle(triangle) {
+        const context = this.context, p = this.getActualPosition(triangle.position), x = p.x, y = p.y, b = this.getActualMeasure(triangle.base), h = this.getActualMeasure(triangle.height);
+        context.beginPath();
+        context.moveTo(x, y - h / 2);
+        context.lineTo(x + b / 2, y + h / 2);
+        context.lineTo(x - b / 2, y + h / 2);
+        this.draw(triangle);
+    }
+    getActualMeasure(value) {
+        return Math.floor(value * this.scale);
+    }
+    getActualPosition(point) {
+        return VectorMath.multiply(point, this.scale).round(0);
+    }
+    getRelativePosition(point) {
+        const offset = {
+            x: this.canvasElement.offsetLeft,
+            y: this.canvasElement.offsetTop
+        };
+        return VectorMath.subtract(point, offset).divide(this.scale);
+    }
+    draw(shape) {
+        const context = this.context;
+        if (shape.color) {
+            context.fillStyle = shape.color;
+            context.fill();
+        }
+        if (shape.borderColor) {
+            context.strokeStyle = shape.borderColor;
+            context.lineWidth = shape.borderWidth ?? 1;
+            context.stroke();
+        }
+    }
+    resize() {
+        const scale = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+        this.scale = scale;
+        this.canvasElement.width = this.getActualMeasure(this.width);
+        this.canvasElement.height = this.getActualMeasure(this.height);
+    }
+}
+class TextFader {
+    canvas;
+    queues;
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.queues = { permanent: [], temporary: [] };
+    }
+    draw() {
+        for (let i = 0; i < this.queues.temporary.length; i++) {
+            const queue = this.queues.temporary[i];
+            for (let j = 0; j < queue.activeTexts.length; j++) {
+                const text = queue.activeTexts[j];
+                this.drawText(text, queue.position);
+            }
+        }
+        for (let i = 0; i < this.queues.permanent.length; i += 1) {
+            const text = this.queues.permanent[i];
+            this.drawText(text, text.position);
+        }
+    }
+    update(elapsed) {
+        for (let i = 0; i < this.queues.temporary.length; i++) {
+            const queue = this.queues.temporary[i];
+            for (let j = 0; j < queue.activeTexts.length; j++) {
+                const text = queue.activeTexts[j];
+                text.delta += 70 * elapsed / 1000;
+                if (text.fadeIn) {
+                    text.alpha += 0.02;
+                    if (text.alpha >= 1) {
+                        text.fadeIn = false;
+                    }
+                }
+                else {
+                    text.alpha -= 0.02;
+                    if (text.alpha <= 0) {
+                        queue.activeTexts.splice(j--, 1);
+                        continue;
+                    }
+                }
+            }
+            if (queue.queuedTexts.length > 0) {
+                if (queue.activeTexts.length === 0) {
+                    queue.activeTexts.push(queue.queuedTexts.shift());
+                }
+                else if (queue.activeTexts[queue.activeTexts.length - 1].delta > queue.queuedTexts[0].fontSize) {
+                    queue.activeTexts.push(queue.queuedTexts.shift());
+                }
+            }
+        }
+        for (let i = 0; i < this.queues.permanent.length; i += 1) {
+            const text = this.queues.permanent[i];
+            if (text.fadeIn) {
+                text.alpha += 0.05;
+                if (text.alpha >= 1) {
+                    text.fadeIn = false;
+                }
+            }
+            else {
+                text.alpha -= 0.05;
+                if (text.alpha <= 0) {
+                    text.fadeIn = true;
+                }
+            }
+        }
+    }
+    addText(text) {
+        const id = this.getId(text.position);
+        let queue = this.queues.temporary.find(q => q.id == id);
+        if (!queue) {
+            queue = this.createQueue(text.position);
+        }
+        text.life ??= 1000;
+        text.alpha = text.fadeIn ? 0 : 1;
+        text.delta = 0;
+        queue.queuedTexts.push(text);
+    }
+    addPermanentText(text) {
+        for (let i = 0; i < this.queues.permanent.length; i++) {
+            if (this.queues.permanent[i].id === text.id) {
+                return;
+            }
+        }
+        if (!text.life) {
+            text.life = 1000;
+        }
+        text.alpha = 0;
+        text.fadeIn = true;
+        this.queues.permanent.push(text);
+    }
+    removeFromPermanentQueue(id) {
+        for (let i = 0; i < this.queues.permanent.length; i++) {
+            if (this.queues.permanent[i].id === id) {
+                this.queues.permanent.splice(i, 1);
+                return;
+            }
+        }
+    }
+    emptyQueues() {
+        this.queues = { permanent: [], temporary: [] };
+    }
+    createQueue(position) {
+        const queue = {
+            id: this.getId(position),
+            position: { ...position },
+            activeTexts: [],
+            queuedTexts: []
+        };
+        this.queues.temporary.push(queue);
+        return queue;
+    }
+    drawText(text, position) {
+        const delta = text.delta ?? 0, { r, g, b } = text.rgbColor, a = text.alpha, color = `rgba(${r}, ${g}, ${b}, ${a})`;
+        this.canvas.drawText({
+            ...text,
+            position: {
+                x: position.x,
+                y: position.y - delta
+            },
+            fontFamily: 'Arial',
+            align: 'center',
+            color
+        });
+    }
+    getId(position) {
+        return position.x.toString() + position.y.toString();
+    }
+}
+class Utilities {
+    static defaultButton(position, text, onClick) {
+        return new SimpleButton(position, 120, 40, text, Defaults.primaryColor, onClick);
+    }
+    static drawCircleHighlight(position, radius, canvas) {
+        const innerCircle = {
+            position,
+            radius,
+            borderColor: 'fireBrick',
+            borderWidth: 2
+        }, outerCircle = {
+            ...innerCircle,
+            radius: radius + 1,
+            borderColor: 'red'
+        };
+        canvas.drawCircle(innerCircle);
+        canvas.drawCircle(outerCircle);
+    }
+    static drawServer(server, options, canvas) {
+        options = {
+            ...Defaults.serverDefaults,
+            ...options
+        };
+        const size = options.size, p = server.position;
+        let i = Math.max(0, server.capacity / Defaults.serverCapacity - 1);
+        for (; i > -1; i -= 1) {
+            canvas.drawRect({
+                position: {
+                    x: p.x + 3 * i,
+                    y: p.y - 3 * i
+                },
+                width: size,
+                height: size,
+                color: options.color,
+                borderColor: options.borderColor
+            });
+        }
+        const speed = Defaults.serverSpeed, queueWidth = 6, queueHeight = size - 10, queueX = p.x + size / 2 - 7, queueY = p.y, fullness = server.queue.length / server.capacity, gradientWidth = queueWidth, gradientHeight = MathHelper.roundToEven(fullness * queueHeight), gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
+        canvas.drawRect({
+            position: {
+                x: queueX,
+                y: queueY
+            },
+            width: queueWidth,
+            height: queueHeight,
+            color: options.queueColor
+        });
+        const gradient = canvas.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
+        gradient.addColorStop(0.5, Defaults.successColor);
+        gradient.addColorStop(1, Defaults.dangerColor);
+        canvas.drawRect({
+            position: {
+                x: gradientX,
+                y: gradientY
+            },
+            width: gradientWidth,
+            height: gradientHeight,
+            color: gradient
+        });
+        canvas.drawRect({
+            position: {
+                x: queueX,
+                y: queueY
+            },
+            width: queueWidth,
+            height: queueHeight,
+            borderColor: options.queueBorderColor
+        });
+        for (i = server.speed; i > 0; i -= speed) {
+            const starX = p.x - size / 2 + 7, starY = p.y + size / 2 - 4 - 5 * (i / speed);
+            canvas.drawStar({
+                position: {
+                    x: starX,
+                    y: starY
+                },
+                outerRadius: 4,
+                innerRadius: 2,
+                color: options.speedColor,
+                borderColor: options.speedBorderColor
+            });
+        }
+    }
+    static invertColor(color) {
+        color = color.substring(1);
+        let colorNumber = parseInt(color, 16);
+        colorNumber = 0xFFFFFF ^ colorNumber;
+        color = colorNumber.toString(16);
+        color = ('000000' + color).slice(-6);
+        color = '#' + color;
+        return color;
+    }
+}
+class UpgradesTracker {
+    upgrades = [100, 200, 300, 500, 700, 1000, 1300, 1700, 2100, 2600, 3100, 3700, 4300, 5000];
+    nextUpgradeIndex = 0;
+    upgradesAvailable = 0;
+    selectedUpgrade;
+    get nextUpgrade() {
+        if (this.nextUpgradeIndex >= this.upgrades.length) {
+            return Infinity;
+        }
+        return this.upgrades[this.nextUpgradeIndex];
+    }
+    ;
+    increaseUpgrades() {
+        this.upgradesAvailable += 1;
+        this.nextUpgradeIndex += 1;
+    }
+    reset() {
+        this.nextUpgradeIndex = 0;
+        this.upgradesAvailable = 0;
+        this.selectedUpgrade = undefined;
+    }
+}
+class PopularityTracker {
+    fader;
+    upgrades;
+    canvas;
+    popularity;
+    constructor(fader, upgrades, canvas) {
+        this.fader = fader;
+        this.upgrades = upgrades;
+        this.canvas = canvas;
+        this.popularity = 0;
+    }
+    draw(y) {
+        this.canvas.drawText({
+            position: {
+                x: 10,
+                y
+            },
+            text: 'Popularity: ' + this.popularity,
+            fontSize: 18,
+            fontFamily: 'sans-serif'
+        });
+    }
+    reset() {
+        this.popularity = 0;
+    }
+    updatePopularity(client, amount) {
+        let fontSize = amount >= 5 ? 16 : 12, color = amount < 0
+            ? { r: 150, g: 0, b: 0 }
+            : { r: 0, g: 150, b: 0 }, position = {
+            x: client.position.x,
+            y: client.position.y - 8 - Defaults.clientSize / 2
+        };
+        this.fader.addText({
+            text: amount.toString(),
+            rgbColor: color,
+            fontSize: fontSize,
+            fontWeight: 'bold',
+            alpha: 1,
+            delta: 0,
+            position
+        });
+        this.popularity += amount;
+        if (this.popularity >= this.upgrades.nextUpgrade) {
+            this.upgrades.increaseUpgrades();
+        }
+    }
+}
+class Client {
+    orchestrator;
+    popularity;
+    position;
+    messages;
+    life;
+    connectedTo;
+    lastMessageTime;
+    messagesToSend;
+    ACKsToReceive;
+    NACKsToDie;
+    constructor(orchestrator, popularity, position, messages) {
+        this.orchestrator = orchestrator;
+        this.popularity = popularity;
+        this.position = position;
+        this.messages = messages;
+        this.life = 0;
+        this.lastMessageTime = 0;
+        this.messagesToSend = messages;
+        this.ACKsToReceive = messages;
+        this.NACKsToDie = Math.floor(messages / 3);
+    }
+    sendMessage(elapsedTime) {
+        if (!this.connectedTo) {
+            throw 'Disconnected client cannot send messages.';
+        }
+        this.orchestrator.createMessage(this, this.connectedTo);
+        this.messagesToSend -= 1;
+        this.lastMessageTime = elapsedTime;
+    }
+    ;
+    receiveMessage(message) {
+        let n;
+        if (message.status === 'ack') {
+            this.ACKsToReceive -= 1;
+            n = 1;
+            if (this.ACKsToReceive === 0) {
+                n += 5;
+            }
+            this.orchestrator.registerAck(message);
+            this.popularity.updatePopularity(this, n);
+        }
+        else {
+            this.NACKsToDie -= 1;
+            n = -1;
+            if (this.NACKsToDie > 0) {
+                this.messagesToSend += 1;
+            }
+            else {
+                n -= 5;
+            }
+            this.popularity.updatePopularity(this, n);
+        }
+        message.status = 'done';
+    }
+    ;
+}
+class Server {
+    position;
+    queue;
+    lastMessageTime;
+    capacity;
+    speed;
+    constructor(position) {
+        this.position = position;
+        this.queue = [];
+        this.lastMessageTime = 0;
+        this.capacity = Defaults.serverCapacity;
+        this.speed = Defaults.serverSpeed;
+    }
+    sendMessage(elapsedTime) {
+        const msg = this.queue.shift();
+        if (msg) {
+            msg.status = 'ack';
+            msg.invertDirection();
+            this.lastMessageTime = elapsedTime;
+        }
+    }
+    ;
+    receiveMessage(message) {
+        message.position = { ...this.position };
+        if (this.queue.length < this.capacity) {
+            this.queue.push(message);
+            message.status = 'queued';
+        }
+        else {
+            message.status = 'nack';
+            message.invertDirection();
+        }
+    }
+    ;
+}
+class MathHelper {
+    static clamp(number, min, max) {
+        return Math.min(Math.max(number, min), max);
+    }
+    static nearestPower(x, base) {
+        return Math.pow(base, this.nearestRoot(x, base));
+    }
+    static nearestRoot(x, degree) {
+        return Math.ceil(Math.log(x) / Math.log(degree));
+    }
+    static random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+    static randomInt(min, max) {
+        return Math.floor(MathHelper.random(min, max));
+    }
+    static round(number, decimalPlaces) {
+        const multiplier = Math.pow(10, decimalPlaces);
+        return Math.round(number * multiplier) / multiplier;
+    }
+    static roundToEven(number) {
+        return Math.round(number / 2) * 2;
+    }
+}
+class VectorMath {
+    static zero = {
+        x: 0,
+        y: 0
+    };
+    static add(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x + v2.x,
+            y: v1.y + v2.y
+        });
+    }
+    static angle(v1, v2) {
+        v1 = this.normalize(v1);
+        v2 = this.normalize(v2);
+        return Math.acos(this.dotProduct(v1, v2));
+    }
+    static clamp(v, min, max) {
+        return new VectorCalculator({
+            x: MathHelper.clamp(v.x, min, max),
+            y: MathHelper.clamp(v.y, min, max)
+        });
+    }
+    static direction(v1, v2) {
+        return this.subtract(v2, v1).normalize();
+    }
+    static distance(v1, v2) {
+        const d = this.subtract(v2, v1);
+        return Math.sqrt(Math.pow(d.x, 2) + Math.pow(d.y, 2));
+    }
+    static divide(v, number) {
+        return new VectorCalculator({
+            x: v.x / number,
+            y: v.y / number
+        });
+    }
+    static dotProduct(v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+    static hadamardProduct(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x * v2.x,
+            y: v1.y * v2.y
+        });
+    }
+    static invert(v) {
+        return this.multiply(v, -1);
+    }
+    static isEqual(v1, v2) {
+        return v1.x === v2.x && v1.y === v2.y;
+    }
+    static magnitude(v) {
+        return Math.sqrt(v.x * v.x + v.y * v.y);
+    }
+    static multiply(v, number) {
+        return new VectorCalculator({
+            x: v.x * number,
+            y: v.y * number
+        });
+    }
+    static normalize(v) {
+        const m = this.magnitude(v);
+        return this.divide(v, m);
+    }
+    static rotate(v, rad) {
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        return new VectorCalculator({
+            x: cos * v.x - sin * v.y,
+            y: sin * v.x + cos * v.y
+        });
+    }
+    static round(v, decimalPlaces) {
+        return new VectorCalculator({
+            x: MathHelper.round(v.x, decimalPlaces),
+            y: MathHelper.round(v.y, decimalPlaces)
+        });
+    }
+    static shift(v, direction, magnitude) {
+        return new VectorCalculator({
+            x: v.x + Math.cos(direction) * magnitude,
+            y: v.y + Math.sin(direction) * magnitude
+        });
+    }
+    static subtract(v1, v2) {
+        return new VectorCalculator({
+            x: v1.x - v2.x,
+            y: v1.y - v2.y
+        });
+    }
+}
+class SettingButton {
+    position;
+    size;
+    text;
+    width;
+    height;
+    constructor(position, size, text) {
+        this.position = position;
+        this.size = size;
+        this.text = text;
+        this.width = size;
+        this.height = size;
+    }
+    draw(hovered, canvas) {
+        const p = this.position, w = this.width, h = this.height;
+        if (!this.isOn) {
+            canvas.drawLine({
+                from: {
+                    x: p.x - w / 2,
+                    y: p.y + h / 2
+                },
+                to: {
+                    x: p.x + w / 2,
+                    y: p.y - h / 2
+                },
+                color: Defaults.accentColor,
+                width: 2
+            });
+        }
+        if (hovered) {
+            canvas.drawText({
+                position: {
+                    x: p.x,
+                    y: p.y + w / 2 + 4
+                },
+                text: this.text,
+                fontSize: 8,
+                align: 'center',
+                baseline: 'top',
+                color: Defaults.primaryColor
+            });
+        }
+    }
+}
+class FullScreenButton extends SettingButton {
+    target;
+    constructor(position, size, target) {
+        super(position, size, 'Fullscreen');
+        this.target = target;
+    }
+    get isOn() {
+        return !!document.fullscreenElement;
+    }
+    draw(hovered, canvas) {
+        const p = this.position, shift = this.size / 2 - 3, segmentLength = Math.floor(this.size / 4), topLeft = VectorMath.add(p, { x: -shift, y: -shift }), topRight = VectorMath.add(p, { x: shift, y: -shift }), bottomLeft = VectorMath.add(p, { x: -shift, y: shift }), bottomRight = VectorMath.add(p, { x: shift, y: shift }), line = {
+            color: hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent,
+            width: 2
+        };
+        canvas.drawLine({
+            ...line,
+            from: topLeft,
+            to: topLeft.add({ x: 0, y: segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: topLeft,
+            to: topLeft.add({ x: segmentLength, y: 0 })
+        });
+        canvas.drawLine({
+            ...line,
+            from: topRight,
+            to: topRight.add({ x: 0, y: segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: topRight,
+            to: topRight.add({ x: -segmentLength, y: 0 })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomRight,
+            to: bottomRight.add({ x: 0, y: -segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomRight,
+            to: bottomRight.add({ x: -segmentLength, y: 0 })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomLeft,
+            to: bottomLeft.add({ x: 0, y: -segmentLength })
+        });
+        canvas.drawLine({
+            ...line,
+            from: bottomLeft,
+            to: bottomLeft.add({ x: segmentLength, y: 0 })
+        });
+        super.draw(hovered, canvas);
+    }
+    onClick() {
+        if (this.isOn) {
+            document.exitFullscreen();
+        }
+        else {
+            this.target.requestFullscreen({ navigationUI: 'hide' });
+        }
+    }
+}
+class VolumeButton extends SettingButton {
+    target;
+    isOn = false;
+    constructor(position, size, target) {
+        super(position, size, 'Music');
+        this.target = target;
+    }
+    draw(hovered, canvas) {
+        const p = this.position, w = this.width, h = this.height, color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent;
+        canvas.drawRect({
+            position: {
+                x: p.x - w / 4 + 1,
+                y: p.y
+            },
+            width: w / 4 + 1,
+            height: h / 2 - 1,
+            color
+        });
+        canvas.drawPolygon({
+            position: p,
+            points: [{
+                    x: p.x - 1,
+                    y: p.y - h / 4
+                }, {
+                    x: p.x + w / 4,
+                    y: p.y - h / 2 + 1
+                }, {
+                    x: p.x + w / 4,
+                    y: p.y + h / 2 - 1
+                }, {
+                    x: p.x - 1,
+                    y: p.y + h / 4
+                }],
+            color
+        });
+        super.draw(hovered, canvas);
+    }
+    onClick() {
+        const music = this.target;
+        if (music.paused) {
+            music.play();
+        }
+        else {
+            music.pause();
+        }
+        this.isOn = !music.paused;
+    }
+}
+class GameUI {
+    buttons = [];
+    settingsButtons;
+    constructor(music, canvas) {
+        const w = canvas.width, h = canvas.height, size = 20, y = h - 30, p1 = { x: w - 40, y }, p2 = { x: w - 80, y }, volumeButton = new VolumeButton(p2, size, music), fullScreenButton = new FullScreenButton(p1, size, document.documentElement);
+        this.settingsButtons = [
+            fullScreenButton,
+            volumeButton
+        ];
+    }
+    click(position) {
+        this.buttons.some((button) => {
+            const { x, y } = position, p = button.position;
+            if (x > p.x - button.width / 2 && x < p.x + button.width / 2 &&
+                y > p.y - button.height / 2 && y < p.y + button.height / 2) {
+                button.onClick();
+                return true;
+            }
+        });
+    }
+}
+class GameTracker {
+    popularityTracker;
+    ui;
+    orchestrator;
+    selectedClient;
+    currentGameMode = 0;
+    clientsServed = 0;
+    droppedConnections = 0;
+    failedConnections = 0;
+    elapsedTime = 0;
+    servers = [];
+    clients = [];
+    attackers = [];
+    constructor(popularityTracker, ui, orchestrator) {
+        this.popularityTracker = popularityTracker;
+        this.ui = ui;
+        this.orchestrator = orchestrator;
+    }
+    switchMode(gameMode) {
+        this.ui.buttons = [];
+        this.currentGameMode = gameMode;
+    }
+    reset() {
+        this.selectedClient = undefined;
+        this.clientsServed = 0;
+        this.droppedConnections = 0;
+        this.failedConnections = 0;
+        this.elapsedTime = 0;
+        this.servers = [];
+        this.clients = [];
+        this.attackers = [];
+        this.switchMode(Defaults.gameModes.GAME);
+    }
+    update(elapsed) {
+        this.elapsedTime += elapsed / 1000;
+        this.orchestrator.updateMessages(elapsed);
+        this.updateClients(elapsed);
+        this.updateServers();
+        this.updateAttackers();
+    }
+    updateServers() {
+        const elapsedTime = this.elapsedTime;
+        this.servers.forEach(function (s) {
+            if ((elapsedTime - s.lastMessageTime) > 1 / s.speed) {
+                s.sendMessage(elapsedTime);
+            }
+        });
+    }
+    updateClients(elapsed) {
+        const elapsedTime = this.elapsedTime, remaining = Defaults.gameLength * 60 - elapsedTime;
+        for (let i = 0; i < this.clients.length; i++) {
+            var c = this.clients[i];
+            if (remaining <= 0 && c.messagesToSend > 0) {
+                c.ACKsToReceive -= c.messagesToSend;
+                c.messagesToSend = 0;
+            }
+            if (c.messagesToSend === 0 && c.ACKsToReceive === 0) {
+                this.clients.splice(i--, 1);
+                this.clientsServed += 1;
+                continue;
+            }
+            if (c.NACKsToDie === 0) {
+                c.connectedTo = undefined;
+                this.clients.splice(i--, 1);
+                this.droppedConnections += 1;
+                continue;
+            }
+            if (c.connectedTo === undefined) {
+                c.life += elapsed / 1000;
+                if (remaining <= 0 || c.life > Defaults.maxClientWaitTime) {
+                    this.clients.splice(i--, 1);
+                    if (c === this.selectedClient) {
+                        this.selectedClient = undefined;
+                    }
+                    this.failedConnections += 1;
+                    this.popularityTracker.updatePopularity(c, -10);
+                }
+            }
+            else {
+                if (c.messagesToSend > 0 && (elapsedTime - c.lastMessageTime) > 1 / Defaults.clientSpeed) {
+                    c.sendMessage(elapsedTime);
+                }
+            }
+        }
+    }
+    updateAttackers() {
+        const elapsedTime = this.elapsedTime;
+        for (let i = 0; i < this.attackers.length; i += 1) {
+            var a = this.attackers[i];
+            if (a.messagesToReceive === 0) {
+                this.attackers.splice(i--, 1);
+                continue;
+            }
+            if (a.messagesToSend != 0 && elapsedTime - a.lastMessageTime > 0.5 / Defaults.clientSpeed) {
+                a.sendMessage(elapsedTime);
+            }
+        }
+    }
+}
+class AttackerFactory {
+    game;
+    orchestrator;
+    constructor(game, orchestrator) {
+        this.game = game;
+        this.orchestrator = orchestrator;
+    }
+    create(position, messages, server) {
+        const attacker = new Attacker(this.orchestrator, position, messages, server);
+        this.game.attackers.push(attacker);
+        return attacker;
+    }
+}
 class ClientFactory {
     game;
     orchestrator;
     popularityTracker;
-    fader;
-    constructor(game, orchestrator, popularityTracker, fader) {
+    constructor(game, orchestrator, popularityTracker) {
         this.game = game;
         this.orchestrator = orchestrator;
         this.popularityTracker = popularityTracker;
-        this.fader = fader;
     }
-    create(x, y, messages) {
-        const clientSize = Defaults.clientSize, client = new Client(this.orchestrator, this.popularityTracker, x, y, messages);
+    create(position, messages) {
+        const client = new Client(this.orchestrator, this.popularityTracker, position, messages);
         this.game.clients.push(client);
-        this.fader.createQueue(x.toString() + y.toString(), x, y - 8 - clientSize / 2);
         return client;
     }
 }
@@ -871,8 +1129,8 @@ class ServerFactory {
     constructor(game) {
         this.game = game;
     }
-    create(x, y) {
-        const server = new Server(x, y);
+    create(position) {
+        const server = new Server(position);
         this.game.servers.push(server);
         return server;
     }
@@ -918,133 +1176,109 @@ class Scheduler {
         this.timeLastClient = 1 - this.spawnRate;
     }
     createServer(zone) {
-        const width = this.canvas.width, height = this.canvas.height, serverSize = Defaults.serverSize;
-        let x, y, minX, minY, maxX, maxY;
+        const width = this.canvas.width, height = this.canvas.height, serverSize = Defaults.serverSize, padding = { x: serverSize, y: serverSize }, zoneSize = { x: width / 3, y: height / 3 };
+        let scale;
         switch (zone) {
             case 'nw':
-                minX = serverSize;
-                minY = serverSize;
-                maxX = width / 3;
-                maxY = height / 3;
+                scale = { x: 0, y: 0 };
                 break;
             case 'n':
-                minX = width / 3;
-                minY = serverSize;
-                maxX = width * 2 / 3;
-                maxY = height / 3;
+                scale = { x: 1, y: 0 };
                 break;
             case 'ne':
-                minX = width * 2 / 3;
-                minY = serverSize;
-                maxX = width - serverSize;
-                maxY = height / 3;
+                scale = { x: 2, y: 0 };
                 break;
             case 'w':
-                minX = serverSize;
-                minY = height / 3;
-                maxX = width / 3;
-                maxY = height * 2 / 3;
+                scale = { x: 0, y: 1 };
                 break;
             case 'c':
-                minX = width / 3;
-                minY = height / 3;
-                maxX = width * 2 / 3;
-                maxY = height * 2 / 3;
+                scale = { x: 1, y: 1 };
                 break;
             case 'e':
-                minX = width * 2 / 3;
-                minY = height / 3;
-                maxX = width - serverSize;
-                maxY = height * 2 / 3;
+                scale = { x: 2, y: 1 };
                 break;
             case 'sw':
-                minX = serverSize;
-                minY = height * 2 / 3;
-                maxX = width / 3;
-                maxY = height - serverSize;
+                scale = { x: 0, y: 2 };
                 break;
             case 's':
-                minX = width / 3;
-                minY = height * 2 / 3;
-                maxX = width * 2 / 3;
-                maxY = height - serverSize;
+                scale = { x: 1, y: 2 };
                 break;
             case 'se':
-                minX = width * 2 / 3;
-                minY = height * 2 / 3;
-                maxX = width - serverSize;
-                maxY = height - serverSize;
+                scale = { x: 2, y: 2 };
                 break;
             default:
                 throw `Invalid zone: ${zone}.`;
         }
-        x = Utilities.random(minX, maxX);
-        y = Utilities.random(minY, maxY);
-        while (this.checkCollisions(x, y)) {
-            x = Utilities.random(minX, maxX);
-            y = Utilities.random(minY, maxY);
-        }
-        this.serverFactory.create(x, y);
+        const shift = VectorMath.hadamardProduct(zoneSize, scale), min = VectorMath.add(VectorMath.zero, shift).add(padding), max = VectorMath.add(zoneSize, shift).subtract(padding), position = this.getRandomPositionBounded(min, max);
+        this.serverFactory.create(position);
     }
     ;
     createClient() {
-        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, messages = Utilities.random(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100);
-        let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
-        while (this.checkCollisions(x, y)) {
-            x = Utilities.random(minX, maxX);
-            y = Utilities.random(minY, maxY);
-        }
-        this.clientFactory.create(x, y, messages);
+        const elapsedTime = this.game.elapsedTime, messages = MathHelper.randomInt(this.minClientMessages, this.maxClientMessages) + Math.floor(this.popularityTracker.popularity / 100), position = this.getRandomPosition(Defaults.clientSize);
+        this.clientFactory.create(position, messages);
         this.timeLastClient = elapsedTime;
     }
     ;
     initiateDDoS() {
-        const width = this.canvas.width, height = this.canvas.height, elapsedTime = this.game.elapsedTime, clientSize = Defaults.clientSize, minX = clientSize, maxX = width - clientSize, minY = clientSize, maxY = height - clientSize, modifier = Math.floor(this.popularityTracker.popularity / 400), messages = this.attackersMessages + modifier, number = this.attackersNumber + modifier;
+        const elapsedTime = this.game.elapsedTime, modifier = Math.floor(this.popularityTracker.popularity / 400), messages = this.attackersMessages + modifier, number = this.attackersNumber + modifier;
         for (let i = 0; i < number; i += 1) {
-            let x = Utilities.random(minX, maxX), y = Utilities.random(minY, maxY);
-            while (this.checkCollisions(x, y)) {
-                x = Utilities.random(minX, maxX);
-                y = Utilities.random(minY, maxY);
-            }
-            const server = this.findClosestServer(x, y);
+            const position = this.getRandomPosition(Defaults.clientSize), server = this.findClosestServer(position);
             if (server) {
-                this.attackerFactory.create(x, y, messages, server);
+                this.attackerFactory.create(position, messages, server);
             }
         }
         this.timeLastDDoS = elapsedTime;
     }
     ;
-    checkCollisions(x, y) {
-        const serverSize = Defaults.serverSize, clientSize = Defaults.clientSize, servers = this.game.servers, clients = this.game.clients, attackers = this.game.attackers;
+    checkCollisions(position) {
+        const serverSize = Defaults.serverSize, clientSize = Defaults.clientSize, servers = this.game.servers, clients = this.game.clients, attackers = this.game.attackers, { x, y } = position;
         for (let i = 0; i < servers.length; i += 1) {
-            const s = servers[i];
-            if (Math.abs(x - s.x) < serverSize && Math.abs(y - s.y) < 2 * serverSize) {
+            const p = servers[i].position;
+            if (Math.abs(x - p.x) < serverSize && Math.abs(y - p.y) < 2 * serverSize) {
                 return true;
             }
         }
         for (let i = 0; i < clients.length; i += 1) {
-            const c = clients[i];
-            if (Math.abs(x - c.x) < clientSize && Math.abs(y - c.y) < clientSize) {
+            const p = clients[i].position;
+            if (Math.abs(x - p.x) < clientSize && Math.abs(y - p.y) < clientSize) {
                 return true;
             }
         }
         for (let i = 0; i < attackers.length; i += 1) {
-            const a = attackers[i];
-            if (Math.abs(x - a.x) < clientSize && Math.abs(y - a.y) < clientSize) {
+            const p = attackers[i].position;
+            if (Math.abs(x - p.x) < clientSize && Math.abs(y - p.y) < clientSize) {
                 return true;
             }
         }
     }
-    findClosestServer(x, y) {
+    findClosestServer(position) {
         let closest, currentDistance = this.canvas.width;
         this.game.servers.forEach((server) => {
-            const newDistance = Utilities.getDistance(x, y, server.x, server.y);
+            const newDistance = VectorMath.distance(position, server.position);
             if (newDistance < currentDistance) {
                 currentDistance = newDistance;
                 closest = server;
             }
         });
         return closest;
+    }
+    getRandomPosition(size) {
+        const width = this.canvas.width, height = this.canvas.height, min = {
+            x: size,
+            y: size,
+        }, max = {
+            x: width - size,
+            y: height - size
+        };
+        return this.getRandomPositionBounded(min, max);
+    }
+    getRandomPositionBounded(min, max) {
+        let x, y;
+        do {
+            x = MathHelper.randomInt(min.x, max.x);
+            y = MathHelper.randomInt(min.y, max.y);
+        } while (this.checkCollisions({ x, y }));
+        return { x, y };
     }
 }
 class NewGame {
@@ -1072,41 +1306,37 @@ class NewGame {
     }
 }
 class SimpleButton {
-    x;
-    y;
+    position;
     width;
     height;
     text;
     color;
     onClick;
-    constructor(x, y, width, height, text, color, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, width, height, text, color, onClick) {
+        this.position = position;
         this.width = width;
         this.height = height;
         this.text = text;
         this.color = color;
         this.onClick = onClick;
     }
-    draw(hovered, context) {
+    draw(hovered, canvas) {
         const color = hovered ? Utilities.invertColor(this.color) : this.color;
-        Utilities.drawRect({
-            x: this.x,
-            y: this.y,
+        canvas.drawRect({
+            position: this.position,
             width: this.width,
             height: this.height,
             color: hovered ? this.color : undefined,
             borderColor: this.color,
             borderWidth: 2
-        }, context);
-        Utilities.drawText({
-            x: this.x,
-            y: this.y,
+        });
+        canvas.drawText({
+            position: this.position,
             text: this.text,
             fontSize: 15,
             align: 'center',
             color
-        }, context);
+        });
     }
     ;
 }
@@ -1119,19 +1349,23 @@ class Credits {
         this.canvas = canvas;
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
-        this.buttons = [Utilities.defaultButton(w / 2, h - 60, 'Back', () => {
+        this.buttons = [Utilities.defaultButton({
+                x: w / 2,
+                y: h - 60
+            }, 'Back', () => {
                 game.switchMode(Defaults.gameModes.MENU);
             })];
     }
     getButtons() {
         return this.buttons;
     }
-    update() {
+    draw() {
         this.clouds.draw();
         this.drawCredits(128, 'An idea by:', 'Treestle', '(treestle.com)');
         this.drawCredits(258, 'Designed and developed by:', 'Naccio', '(naccio.net)');
         this.drawCredits(388, 'Music by:', 'Macspider', '(soundcloud.com/macspider)');
     }
+    update() { }
     drawCredits(y, heading, text, subText) {
         this.drawRect(y);
         this.drawHeading(y - 28, heading);
@@ -1139,15 +1373,17 @@ class Credits {
         this.drawSubText(y + 28, subText);
     }
     drawRect(y) {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width;
-        Utilities.drawRect({
-            x: w / 2,
-            y,
-            width: this.canvas.width,
+        const w = this.canvas.width;
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y
+            },
+            width: w,
             height: 100,
             color: Defaults.secondaryColorTransparent,
             borderColor: Defaults.primaryColorMutedTransparent
-        }, context);
+        });
     }
     drawHeading(y, text) {
         this.drawText(y, text, 20, Defaults.accentColor, 'bold');
@@ -1159,82 +1395,97 @@ class Credits {
         this.drawText(y, text, 15, Defaults.primaryColorMuted);
     }
     drawText(y, text, fontSize, color, fontWeight) {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width;
-        Utilities.drawText({
-            x: w / 2,
-            y,
+        const w = this.canvas.width;
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y
+            },
             text,
             fontSize,
             fontWeight,
             align: 'center',
             color
-        }, context);
+        });
     }
 }
 class CursorTracker {
     game;
     canvas;
     ui;
-    mouseX = 0;
-    mouseY = 0;
+    mousePosition;
     constructor(game, canvas, ui) {
         this.game = game;
         this.canvas = canvas;
         this.ui = ui;
+        this.mousePosition = { x: 0, y: 0 };
     }
     bind() {
-        this.canvas.onmousedown = (e) => this.mouseDownHandler(e);
-        this.canvas.onmouseup = (e) => this.mouseUpHandler(e);
-        this.canvas.onclick = (e) => this.clickHandler(e);
-        this.canvas.onmousemove = (e) => {
-            this.mouseX = e.clientX - this.canvas.offsetLeft;
-            this.mouseY = e.clientY - this.canvas.offsetTop;
+        document.onmousedown = (e) => this.mouseDownHandler(e);
+        document.onmouseup = (e) => this.mouseUpHandler(e);
+        document.onclick = (e) => this.clickHandler(e);
+        document.onmousemove = (e) => {
+            this.mousePosition = this.canvas.getRelativePosition({
+                x: e.clientX,
+                y: e.clientY
+            });
         };
-        this.canvas.ontouchstart = (e) => this.touchHandler(e);
-        this.canvas.ontouchmove = (e) => this.touchHandler(e);
-        this.canvas.ontouchend = (e) => this.touchHandler(e);
-        this.canvas.ontouchcancel = (e) => this.touchHandler(e);
+        document.ontouchstart = (e) => this.touchHandler(e);
+        document.ontouchmove = (e) => this.touchHandler(e);
+        document.ontouchend = (e) => this.touchHandler(e);
+        document.ontouchcancel = (e) => this.touchHandler(e);
     }
     clickHandler(event) {
-        const canvas = this.canvas, x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
-        this.ui.click(x, y);
+        const mousePosition = this.canvas.getRelativePosition({
+            x: event.clientX,
+            y: event.clientY
+        });
+        this.ui.click(mousePosition);
     }
-    cursorPositionHandler(x, y) {
-        const game = this.game, gameModes = Defaults.gameModes, clientSize = Defaults.clientSize, serverSize = Defaults.serverSize;
+    cursorPositionHandler(position) {
+        const game = this.game, { x, y } = position, gameModes = Defaults.gameModes, clientSize = Defaults.clientSize, serverSize = Defaults.serverSize;
         if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
             if (game.selectedClient !== undefined) {
                 game.servers.forEach(function (server) {
-                    if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
-                        y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
+                    const p = server.position;
+                    if (x > p.x - serverSize / 2 - 5 && x < p.x + serverSize / 2 + 5 &&
+                        y > p.y - serverSize / 2 - 5 && y < p.y + serverSize / 2 + 5) {
                         game.selectedClient.connectedTo = server;
                     }
                 });
             }
             game.selectedClient = undefined;
             game.clients.forEach((client) => {
-                if (x > client.x - clientSize / 2 - 5 && x < client.x + clientSize / 2 + 5 &&
-                    y > client.y - serverSize / 2 - 5 && y < client.y + serverSize / 2 + 5) {
+                const p = client.position;
+                if (x > p.x - clientSize / 2 - 5 && x < p.x + clientSize / 2 + 5 &&
+                    y > p.y - serverSize / 2 - 5 && y < p.y + serverSize / 2 + 5) {
                     if (client.connectedTo === undefined) {
                         game.selectedClient = client;
-                        this.mouseX = client.x;
-                        this.mouseY = client.y;
+                        this.mousePosition = { ...p };
                     }
                 }
             });
         }
     }
     mouseDownHandler(event) {
-        const canvas = this.canvas, x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
-        this.cursorPositionHandler(x, y);
+        const mousePosition = this.canvas.getRelativePosition({
+            x: event.clientX,
+            y: event.clientY
+        });
+        this.cursorPositionHandler(mousePosition);
     }
     mouseUpHandler(event) {
-        const game = this.game, canvas = this.canvas, gameModes = Defaults.gameModes, serverSize = Defaults.serverSize;
+        const game = this.game, gameModes = Defaults.gameModes, serverSize = Defaults.serverSize;
         if (game.currentGameMode == gameModes.GAME || game.currentGameMode == gameModes.TUTORIAL) {
-            const x = event.pageX - canvas.offsetLeft, y = event.pageY - canvas.offsetTop;
+            const { x, y } = this.canvas.getRelativePosition({
+                x: event.clientX,
+                y: event.clientY
+            });
             if (game.selectedClient !== undefined) {
                 game.servers.forEach(function (server) {
-                    if (x > server.x - serverSize / 2 - 5 && x < server.x + serverSize / 2 + 5 &&
-                        y > server.y - serverSize / 2 - 5 && y < server.y + serverSize / 2 + 5) {
+                    const p = server.position;
+                    if (x > p.x - serverSize / 2 - 5 && x < p.x + serverSize / 2 + 5 &&
+                        y > p.y - serverSize / 2 - 5 && y < p.y + serverSize / 2 + 5) {
                         game.selectedClient.connectedTo = server;
                         game.selectedClient = undefined;
                     }
@@ -1243,29 +1494,31 @@ class CursorTracker {
         }
     }
     touchHandler(event) {
-        const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], x = touch.pageX - canvas.offsetLeft, y = touch.pageY - canvas.offsetTop;
+        const game = this.game, canvas = this.canvas, touch = event.targetTouches[0], mousePosition = this.canvas.getRelativePosition({
+            x: touch.clientX,
+            y: touch.clientY
+        });
         event.preventDefault();
         if (event.type == 'touchstart') {
-            this.mouseX = x;
-            this.mouseY = y;
-            this.ui.click(x, y);
-            this.cursorPositionHandler(x, y);
+            this.mousePosition = mousePosition;
+            this.ui.click(mousePosition);
+            this.cursorPositionHandler(mousePosition);
         }
         else if (event.type == 'touchmove') {
-            this.mouseX = x;
-            this.mouseY = y;
+            this.mousePosition = mousePosition;
         }
         else if (event.type == 'touchend') {
             if (game.selectedClient !== undefined) {
-                const mouseX = this.mouseX, mouseY = this.mouseY, serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
+                const mp = this.mousePosition, cp = game.selectedClient.position, serverSize = Defaults.serverSize, clientSize = Defaults.clientSize;
                 game.servers.forEach(function (server) {
-                    if (mouseX > server.x - serverSize / 2 - 5 && mouseX < server.x + serverSize / 2 + 5
-                        && mouseY > server.y - serverSize / 2 - 5 && mouseY < server.y + serverSize / 2 + 5) {
+                    const sp = server.position;
+                    if (mp.x > sp.x - serverSize / 2 - 5 && mp.x < sp.x + serverSize / 2 + 5
+                        && mp.y > sp.y - serverSize / 2 - 5 && mp.y < sp.y + serverSize / 2 + 5) {
                         game.selectedClient.connectedTo = server;
                     }
                 });
-                if (mouseX < game.selectedClient.x - clientSize / 2 - 5 || mouseX > game.selectedClient.x + clientSize / 2 + 5
-                    || mouseY < game.selectedClient.y - clientSize / 2 - 5 || mouseY > game.selectedClient.y + clientSize / 2 + 5) {
+                if (mp.x < cp.x - clientSize / 2 - 5 || mp.x > cp.x + clientSize / 2 + 5
+                    || mp.y < cp.y - clientSize / 2 - 5 || mp.y > cp.y + clientSize / 2 + 5) {
                     game.selectedClient = undefined;
                 }
             }
@@ -1290,22 +1543,19 @@ class GameArea {
         this.fader = fader;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), sc = this.game.selectedClient;
-        if (sc !== undefined) {
-            Utilities.drawLine({
-                x1: sc.x,
-                y1: sc.y,
-                x2: this.cursor.mouseX,
-                y2: this.cursor.mouseY,
+        const position = this.game.selectedClient?.position;
+        if (position !== undefined) {
+            this.canvas.drawLine({
+                from: position,
+                to: this.cursor.mousePosition,
                 color: Defaults.highlightColor,
                 width: Defaults.highlightWidth
-            }, context);
-            Utilities.drawCircle({
-                x: sc.x,
-                y: sc.y,
+            });
+            this.canvas.drawCircle({
+                position,
                 radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
                 color: Defaults.highlightColor
-            }, context);
+            });
         }
         this.drawConnections();
         this.drawMessages();
@@ -1331,23 +1581,27 @@ class GameArea {
         this.game.servers.forEach(s => this.drawServer(s));
     }
     drawUI() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        const w = this.canvas.width, h = this.canvas.height;
         this.fader.draw();
         this.popularityTracker.draw(h - 14);
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 14,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h - 14
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
             baseline: 'alphabetic',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
-                x: w / 2,
-                y: h - 35,
+                position: {
+                    x: w / 2,
+                    y: h - 35
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgrade',
@@ -1375,94 +1629,91 @@ class GameArea {
         if (remaining <= 10) {
             color = Defaults.dangerColor;
         }
-        Utilities.drawText({
-            x: w - 10,
-            y: h - 14,
+        this.canvas.drawText({
+            position: {
+                x: w - 10,
+                y: h - 14
+            },
             text,
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'end',
             baseline: 'alphabetic',
             color
-        }, context);
+        });
     }
     drawAttacker(attacker) {
-        const context = this.canvas.getContext('2d'), size = Defaults.clientSize, x = attacker.x, y = attacker.y;
-        Utilities.drawTriangle({
-            x,
-            y,
+        const size = Defaults.clientSize, position = attacker.position;
+        this.canvas.drawTriangle({
+            position,
             base: size * 2 / Math.sqrt(3),
             height: size,
             color: Defaults.attackerColor,
             borderColor: Defaults.attackerBorderColor,
             borderWidth: 2
-        }, context);
-        Utilities.drawText({
-            x,
-            y: y + 8,
+        });
+        this.canvas.drawText({
+            position: {
+                x: position.x,
+                y: position.y + 8
+            },
             text: 'DoS',
             fontWeight: 'bold',
             fontSize: 9,
             fontFamily: 'Arial',
             align: 'center',
             color: Defaults.attackerTextColor
-        }, context);
+        });
     }
     drawClient(client) {
-        const context = this.canvas.getContext('2d'), clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, x = client.x, y = client.y, circle = {
-            x,
-            y,
+        const clientSize = Defaults.clientSize, maxClientWaitTime = Defaults.maxClientWaitTime, position = client.position, circle = {
+            position,
             radius: clientSize / 2,
             color: Defaults.clientColor,
             borderColor: Defaults.clientBorderColor
         };
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle({
+                this.canvas.drawCircle({
                     ...circle,
                     color: Defaults.dangerColor,
                     borderColor: Defaults.dangerColorDark
-                }, context);
+                });
             }
             else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle({
+                this.canvas.drawCircle({
                     ...circle,
                     color: Defaults.dangerColorMuted,
                     borderColor: Defaults.dangerColorMutedDark
-                }, context);
+                });
             }
             else {
-                Utilities.drawCircle(circle, context);
+                this.canvas.drawCircle(circle);
             }
-            Utilities.drawText({
-                x,
-                y,
+            this.canvas.drawText({
+                position,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
                 fontWeight: 'bold',
                 fontSize: 15,
                 fontFamily: 'Arial',
                 align: 'center',
                 color: Defaults.clientTextColor
-            }, context);
+            });
         }
         else {
-            Utilities.drawCircle(circle, context);
+            this.canvas.drawCircle(circle);
         }
     }
     drawConnection(t, color) {
         if (t.connectedTo) {
-            const context = this.canvas.getContext('2d');
-            Utilities.drawLine({
-                x1: t.x,
-                y1: t.y,
-                x2: t.connectedTo.x,
-                y2: t.connectedTo.y,
+            this.canvas.drawLine({
+                from: t.position,
+                to: t.connectedTo.position,
                 color
-            }, context);
+            });
         }
     }
     drawMessage(message) {
-        const context = this.canvas.getContext('2d');
         let color, borderColor;
         switch (message.status) {
             case 'queued':
@@ -1483,17 +1734,15 @@ class GameArea {
             default:
                 throw 'Invalid message status: ' + message.status;
         }
-        Utilities.drawCircle({
-            x: message.x,
-            y: message.y,
+        this.canvas.drawCircle({
+            position: message.position,
             radius: Defaults.messageSize / 2,
             color,
             borderColor
-        }, context);
+        });
     }
     drawServer(server) {
-        const context = this.canvas.getContext('2d');
-        Utilities.drawServer(server, {}, context);
+        Utilities.drawServer(server, {}, this.canvas);
     }
 }
 class Game {
@@ -1513,21 +1762,21 @@ class Game {
     getButtons() {
         return [];
     }
-    update() {
+    draw() {
+        this.canvas.clear();
+        this.gameArea.draw();
+    }
+    update(elapsed) {
         if (this.game.servers.length === 0) {
             this.scheduler.createServer('c');
         }
-        this.game.update();
-        this.fader.update(1 / Defaults.frameRate);
+        this.game.update(elapsed);
+        this.fader.update(elapsed);
         this.scheduler.schedule();
         var m = Math.floor(this.game.elapsedTime / 60);
         if (m === Defaults.gameLength && this.game.clients.length === 0) {
             this.game.switchMode(Defaults.gameModes.GAME_OVER);
-            return;
         }
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
-        this.gameArea.draw();
     }
 }
 class GameOver {
@@ -1547,79 +1796,94 @@ class GameOver {
         this.popularity = popularity;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            Utilities.defaultButton(w / 2, h - 110, 'Restart', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, h - 60, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
+            Utilities.defaultButton({ x: w / 2, y: h - 110 }, 'Restart', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: h - 60 }, 'Menu', () => game.switchMode(Defaults.gameModes.MENU))
         ];
     }
     getButtons() {
         return this.buttons;
     }
-    update() {
-        var context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+    draw() {
+        var w = this.canvas.width, h = this.canvas.height;
         this.clouds.draw();
-        Utilities.drawText({
-            x: w / 2,
-            y: 100,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: 100
+            },
             text: 'Game Over',
             fontSize: 60,
             fontVariant: 'small-caps',
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
         this.drawStat(h / 2 - 80, 'Successful connections', this.game.clientsServed);
         this.drawStat(h / 2 - 55, 'Dropped connections', this.game.droppedConnections);
         this.drawStat(h / 2 - 30, 'Failed connections', this.game.failedConnections);
         this.drawStat(h / 2 - 5, 'Average response time', Math.round(this.orchestrator.avgResponseTime * 100) / 100);
         const fontSize = 30;
-        Utilities.drawText({
-            x: w / 2 + 68,
-            y: h / 2 + 50,
+        this.canvas.drawText({
+            position: {
+                x: w / 2 + 68,
+                y: h / 2 + 50
+            },
             text: 'Popularity:',
             fontSize,
             align: 'end',
             color: this.color
-        }, context);
-        Utilities.drawText({
-            x: w / 2 + 75,
-            y: h / 2 + 50,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2 + 75,
+                y: h / 2 + 50
+            },
             text: this.popularity.popularity.toString(),
             fontSize,
             align: 'start',
             color: this.color
-        }, context);
-        Utilities.drawLine({
-            x1: w / 2 - 130,
-            y1: h / 2 + 20,
-            x2: w / 2 + 130,
-            y2: h / 2 + 20,
+        });
+        this.canvas.drawLine({
+            from: {
+                x: w / 2 - 130,
+                y: h / 2 + 20
+            },
+            to: {
+                x: w / 2 + 130,
+                y: h / 2 + 20
+            },
             color: Defaults.accentColor
-        }, context);
+        });
     }
+    update() { }
     drawStat(y, text, value) {
         this.drawStatTitle(y, text);
         this.drawStatValue(y, value);
     }
     drawStatTitle(y, text) {
-        const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 80;
-        Utilities.drawText({
-            x,
-            y,
+        const x = this.canvas.width / 2 + 80;
+        this.canvas.drawText({
+            position: {
+                x,
+                y
+            },
             text: text + ':',
             fontSize: 15,
             align: 'end',
             color: this.color
-        }, context);
+        });
     }
     drawStatValue(y, value) {
-        const context = this.canvas.getContext('2d'), x = this.canvas.width / 2 + 90;
-        Utilities.drawText({
-            x,
-            y,
+        const x = this.canvas.width / 2 + 90;
+        this.canvas.drawText({
+            position: {
+                x,
+                y
+            },
             text: value.toString(),
             fontSize: 15,
             align: 'start',
             color: this.color
-        }, context);
+        });
     }
 }
 class TutorialStep {
@@ -1633,7 +1897,7 @@ class TutorialStep {
         this.texts = texts;
     }
     setup() { }
-    run() { }
+    update(elapsed) { }
     draw() { }
 }
 class Tutorial {
@@ -1658,8 +1922,14 @@ class Tutorial {
         const w = canvas.width, h = canvas.height;
         this.currentStep = steps[0];
         this.currentStepIndex = 0;
-        this.nextButton = Utilities.defaultButton(w / 3, h - 40, 'Next', () => this.advance());
-        this.homeButton = Utilities.defaultButton(w * 2 / 3, h - 40, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
+        this.nextButton = Utilities.defaultButton({
+            x: w / 3,
+            y: h - 40
+        }, 'Next', () => this.advance());
+        this.homeButton = Utilities.defaultButton({
+            x: w * 2 / 3,
+            y: h - 40
+        }, 'Exit tutorial', () => game.switchMode(Defaults.gameModes.MENU));
         this.currentStep.setup();
         document.addEventListener('keypress', e => this.listener(e));
     }
@@ -1673,43 +1943,58 @@ class Tutorial {
         }
         return buttons;
     }
-    update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts, rectangle = {
-            x: w / 2,
-            y: 0,
+    draw() {
+        const w = this.canvas.width, h = this.canvas.height, texts = this.currentStep.texts, rectangle = {
             width: w,
             height: 80,
             color: Defaults.backgroundColor,
             borderColor: Defaults.backgroundBorderColor
         };
-        this.currentStep.run();
-        this.fader.update(1 / Defaults.frameRate);
-        if (this.currentStep.advance) {
-            this.advance();
-        }
-        context.clearRect(0, 0, w, h);
+        this.canvas.clear();
         this.gameArea.draw();
         this.fader.draw();
-        Utilities.drawRect({ ...rectangle, y: 40 }, context);
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: 40
+            },
+            ...rectangle
+        });
         for (let i = 0; i < texts.length; i++) {
             const text = texts[i];
-            Utilities.drawText({
-                x: w / 2,
-                y: 18 + 20 * i,
+            this.canvas.drawText({
+                position: {
+                    x: w / 2,
+                    y: 18 + 20 * i
+                },
                 text,
                 fontWeight: 'bold',
                 fontSize: 18,
                 align: 'center',
                 color: Defaults.primaryColor
-            }, context);
+            });
         }
-        Utilities.drawRect({ ...rectangle, y: h - 40 }, context);
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: h - 40
+            },
+            ...rectangle
+        });
         this.currentStep.draw();
+    }
+    update(elapsed) {
+        this.currentStep.update(elapsed);
+        this.fader.update(elapsed);
+        if (this.currentStep.advance) {
+            this.advance();
+        }
     }
     reset() {
         this.game.reset();
         this.orchestrator.reset();
         this.fader.emptyQueues();
+        this.currentStepIndex = 0;
         this.currentStep = this.steps[0];
         this.currentStep.setup();
         this.game.switchMode(Defaults.gameModes.TUTORIAL);
@@ -1735,63 +2020,72 @@ class Menu {
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.buttons = [
-            Utilities.defaultButton(w / 2, h / 2, 'Tutorial', () => tutorial.reset()),
-            Utilities.defaultButton(w / 2, h / 2 + 60, 'New Game', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, h / 2 + 120, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
-            ui.volumeButton
+            Utilities.defaultButton({ x: w / 2, y: h / 2 }, 'Tutorial', () => tutorial.reset()),
+            Utilities.defaultButton({ x: w / 2, y: h / 2 + 60 }, 'New Game', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: h / 2 + 120 }, 'Credits', () => game.switchMode(Defaults.gameModes.CREDITS)),
+            ...ui.settingsButtons
         ];
     }
     getButtons() {
         return this.buttons;
     }
-    update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
+    draw() {
+        const w = this.canvas.width, align = 'center', color = Defaults.primaryColorTransparent;
         this.clouds.draw();
-        Utilities.drawRect({
-            x: w / 2,
-            y: 140,
+        this.canvas.drawRect({
+            position: {
+                x: w / 2,
+                y: 140
+            },
             width: w,
             height: 180,
             color: Defaults.secondaryColorTransparent,
             borderColor: Defaults.primaryColorMutedTransparent
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: 110,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: 110
+            },
             text: 'Load Balancing',
             fontVariant: 'small-caps',
             fontWeight: 'bold',
             fontSize: 110,
             align,
             color
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: 185,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: 185
+            },
             text: 'The Game',
             fontSize: 45,
             align,
             color
-        }, context);
-        Utilities.drawLine({
-            x1: 120,
-            y1: 160,
-            x2: w - 118,
-            y2: 160,
+        });
+        this.canvas.drawLine({
+            from: {
+                x: 120,
+                y: 160
+            },
+            to: {
+                x: w - 118,
+                y: 160
+            },
             color: Defaults.accentColor,
             width: 2
-        }, context);
+        });
     }
+    update() { }
 }
 class UpgradeButton {
-    x;
-    y;
+    position;
     text;
     width;
     height;
-    constructor(x, y, text, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, text, onClick) {
+        this.position = position;
         this.text = text;
         this.width = 100;
         this.height = 100;
@@ -1800,91 +2094,105 @@ class UpgradeButton {
         }
     }
     onClick() { }
-    draw(hovered, context) {
-        Utilities.drawRect({
-            x: this.x,
-            y: this.y,
+    draw(hovered, canvas) {
+        canvas.drawRect({
+            position: this.position,
             width: this.width,
             height: this.height,
             color: Defaults.secondaryColor,
             borderColor: hovered ? Defaults.primaryColor : undefined,
             borderWidth: 2
-        }, context);
-        this.drawIcon(context);
+        });
+        this.drawIcon(canvas);
         if (hovered) {
-            Utilities.drawText({
-                x: context.canvas.width / 2,
-                y: context.canvas.height - 50,
+            canvas.drawText({
+                position: {
+                    x: canvas.width / 2,
+                    y: canvas.height - 50
+                },
                 text: this.text,
                 fontSize: 20,
                 align: 'center',
                 color: Defaults.accentColor
-            }, context);
+            });
         }
     }
 }
 class CapacityUpgradeButton extends UpgradeButton {
-    constructor(x, y, onClick) {
-        super(x, y, 'Scale off at one location', onClick);
+    constructor(position, onClick) {
+        super(position, 'Scale off at one location', onClick);
     }
-    drawIcon(context) {
-        const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var queueX = x + serverSize / 2 - 7, queueY = y + 1, color = Defaults.accentColor, lineWidth = 3;
-        Utilities.drawServer(new Server(x, y), {
+    drawIcon(canvas) {
+        const p = this.position, serverSize = Defaults.serverSize;
+        var queueX = p.x + serverSize / 2 - 7, queueY = p.y + 1, color = Defaults.accentColor, lineWidth = 3;
+        Utilities.drawServer(new Server(p), {
             ...Defaults.serverDisabledDefaults,
             queueColor: Defaults.accentColorMuted,
             queueBorderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawArrow({
-            x1: queueX,
-            y1: queueY - serverSize / 2 + 2,
-            x2: queueX,
-            y2: queueY - serverSize / 2 - 13,
+        }, canvas);
+        canvas.drawArrow({
+            from: {
+                x: queueX,
+                y: queueY - serverSize / 2 + 2
+            },
+            to: {
+                x: queueX,
+                y: queueY - serverSize / 2 - 13
+            },
             color,
             width: lineWidth
-        }, context);
+        });
     }
 }
 class ServerUpgradeButton extends UpgradeButton {
-    constructor(x, y, onClick) {
-        super(x, y, 'Buy new datacenter', onClick);
+    constructor(position, onClick) {
+        super(position, 'Buy new datacenter', onClick);
     }
-    drawIcon(context) {
-        const x = this.x, y = this.y;
-        Utilities.drawText({
-            x: x - 25,
-            y,
+    drawIcon(canvas) {
+        const p = this.position;
+        canvas.drawText({
+            position: {
+                x: p.x - 25,
+                y: p.y
+            },
             text: '+',
             fontSize: 45,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
-        Utilities.drawServer(new Server(x + 15, y), {
+        });
+        Utilities.drawServer(new Server({
+            x: p.x + 15,
+            y: p.y
+        }), {
             ...Defaults.serverDisabledDefaults,
             borderColor: Defaults.accentColor
-        }, context);
+        }, canvas);
     }
 }
 class SpeedUpgradeButton extends UpgradeButton {
-    constructor(x, y, onClick) {
-        super(x, y, 'Improve speed at one location', onClick);
+    constructor(position, onClick) {
+        super(position, 'Improve speed at one location', onClick);
     }
-    drawIcon(context) {
-        const x = this.x, y = this.y, serverSize = Defaults.serverSize;
-        var starX = x - serverSize / 2 + 7, starY = y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
-        Utilities.drawServer(new Server(x, y), {
+    drawIcon(canvas) {
+        const p = this.position, serverSize = Defaults.serverSize;
+        var starX = p.x - serverSize / 2 + 7, starY = p.y + serverSize / 2 - 9, color = Defaults.accentColor, lineWidth = 3;
+        Utilities.drawServer(new Server(p), {
             ...Defaults.serverDisabledDefaults,
             speedColor: Defaults.accentColorMuted,
             speedBorderColor: Defaults.accentColor
-        }, context);
-        Utilities.drawArrow({
-            x1: starX,
-            y1: starY - 6,
-            x2: starX,
-            y2: starY - 21,
+        }, canvas);
+        canvas.drawArrow({
+            from: {
+                x: starX,
+                y: starY - 6
+            },
+            to: {
+                x: starX,
+                y: starY - 21
+            },
             color,
             width: lineWidth
-        }, context);
+        });
     }
 }
 class Pause {
@@ -1902,15 +2210,15 @@ class Pause {
         this.upgradesTracker = upgradesTracker;
         const w = canvas.width, h = this.canvas.height, y = h / 2 + 150;
         this.buttons = [
-            Utilities.defaultButton(w / 2, 150, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
-            Utilities.defaultButton(w / 2, 210, 'New game', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, 270, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
-            ui.volumeButton
+            Utilities.defaultButton({ x: w / 2, y: 150 }, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
+            Utilities.defaultButton({ x: w / 2, y: 210 }, 'New game', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: 270 }, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
+            ...ui.settingsButtons
         ];
         this.upgradeButtons = [
-            new ServerUpgradeButton(250, y, () => this.selectUpgrade('server')),
-            new CapacityUpgradeButton(w / 2, y, () => this.selectUpgrade('capacity')),
-            new SpeedUpgradeButton(w - 250, y, () => this.selectUpgrade('speed'))
+            new ServerUpgradeButton({ x: 250, y }, () => this.selectUpgrade('server')),
+            new CapacityUpgradeButton({ x: w / 2, y }, () => this.selectUpgrade('capacity')),
+            new SpeedUpgradeButton({ x: w - 250, y }, () => this.selectUpgrade('speed'))
         ];
     }
     getButtons() {
@@ -1918,38 +2226,45 @@ class Pause {
             ? [...this.buttons, ...this.upgradeButtons]
             : [...this.buttons];
     }
-    update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, x = w / 2, fontSize = 25;
+    draw() {
+        const w = this.canvas.width, h = this.canvas.height, x = w / 2, fontSize = 25;
         this.clouds.draw();
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            Utilities.drawText({
-                x,
-                y: h / 2 + 60,
+            this.canvas.drawText({
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
                 color: Defaults.secondaryColor
-            }, context);
+            });
         }
         else {
-            Utilities.drawText({
-                x,
-                y: h / 2 + 60,
+            this.canvas.drawText({
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
                 color: Defaults.primaryColorMuted
-            }, context);
+            });
         }
-        Utilities.drawText({
-            x,
-            y: 60,
+        this.canvas.drawText({
+            position: {
+                x,
+                y: 60
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
+    update() { }
     selectUpgrade(id) {
         this.upgradesTracker.selectedUpgrade = id;
         this.game.switchMode(Defaults.gameModes.UPGRADE);
@@ -1970,64 +2285,71 @@ class ClientExplanation extends TutorialStep {
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height, client = this.clientFactory.create(w * 3 / 4, h / 2, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client = this.clientFactory.create({ x: w * 3 / 4, y: h / 2 }, 10000);
         client.life = -31;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w * 3 / 4, h / 2, Defaults.clientSize + 9, context);
-        Utilities.drawCircle({
+        const w = this.canvas.width, h = this.canvas.height, position = {
             x: w * 3 / 4,
-            y: h / 2,
+            y: h / 2
+        };
+        Utilities.drawCircleHighlight(position, Defaults.clientSize + 9, this.canvas);
+        this.canvas.drawCircle({
+            position,
             radius: Defaults.clientSize / 2,
             color: 'gray'
-        }, context);
+        });
     }
 }
 class TutorialHelper {
     static drawLegend(canvas, includeNACK) {
-        const context = canvas.getContext('2d'), w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5, circle = {
-            x,
-            y,
-            radius: iconRadius
-        }, text = {
-            x: x + textSpacing + iconRadius,
-            y,
-            fontSize: 10,
-            fontFamily: 'sans-serif'
-        };
-        Utilities.drawCircle({
-            ...circle,
+        const w = canvas.width, x = w - 120, y = 100, iconRadius = 3, textSpacing = 2, lineSpacing = iconRadius + 5;
+        canvas.drawCircle({
+            position: { x, y },
+            radius: iconRadius,
             color: Defaults.messageReqColor,
             borderColor: Defaults.messageReqBorderColor
-        }, context);
-        Utilities.drawText({
-            ...text,
+        });
+        canvas.drawText({
+            position: {
+                x: x + textSpacing + iconRadius,
+                y
+            },
+            fontSize: 10,
+            fontFamily: 'sans-serif',
             text: ': Request'
-        }, context);
-        Utilities.drawCircle({
-            ...circle,
-            y: y + lineSpacing,
+        });
+        canvas.drawCircle({
+            position: { x, y: y + lineSpacing },
+            radius: iconRadius,
             color: Defaults.messageAckColor,
             borderColor: Defaults.messageAckBorderColor
-        }, context);
-        Utilities.drawText({
-            ...text,
-            y: y + lineSpacing,
+        });
+        canvas.drawText({
+            position: {
+                x: x + textSpacing + iconRadius,
+                y: y + lineSpacing
+            },
+            fontSize: 10,
+            fontFamily: 'sans-serif',
             text: ': Response (+1)'
-        }, context);
+        });
         if (includeNACK) {
-            Utilities.drawCircle({
-                ...circle,
-                y: y + lineSpacing * 2,
+            canvas.drawCircle({
+                position: { x, y: y + lineSpacing * 2 },
+                radius: iconRadius,
                 color: Defaults.messageNackColor,
                 borderColor: Defaults.messageNackBorderColor
-            }, context);
-            Utilities.drawText({
-                ...text,
-                y: y + lineSpacing * 2,
+            });
+            canvas.drawText({
+                position: {
+                    x: x + textSpacing + iconRadius,
+                    y: y + lineSpacing * 2
+                },
+                fontSize: 10,
+                fontFamily: 'sans-serif',
                 text: ': Datacenter busy (-1)'
-            }, context);
+            });
         }
     }
 }
@@ -2064,17 +2386,20 @@ class ClientSuccessExplanation extends TutorialStep {
             }
         });
     }
-    run() {
+    update(elapsed) {
         if (this.game.clients.length === 0) {
             this.hasNext = true;
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize, position = {
+            x: w / 2 - serverSize / 2 + 7,
+            y: h / 2 + serverSize / 4
+        };
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 - serverSize / 2 + 7, h / 2 + serverSize / 4, 15, context);
+        Utilities.drawCircleHighlight(position, 15, this.canvas);
     }
 }
 class ConnectionExplanation extends TutorialStep {
@@ -2088,7 +2413,7 @@ class ConnectionExplanation extends TutorialStep {
         this.game = game;
         this.hasHome = true;
     }
-    run() {
+    update(elapsed) {
         const client = this.game.clients[0];
         if (client.connectedTo !== undefined) {
             this.advance = true;
@@ -2101,7 +2426,7 @@ class ConnectionExplanation extends TutorialStep {
             ];
             client.life = -31;
         }
-        this.game.updateClients();
+        this.game.updateClients(elapsed);
     }
 }
 class ConnectMoreClients extends TutorialStep {
@@ -2124,7 +2449,7 @@ class ConnectMoreClients extends TutorialStep {
     setup() {
         this.spawnClients();
     }
-    run() {
+    update(elapsed) {
         const server = this.game.servers[0];
         if (server.queue.length > server.capacity / 2) {
             this.advance = true;
@@ -2137,7 +2462,7 @@ class ConnectMoreClients extends TutorialStep {
             ];
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height;
@@ -2145,7 +2470,7 @@ class ConnectMoreClients extends TutorialStep {
         TutorialHelper.drawLegend(this.canvas, false);
     }
     spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create(w / 4, h / 4, 10000), client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client1 = this.clientFactory.create({ x: w / 4, y: h / 4 }, 10000), client2 = this.clientFactory.create({ x: w / 4, y: h * 3 / 4 }, 10000);
         client1.life = -21;
         client2.life = -21;
     }
@@ -2171,16 +2496,16 @@ class ConnectToNewServer extends TutorialStep {
         this.game.clients[0].life = -21;
         this.game.clients[1].life = -21;
     }
-    run() {
+    update(elapsed) {
         if (this.game.clients.length === 0) {
-            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+            const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000), client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
             client0.life = -21;
             client1.life = -21;
         }
         if (this.game.clients[0].connectedTo !== undefined && this.game.clients[1].connectedTo !== undefined) {
             this.advance = true;
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height;
@@ -2210,8 +2535,10 @@ class DdosAttackExample extends TutorialStep {
     }
     setup() {
         const w = this.canvas.width, h = this.canvas.height, server = this.game.servers[0], text = {
-            x: w / 2,
-            y: h - 116,
+            position: {
+                x: w / 2,
+                y: h - 116
+            },
             fontSize: 20,
             rgbColor: { r: 255, g: 0, b: 0 },
             id: 'upgradeTut',
@@ -2220,36 +2547,38 @@ class DdosAttackExample extends TutorialStep {
             alpha: 0,
             delta: 0
         };
-        this.attackerFactory.create(w / 2, h * 3 / 4, 10000, server);
-        this.attackerFactory.create(w / 3, h * 2 / 3, 10000, server);
-        this.attackerFactory.create(w * 2 / 3, h * 2 / 3, 10000, server);
+        this.attackerFactory.create({ x: w / 2, y: h * 3 / 4 }, 10000, server);
+        this.attackerFactory.create({ x: w / 3, y: h * 2 / 3 }, 10000, server);
+        this.attackerFactory.create({ x: w * 2 / 3, y: h * 2 / 3 }, 10000, server);
         this.spawnClients();
         this.fader.addPermanentText(text);
     }
-    run() {
+    update(elapsed) {
         if (this.game.selectedClient) {
             this.game.selectedClient = undefined;
         }
         if (this.game.clients.length === 0) {
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        const w = this.canvas.width, h = this.canvas.height;
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 95,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
     spawnClients() {
-        const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create(w / 4, h / 3, 10000), client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+        const w = this.canvas.width, h = this.canvas.height, client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000), client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
         client0.life = -21;
         client1.life = -21;
     }
@@ -2267,42 +2596,48 @@ class NewServerUpgradeExample extends TutorialStep {
         this.fader = fader;
         const w = canvas.width, h = canvas.height, y = h / 2 + 150;
         this.extraButtons = [
-            new ServerUpgradeButton(250, y, () => {
-                const server = serverFactory.create(w / 2, h / 4);
+            new ServerUpgradeButton({
+                x: 250,
+                y
+            }, () => {
+                const server = serverFactory.create({ x: w / 2, y: h / 4 });
                 server.capacity = 20;
                 this.advance = true;
             }),
-            new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y)
+            new CapacityUpgradeButton({ x: w / 2, y }),
+            new SpeedUpgradeButton({ x: w - 250, y })
         ];
     }
     setup() {
         this.fader.removeFromPermanentQueue('upgradeTut');
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawRect({
-            x: w / 2,
-            y: h / 2,
+        const w = this.canvas.width, h = this.canvas.height;
+        this.canvas.drawRect({
+            position: this.canvas.center,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: h / 2 + 60,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h / 2 + 60
+            },
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: h / 3,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h / 3
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 }
 class PopularityExplanation extends TutorialStep {
@@ -2324,14 +2659,17 @@ class PopularityExplanation extends TutorialStep {
     setup() {
         this.popularityTracker.popularity = 0;
     }
-    run() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
-        const context = this.canvas.getContext('2d'), h = this.canvas.height;
+        const h = this.canvas.height, position = {
+            x: 70,
+            y: h - 95
+        };
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, false);
-        Utilities.drawCircleHighlight(70, h - 95, 67, context);
+        Utilities.drawCircleHighlight(position, 67, this.canvas);
     }
 }
 class ServerBusyExample extends TutorialStep {
@@ -2350,14 +2688,17 @@ class ServerBusyExample extends TutorialStep {
         this.hasNext = true;
         this.hasHome = true;
     }
-    run() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize;
+        const w = this.canvas.width, h = this.canvas.height, serverSize = Defaults.serverSize, position = {
+            x: w / 2 + serverSize / 2 - 7,
+            y: h / 2 + 1
+        };
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawCircleHighlight(w / 2 + serverSize / 2 - 7, h / 2 + 1, serverSize / 2, context);
+        Utilities.drawCircleHighlight(position, serverSize / 2, this.canvas);
     }
 }
 class ServerExplanation extends TutorialStep {
@@ -2373,8 +2714,7 @@ class ServerExplanation extends TutorialStep {
         this.hasHome = true;
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, context);
+        Utilities.drawCircleHighlight(this.canvas.center, Defaults.serverSize + 9, this.canvas);
     }
 }
 class SpeedUpgradeExample extends TutorialStep {
@@ -2392,9 +2732,12 @@ class SpeedUpgradeExample extends TutorialStep {
         this.fader = fader;
         const w = canvas.width, h = canvas.height, y = h / 2 + 150;
         this.extraButtons = [
-            new ServerUpgradeButton(250, y),
-            new CapacityUpgradeButton(w / 2, y),
-            new SpeedUpgradeButton(w - 250, y, () => {
+            new ServerUpgradeButton({ x: 250, y }),
+            new CapacityUpgradeButton({ x: w / 2, y }),
+            new SpeedUpgradeButton({
+                x: w - 250,
+                y
+            }, () => {
                 this.game.servers[0].speed += Defaults.serverSpeed;
                 this.advance = true;
             })
@@ -2404,29 +2747,32 @@ class SpeedUpgradeExample extends TutorialStep {
         this.fader.removeFromPermanentQueue('upgradeTut');
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        Utilities.drawRect({
-            x: w / 2,
-            y: h / 2,
+        const w = this.canvas.width, h = this.canvas.height;
+        this.canvas.drawRect({
+            position: this.canvas.center,
             width: w,
             height: h - 158,
             color: Defaults.backgroundColor
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: h / 2 + 60,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h / 2 + 60
+            },
             text: 'Choose an upgrade:',
             fontSize: 25,
             align: 'center',
-        }, context);
-        Utilities.drawText({
-            x: w / 2,
-            y: h / 3,
+        });
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h / 3
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
 }
 class TutorialFinished extends TutorialStep {
@@ -2445,11 +2791,14 @@ class TutorialFinished extends TutorialStep {
         const w = canvas.width, h = canvas.height;
         this.hasHome = true;
         this.extraButtons = [
-            Utilities.defaultButton(w / 3, h - 40, 'New game', () => newGame.execute())
+            Utilities.defaultButton({
+                x: w / 3,
+                y: h - 40
+            }, 'New game', () => newGame.execute())
         ];
     }
-    run() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
         const h = this.canvas.height;
@@ -2477,8 +2826,10 @@ class UpgradesIntroduction extends TutorialStep {
     }
     setup() {
         const w = this.canvas.width, h = this.canvas.height, text = {
-            x: w / 2,
-            y: h - 116,
+            position: {
+                x: w / 2,
+                y: h - 116
+            },
             fontSize: 20,
             rgbColor: { r: 255, g: 0, b: 0 },
             id: 'upgradeTut',
@@ -2489,22 +2840,24 @@ class UpgradesIntroduction extends TutorialStep {
         };
         this.fader.addPermanentText(text);
     }
-    run() {
-        this.game.update();
+    update(elapsed) {
+        this.game.update(elapsed);
     }
     draw() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
+        const w = this.canvas.width, h = this.canvas.height;
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 95,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
 }
 class Welcome extends TutorialStep {
@@ -2522,22 +2875,20 @@ class Welcome extends TutorialStep {
         this.hasHome = true;
     }
     setup() {
-        const w = this.canvas.width, h = this.canvas.height, server = this.serverFactory.create(w / 2, h / 2);
+        const server = this.serverFactory.create(this.canvas.center);
         server.capacity = 20;
     }
 }
 class BorderButton {
-    x;
-    y;
+    position;
     width;
     height;
     color;
     hoverColor;
     borderWidth;
     onClick;
-    constructor(x, y, width, height, color, hoverColor, borderWidth, onClick) {
-        this.x = x;
-        this.y = y;
+    constructor(position, width, height, color, hoverColor, borderWidth, onClick) {
+        this.position = position;
         this.width = width;
         this.height = height;
         this.color = color;
@@ -2545,16 +2896,15 @@ class BorderButton {
         this.borderWidth = borderWidth;
         this.onClick = onClick;
     }
-    draw(hovered, context) {
+    draw(hovered, canvas) {
         const color = hovered ? this.hoverColor : this.color;
-        Utilities.drawRect({
-            x: this.x,
-            y: this.y,
+        canvas.drawRect({
+            position: this.position,
             width: this.width,
             height: this.height,
             borderColor: color,
             borderWidth: this.borderWidth
-        }, context);
+        });
     }
 }
 class Upgrade {
@@ -2574,7 +2924,7 @@ class Upgrade {
         this.fader = fader;
     }
     getButtons() {
-        const w = this.canvas.width, h = this.canvas.height, button = Utilities.defaultButton(w / 2, h - 100, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
+        const w = this.canvas.width, h = this.canvas.height, button = Utilities.defaultButton({ x: w / 2, y: h - 100 }, 'Cancel', () => this.game.switchMode(Defaults.gameModes.PAUSE));
         button.color = Defaults.secondaryColor;
         let buttons = [button];
         switch (this.upgradesTracker.selectedUpgrade) {
@@ -2600,9 +2950,9 @@ class Upgrade {
         }
         return buttons;
     }
-    update() {
-        const context = this.canvas.getContext('2d'), w = this.canvas.width, h = this.canvas.height;
-        context.clearRect(0, 0, w, h);
+    draw() {
+        const w = this.canvas.width;
+        this.canvas.clear();
         this.gameArea.drawServers();
         let text;
         switch (this.upgradesTracker.selectedUpgrade) {
@@ -2614,25 +2964,28 @@ class Upgrade {
                 text = 'zone';
                 break;
         }
-        Utilities.drawText({
-            x: w / 2,
-            y: 60,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: 60
+            },
             text: `~ Select ${text} ~`,
             fontSize: 30,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
+    update() { }
     createAreaButton(x, y, area) {
         const w = this.canvas.width, h = this.canvas.height, borderWidth = Defaults.highlightWidth;
-        return new BorderButton(x, y, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton({ x, y }, Math.floor(w / 3) - borderWidth, Math.floor(h / 3) - borderWidth, 'transparent', Defaults.highlightColor, borderWidth, () => {
             this.scheduler.createServer(area);
             this.selectUpgrade();
         });
     }
     createServerButton(server, action) {
         const borderWidth = Defaults.highlightWidth, size = Defaults.serverSize + borderWidth;
-        return new BorderButton(server.x, server.y, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
+        return new BorderButton(server.position, size, size, 'transparent', Defaults.highlightColor, borderWidth, () => {
             action();
             this.selectUpgrade();
         });
@@ -2700,10 +3053,10 @@ class Application {
         window.addEventListener('blur', () => this.blurHandler());
     }
     static build(clouds) {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
+        const canvasElement = document.getElementById('canvas');
         const music = new Audio('assets/music.mp3');
-        const fader = new TextFader(context);
+        const canvas = new Canvas(canvasElement);
+        const fader = new TextFader(canvas);
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
@@ -2711,7 +3064,7 @@ class Application {
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui, orchestrator);
         const attackerFactory = new AttackerFactory(game, orchestrator);
-        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
+        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker);
         const serverFactory = new ServerFactory(game);
         const cursor = new CursorTracker(game, canvas, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
@@ -2752,14 +3105,16 @@ class Application {
         ], game, ui, cursor, canvas, fpsCounter, clouds);
     }
     run() {
-        setInterval(() => this.mainLoop(), 1000 / Defaults.frameRate);
+        const elapsed = 1000 / Defaults.frameRate;
+        setInterval(() => this.mainLoop(elapsed), elapsed);
     }
-    mainLoop() {
+    mainLoop(elapsed) {
         if (this.activeScene.id !== this.game.currentGameMode) {
             this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode);
         }
-        this.clouds.update(1000 / Defaults.frameRate);
-        this.activeScene.update();
+        this.clouds.update(elapsed);
+        this.activeScene.update(elapsed);
+        this.activeScene.draw();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();
         if (this.logActive) {
@@ -2768,17 +3123,17 @@ class Application {
         }
     }
     createCloud(x, y) {
-        const w = Utilities.random(350, 500), h = Utilities.random(w, 700), circles = Utilities.random(15, 30), n = Utilities.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = Utilities.random(100, 200);
-        this.clouds.add(x, y, w, h, circles, color, speed);
+        const p = this.canvas.getActualPosition({ x, y }), w = this.canvas.getActualMeasure(MathHelper.random(350, 500)), h = this.canvas.getActualMeasure(MathHelper.random(w, 700)), circles = MathHelper.random(15, 30), n = MathHelper.random(180, 255), color = { r: n, g: n, b: n, a: .1 }, speed = MathHelper.random(100, 200);
+        this.clouds.add(p.x, p.y, w, h, circles, color, speed);
     }
     drawButtons() {
-        const context = this.canvas.getContext('2d'), mouseX = this.cursor.mouseX, mouseY = this.cursor.mouseY;
+        const mp = this.cursor.mousePosition;
         this.ui.buttons.forEach((button) => {
-            const hovered = mouseX > button.x - (button.width + 2) / 2 &&
-                mouseX < button.x + (button.width + 2) / 2 &&
-                mouseY > button.y - (button.height + 4) / 2 &&
-                mouseY < button.y + (button.height + 2) / 2;
-            button.draw(hovered, context);
+            const bp = button.position, hovered = mp.x > bp.x - (button.width + 2) / 2 &&
+                mp.x < bp.x + (button.width + 2) / 2 &&
+                mp.y > bp.y - (button.height + 4) / 2 &&
+                mp.y < bp.y + (button.height + 2) / 2;
+            button.draw(hovered, this.canvas);
         });
     }
     blurHandler() {
@@ -2798,5 +3153,59 @@ class Application {
                     game.switchMode(Defaults.gameModes.GAME);
                 }
         }
+    }
+}
+class VectorCalculator {
+    v;
+    constructor(v) {
+        this.v = v;
+    }
+    get x() {
+        return this.v.x;
+    }
+    get y() {
+        return this.v.y;
+    }
+    add(v) {
+        return VectorMath.add(this, v);
+    }
+    angle(v) {
+        return VectorMath.angle(this, v);
+    }
+    clamp(min, max) {
+        return VectorMath.clamp(this, min, max);
+    }
+    direction(v) {
+        return VectorMath.direction(this, v);
+    }
+    divide(n) {
+        return VectorMath.divide(this, n);
+    }
+    dotProduct(v) {
+        return VectorMath.dotProduct(this, v);
+    }
+    invert() {
+        return VectorMath.invert(this);
+    }
+    isEqual(v) {
+        return VectorMath.isEqual(this, v);
+    }
+    magnitude() {
+        return VectorMath.magnitude(this);
+    }
+    multiply(n) {
+        return VectorMath.multiply(this, n);
+    }
+    normalize() {
+        return VectorMath.normalize(this);
+    }
+    rotate(rad) {
+        return VectorMath.rotate(this, rad);
+    }
+    round(places) {
+        return VectorMath.round(this, places);
+    }
+    subtract(v) {
+        return VectorMath.subtract(this, v);
     }
 }

@@ -1,10 +1,11 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/ServerFactory.ts' />
 /// <reference path='TutorialStep.ts' />
 
 class Welcome extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private serverFactory: ServerFactory
     ) {
         super([
@@ -17,9 +18,7 @@ class Welcome extends TutorialStep {
     }
 
     setup() {
-        const w = this.canvas.width,
-            h = this.canvas.height,
-            server = this.serverFactory.create(w / 2, h / 2);
+        const server = this.serverFactory.create(this.canvas.center);
 
         server.capacity = 20;
     }

@@ -1,4 +1,5 @@
 /// <reference path='MessageTransmitter.ts' />
+/// <reference path='Point.ts' />
 
 class Server implements MessageTransmitter {
     public queue: Message[];
@@ -6,9 +7,7 @@ class Server implements MessageTransmitter {
     public capacity: number;
     public speed: number;
 
-    constructor(public x: number, public y: number) {
-        this.x = x;
-        this.y = y;
+    constructor(public position: Point) {
         this.queue = [];
         this.lastMessageTime = 0;
         this.capacity = Defaults.serverCapacity;
@@ -26,8 +25,7 @@ class Server implements MessageTransmitter {
     };
 
     receiveMessage(message: Message) {
-        message.x = this.x;
-        message.y = this.y;
+        message.position = { ...this.position };
 
         if (this.queue.length < this.capacity) {
             this.queue.push(message);

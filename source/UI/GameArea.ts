@@ -1,4 +1,5 @@
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Model/Attacker.ts' />
 /// <reference path='../Model/Client.ts' />
 /// <reference path='../Model/Message.ts' />
@@ -13,7 +14,7 @@
 
 class GameArea {
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private orchestrator: MessageOrchestrator,
         private popularityTracker: PopularityTracker,
@@ -23,25 +24,21 @@ class GameArea {
     ) { }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            sc = this.game.selectedClient;
+        const position = this.game.selectedClient?.position;
 
         //draw a line connecting the selected client to the mouse pointer
-        if (sc !== undefined) {
-            Utilities.drawLine({
-                x1: sc.x,
-                y1: sc.y,
-                x2: this.cursor.mouseX,
-                y2: this.cursor.mouseY,
+        if (position !== undefined) {
+            this.canvas.drawLine({
+                from: position,
+                to: this.cursor.mousePosition,
                 color: Defaults.highlightColor,
                 width: Defaults.highlightWidth
-            }, context);
-            Utilities.drawCircle({
-                x: sc.x,
-                y: sc.y,
+            });
+            this.canvas.drawCircle({
+                position,
                 radius: Defaults.clientSize / 2 + Defaults.highlightWidth,
                 color: Defaults.highlightColor
-            }, context);
+            });
         }
 
         this.drawConnections();
@@ -74,8 +71,7 @@ class GameArea {
     }
 
     drawUI() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
         this.fader.draw();
 
@@ -83,21 +79,25 @@ class GameArea {
         this.popularityTracker.draw(h - 14);
 
         //bottom center
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 14,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h - 14
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
             baseline: 'alphabetic',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
             const text = {
-                x: w / 2,
-                y: h - 35,
+                position: {
+                    x: w / 2,
+                    y: h - 35
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgrade',
@@ -131,54 +131,52 @@ class GameArea {
         if (remaining <= 10) {
             color = Defaults.dangerColor;
         }
-        Utilities.drawText({
-            x: w - 10,
-            y: h - 14,
+        this.canvas.drawText({
+            position: {
+                x: w - 10,
+                y: h - 14
+            },
             text,
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'end',
             baseline: 'alphabetic',
             color
-        }, context);
+        });
     }
 
     private drawAttacker(attacker: Attacker) {
-        const context = this.canvas.getContext('2d')!,
-            size = Defaults.clientSize,
-            x = attacker.x,
-            y = attacker.y;
+        const size = Defaults.clientSize,
+            position = attacker.position;
 
-        Utilities.drawTriangle({
-            x,
-            y,
+        this.canvas.drawTriangle({
+            position,
             base: size * 2 / Math.sqrt(3),
             height: size,
             color: Defaults.attackerColor,
             borderColor: Defaults.attackerBorderColor,
             borderWidth: 2
-        }, context);
-        Utilities.drawText({
-            x,
-            y: y + 8,
+        });
+        this.canvas.drawText({
+            position: {
+                x: position.x,
+                y: position.y + 8
+            },
             text: 'DoS',
             fontWeight: 'bold',
             fontSize: 9,
             fontFamily: 'Arial',
             align: 'center',
             color: Defaults.attackerTextColor
-        }, context);
+        });
     }
 
     private drawClient(client: Client) {
-        const context = this.canvas.getContext('2d')!,
-            clientSize = Defaults.clientSize,
+        const clientSize = Defaults.clientSize,
             maxClientWaitTime = Defaults.maxClientWaitTime,
-            x = client.x,
-            y = client.y,
+            position = client.position,
             circle = {
-                x,
-                y,
+                position,
                 radius: clientSize / 2,
                 color: Defaults.clientColor,
                 borderColor: Defaults.clientBorderColor
@@ -186,52 +184,47 @@ class GameArea {
 
         if (client.connectedTo === undefined) {
             if (client.connectedTo === undefined && client.life > maxClientWaitTime - 2) {
-                Utilities.drawCircle({
+                this.canvas.drawCircle({
                     ...circle,
                     color: Defaults.dangerColor,
                     borderColor: Defaults.dangerColorDark
-                }, context);
+                });
             } else if (client.connectedTo === undefined && client.life > maxClientWaitTime - 3.5) {
-                Utilities.drawCircle({
+                this.canvas.drawCircle({
                     ...circle,
                     color: Defaults.dangerColorMuted,
                     borderColor: Defaults.dangerColorMutedDark
-                }, context);
+                });
             } else {
-                Utilities.drawCircle(circle, context);
+                this.canvas.drawCircle(circle);
             }
 
-            Utilities.drawText({
-                x,
-                y,
+            this.canvas.drawText({
+                position,
                 text: Math.round(maxClientWaitTime - client.life).toString(),
                 fontWeight: 'bold',
                 fontSize: 15,
                 fontFamily: 'Arial',
                 align: 'center',
                 color: Defaults.clientTextColor
-            }, context);
+            });
         }
         else {
-            Utilities.drawCircle(circle, context);
+            this.canvas.drawCircle(circle);
         }
     }
 
     private drawConnection(t: MessageTransmitter, color: string) {
         if (t.connectedTo) {
-            const context = this.canvas.getContext('2d')!;
-            Utilities.drawLine({
-                x1: t.x,
-                y1: t.y,
-                x2: t.connectedTo.x,
-                y2: t.connectedTo.y,
+            this.canvas.drawLine({
+                from: t.position,
+                to: t.connectedTo.position,
                 color
-            }, context);
+            });
         }
     }
 
     private drawMessage(message: Message) {
-        const context = this.canvas.getContext('2d')!;
         let color, borderColor;
 
         switch (message.status) {
@@ -254,18 +247,15 @@ class GameArea {
                 throw 'Invalid message status: ' + message.status;
         }
 
-        Utilities.drawCircle({
-            x: message.x,
-            y: message.y,
+        this.canvas.drawCircle({
+            position: message.position,
             radius: Defaults.messageSize / 2,
             color,
             borderColor
-        }, context);
+        });
     }
 
     private drawServer(server: Server) {
-        const context = this.canvas.getContext('2d')!;
-
-        Utilities.drawServer(server, {}, context);
+        Utilities.drawServer(server, {}, this.canvas);
     }
 }

@@ -1,4 +1,5 @@
 /// <reference path='../../Commands/NewGame.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
 /// <reference path='../../Utilities.ts' />
@@ -8,7 +9,7 @@
 class TutorialFinished extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         newGame: NewGame
@@ -24,12 +25,15 @@ class TutorialFinished extends TutorialStep {
         this.hasHome = true;
 
         this.extraButtons = [
-            Utilities.defaultButton(w / 3, h - 40, 'New game', () => newGame.execute())
+            Utilities.defaultButton({
+                x: w / 3,
+                y: h - 40
+            }, 'New game', () => newGame.execute())
         ]
     }
 
-    run() {
-        this.game.update();
+    update(elapsed: number) {
+        this.game.update(elapsed);
     }
 
     draw() {

@@ -1,10 +1,11 @@
 /// <reference path='../../Defaults.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Utilities.ts' />
 /// <reference path='TutorialStep.ts' />
 
 class ServerExplanation extends TutorialStep {
 
-    constructor(private canvas: HTMLCanvasElement) {
+    constructor(private canvas: Canvas) {
         super([
             'This is a DATACENTER.',
             'Its role is to send data to your clients.',
@@ -15,10 +16,6 @@ class ServerExplanation extends TutorialStep {
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
-            h = this.canvas.height;
-
-        Utilities.drawCircleHighlight(w / 2, h / 2, Defaults.serverSize + 9, context);
+        Utilities.drawCircleHighlight(this.canvas.center, Defaults.serverSize + 9, this.canvas);
     }
 }

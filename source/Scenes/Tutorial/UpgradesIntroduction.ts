@@ -1,3 +1,4 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Model/Client.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -9,7 +10,7 @@
 class UpgradesIntroduction extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         private fader: TextFader
@@ -27,8 +28,10 @@ class UpgradesIntroduction extends TutorialStep {
         const w = this.canvas.width,
             h = this.canvas.height,
             text = {
-                x: w / 2,
-                y: h - 116,
+                position: {
+                    x: w / 2,
+                    y: h - 116
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgradeTut',
@@ -41,26 +44,27 @@ class UpgradesIntroduction extends TutorialStep {
         this.fader.addPermanentText(text);
     }
 
-    run() {
-        this.game.update();
+    update(elapsed: number) {
+        this.game.update(elapsed);
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
 
         this.popularityTracker.draw(h - 95);
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 95,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
 }

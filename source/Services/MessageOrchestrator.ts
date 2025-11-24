@@ -8,7 +8,6 @@ class MessageOrchestrator {
 
     createMessage(sender: MessageTransmitter, receiver: MessageTransmitter) {
         const m = new Message(sender, receiver);
-        m.computeVelocity();
         this.messages.push(m);
     }
 
@@ -23,13 +22,13 @@ class MessageOrchestrator {
         this.avgResponseTime = 0;
     }
 
-    updateMessages() {
+    updateMessages(elapsed: number) {
         const clientSize = Defaults.clientSize;
 
         for (let i = 0; i < this.messages.length; i += 1) {
             var m = this.messages[i];
 
-            m.life += 1 / Defaults.frameRate;
+            m.life += elapsed / 1000;
 
             //check if connection has been dropped while message was still traveling
             if (m.status === 'req') {
@@ -54,12 +53,14 @@ class MessageOrchestrator {
 
             //update message
             if (m.status != 'queued') {
-                var r = m.receiver;
-                if (m.x < r.x + clientSize / 2 && m.x > r.x - clientSize / 2 &&
-                    m.y < r.y + clientSize / 2 && m.y > r.y - clientSize / 2)
+                const r = m.receiver,
+                    mp = m.position,
+                    rp = r.position;
+                if (mp.x < rp.x + clientSize / 2 && mp.x > rp.x - clientSize / 2 &&
+                    mp.y < rp.y + clientSize / 2 && mp.y > rp.y - clientSize / 2)
                     r.receiveMessage(m);
                 else
-                    m.move();
+                    m.update(elapsed);
             }
         }
     }

@@ -1,31 +1,35 @@
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='Button.ts' />
+/// <reference path='FullScreenButton.ts' />
 /// <reference path='VolumeButton.ts' />
 
 class GameUI {
     public buttons: Button[] = [];
 
-    public readonly volumeButton: VolumeButton;
+    public readonly settingsButtons: Button[];
 
-    constructor(music: HTMLAudioElement, canvas: HTMLCanvasElement) {
+    constructor(music: HTMLAudioElement, canvas: Canvas) {
         const w = canvas.width,
             h = canvas.height,
-            x = w - 40,
-            y = h - 40;
+            size = 20,
+            y = h - 30,
+            p1 = { x: w - 40, y },
+            p2 = { x: w - 80, y },
+            volumeButton = new VolumeButton(p2, size, music),
+            fullScreenButton = new FullScreenButton(p1, size, document.documentElement);
 
-        this.volumeButton = new VolumeButton(x, y, 20, () => {
-            if (music.paused) {
-                music.play();
-            } else {
-                music.pause();
-            }
-            this.volumeButton.isOn = !music.paused;
-        });
+        this.settingsButtons = [
+            fullScreenButton,
+            volumeButton
+        ];
     }
 
-    click(x: number, y: number) {
+    click(position: Point) {
         this.buttons.some((button) => {
-            if (x > button.x - button.width / 2 && x < button.x + button.width / 2 &&
-                y > button.y - button.height / 2 && y < button.y + button.height / 2) {
+            const { x, y } = position,
+                p = button.position;
+            if (x > p.x - button.width / 2 && x < p.x + button.width / 2 &&
+                y > p.y - button.height / 2 && y < p.y + button.height / 2) {
                 button.onClick();
                 return true;
             }

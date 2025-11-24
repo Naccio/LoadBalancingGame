@@ -1,3 +1,4 @@
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/AttackerFactory.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
@@ -8,7 +9,7 @@
 class DdosAttackExample extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private fader: TextFader,
         private clientFactory: ClientFactory,
@@ -28,8 +29,10 @@ class DdosAttackExample extends TutorialStep {
             h = this.canvas.height,
             server = this.game.servers[0],
             text = {
-                x: w / 2,
-                y: h - 116,
+                position: {
+                    x: w / 2,
+                    y: h - 116
+                },
                 fontSize: 20,
                 rgbColor: { r: 255, g: 0, b: 0 },
                 id: 'upgradeTut',
@@ -39,47 +42,48 @@ class DdosAttackExample extends TutorialStep {
                 delta: 0
             };
 
-        this.attackerFactory.create(w / 2, h * 3 / 4, 10000, server);
-        this.attackerFactory.create(w / 3, h * 2 / 3, 10000, server);
-        this.attackerFactory.create(w * 2 / 3, h * 2 / 3, 10000, server);
+        this.attackerFactory.create({ x: w / 2, y: h * 3 / 4 }, 10000, server);
+        this.attackerFactory.create({ x: w / 3, y: h * 2 / 3 }, 10000, server);
+        this.attackerFactory.create({ x: w * 2 / 3, y: h * 2 / 3 }, 10000, server);
 
         this.spawnClients();
         this.fader.addPermanentText(text);
     }
 
-    run() {
+    update(elapsed: number) {
         if (this.game.selectedClient) {
             this.game.selectedClient = undefined;
         }
         if (this.game.clients.length === 0) {
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
 
     draw() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+        const w = this.canvas.width,
             h = this.canvas.height;
 
         TutorialHelper.drawLegend(this.canvas, true);
 
-        Utilities.drawText({
-            x: w / 2,
-            y: h - 95,
+        this.canvas.drawText({
+            position: {
+                x: w / 2,
+                y: h - 95
+            },
             text: 'Press space to pause',
             fontSize: 18,
             fontFamily: 'sans-serif',
             align: 'center',
             color: Defaults.secondaryColorMuted
-        }, context);
+        });
     }
 
     private spawnClients() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            client0 = this.clientFactory.create(w / 4, h / 3, 10000),
-            client1 = this.clientFactory.create(w * 3 / 4, h / 3, 10000);
+            client0 = this.clientFactory.create({ x: w / 4, y: h / 3 }, 10000),
+            client1 = this.clientFactory.create({ x: w * 3 / 4, y: h / 3 }, 10000);
 
         client0.life = - 21;
         client1.life = - 21;

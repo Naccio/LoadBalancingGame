@@ -1,5 +1,6 @@
 /// <reference path='../Commands/NewGame.ts' />
 /// <reference path='../Defaults.ts' />
+/// <reference path='../Graphics/Canvas.ts' />
 /// <reference path='../Services/GameTracker.ts' />
 /// <reference path='../Upgrades/UpgradesTracker.ts' />
 /// <reference path='../UI/Button.ts' />
@@ -18,7 +19,7 @@ class Pause implements Scene {
     public id = Defaults.gameModes.PAUSE;
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private clouds: Clouds,
         private game: GameTracker,
         private upgradesTracker: UpgradesTracker,
@@ -30,16 +31,16 @@ class Pause implements Scene {
             y = h / 2 + 150;
 
         this.buttons = [
-            Utilities.defaultButton(w / 2, 150, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
-            Utilities.defaultButton(w / 2, 210, 'New game', () => newGame.execute()),
-            Utilities.defaultButton(w / 2, 270, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
-            ui.volumeButton
+            Utilities.defaultButton({ x: w / 2, y: 150 }, 'Continue', () => game.switchMode(Defaults.gameModes.GAME)),
+            Utilities.defaultButton({ x: w / 2, y: 210 }, 'New game', () => newGame.execute()),
+            Utilities.defaultButton({ x: w / 2, y: 270 }, 'Abandon', () => game.switchMode(Defaults.gameModes.MENU)),
+            ...ui.settingsButtons
         ];
 
         this.upgradeButtons = [
-            new ServerUpgradeButton(250, y, () => this.selectUpgrade('server')),
-            new CapacityUpgradeButton(w / 2, y, () => this.selectUpgrade('capacity')),
-            new SpeedUpgradeButton(w - 250, y, () => this.selectUpgrade('speed'))
+            new ServerUpgradeButton({ x: 250, y }, () => this.selectUpgrade('server')),
+            new CapacityUpgradeButton({ x: w / 2, y }, () => this.selectUpgrade('capacity')),
+            new SpeedUpgradeButton({ x: w - 250, y }, () => this.selectUpgrade('speed'))
         ];
     }
 
@@ -49,9 +50,8 @@ class Pause implements Scene {
             : [...this.buttons];
     }
 
-    update() {
-        const context = this.canvas.getContext('2d')!,
-            w = this.canvas.width,
+    draw() {
+        const w = this.canvas.width,
             h = this.canvas.height,
             x = w / 2,
             fontSize = 25;
@@ -59,34 +59,42 @@ class Pause implements Scene {
         this.clouds.draw();
 
         if (this.upgradesTracker.upgradesAvailable > 0) {
-            Utilities.drawText({
-                x,
-                y: h / 2 + 60,
+            this.canvas.drawText({
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'Choose an upgrade:',
                 fontSize,
                 align: 'center',
                 color: Defaults.secondaryColor
-            }, context);
+            });
         } else {
-            Utilities.drawText({
-                x,
-                y: h / 2 + 60,
+            this.canvas.drawText({
+                position: {
+                    x,
+                    y: h / 2 + 60
+                },
                 text: 'No upgrades available',
                 fontSize,
                 align: 'center',
                 color: Defaults.primaryColorMuted
-            }, context);
+            });
         }
 
-        Utilities.drawText({
-            x,
-            y: 60,
+        this.canvas.drawText({
+            position: {
+                x,
+                y: 60
+            },
             text: '~ Paused ~',
             fontSize: 50,
             align: 'center',
             color: Defaults.accentColor
-        }, context);
+        });
     }
+
+    update() { }
 
     private selectUpgrade(id: string) {
         this.upgradesTracker.selectedUpgrade = id;

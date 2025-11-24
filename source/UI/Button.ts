@@ -1,8 +1,10 @@
+/// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../Model/Point.ts' />
+
 interface Button {
-    x: number,
-    y: number,
+    position: Point,
     width: number,
     height: number,
-    draw: (hovered: boolean, context: CanvasRenderingContext2D) => void;
+    draw: (hovered: boolean, canvas: Canvas) => void;
     onClick: () => void
 }

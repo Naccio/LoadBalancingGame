@@ -11,6 +11,6 @@ class TutorialStep {
     constructor(public texts: [string, string, string]) { }
 
     setup() { }
-    run() { }
+    update(elapsed: number) { }
     draw() { }
 }

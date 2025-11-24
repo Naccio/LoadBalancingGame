@@ -49,7 +49,7 @@ class Application {
         private game: GameTracker,
         private ui: GameUI,
         private cursor: CursorTracker,
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private fpsCounter: FpsCounter,
         private clouds: Clouds
     ) {
@@ -72,12 +72,12 @@ class Application {
     }
 
     public static build(clouds: Clouds) {
-        const canvas = <HTMLCanvasElement>document.getElementById('canvas');
-        const context = canvas.getContext('2d')!;
+        const canvasElement = <HTMLCanvasElement>document.getElementById('canvas');
 
         const music = new Audio('assets/music.mp3');
 
-        const fader = new TextFader(context);
+        const canvas = new Canvas(canvasElement);
+        const fader = new TextFader(canvas);
         const fpsCounter = new FpsCounter();
         const orchestrator = new MessageOrchestrator();
         const upgradesTracker = new UpgradesTracker();
@@ -85,7 +85,7 @@ class Application {
         const ui = new GameUI(music, canvas);
         const game = new GameTracker(popularityTracker, ui, orchestrator);
         const attackerFactory = new AttackerFactory(game, orchestrator);
-        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker, fader);
+        const clientFactory = new ClientFactory(game, orchestrator, popularityTracker);
         const serverFactory = new ServerFactory(game);
         const cursor = new CursorTracker(game, canvas, ui);
         const scheduler = new Scheduler(popularityTracker, canvas, game, clientFactory, attackerFactory, serverFactory);
@@ -133,16 +133,19 @@ class Application {
     }
 
     public run() {
-        setInterval(() => this.mainLoop(), 1000 / Defaults.frameRate);
+        const elapsed = 1000 / Defaults.frameRate;
+
+        setInterval(() => this.mainLoop(elapsed), elapsed);
     }
 
-    private mainLoop() {
+    private mainLoop(elapsed: number) {
         if (this.activeScene.id !== this.game.currentGameMode) {
             this.activeScene = this.scenes.find(s => s.id === this.game.currentGameMode)!;
         }
 
-        this.clouds.update(1000 / Defaults.frameRate);
-        this.activeScene.update();
+        this.clouds.update(elapsed);
+        this.activeScene.update(elapsed);
+        this.activeScene.draw();
         this.ui.buttons = this.activeScene.getButtons();
         this.drawButtons();
 
@@ -153,29 +156,29 @@ class Application {
     }
 
     private createCloud(x: number, y: number) {
-        const w = Utilities.random(350, 500),
-            h = Utilities.random(w, 700),
-            circles = Utilities.random(15, 30),
-            n = Utilities.random(180, 255),
+        const p = this.canvas.getActualPosition({ x, y }),
+            w = this.canvas.getActualMeasure(MathHelper.random(350, 500)),
+            h = this.canvas.getActualMeasure(MathHelper.random(w, 700)),
+            circles = MathHelper.random(15, 30),
+            n = MathHelper.random(180, 255),
             color = { r: n, g: n, b: n, a: .1 },
-            speed = Utilities.random(100, 200);
+            speed = MathHelper.random(100, 200);
 
-        this.clouds.add(x, y, w, h, circles, color, speed);
+        this.clouds.add(p.x, p.y, w, h, circles, color, speed);
     }
 
     private drawButtons() {
-        const context = this.canvas.getContext('2d')!,
-            mouseX = this.cursor.mouseX,
-            mouseY = this.cursor.mouseY;
+        const mp = this.cursor.mousePosition;
 
         this.ui.buttons.forEach((button) => {
-            const hovered =
-                mouseX > button.x - (button.width + 2) / 2 &&
-                mouseX < button.x + (button.width + 2) / 2 &&
-                mouseY > button.y - (button.height + 4) / 2 &&
-                mouseY < button.y + (button.height + 2) / 2;
+            const bp = button.position,
+                hovered =
+                    mp.x > bp.x - (button.width + 2) / 2 &&
+                    mp.x < bp.x + (button.width + 2) / 2 &&
+                    mp.y > bp.y - (button.height + 4) / 2 &&
+                    mp.y < bp.y + (button.height + 2) / 2;
 
-            button.draw(hovered, context);
+            button.draw(hovered, this.canvas);
         });
     }
 

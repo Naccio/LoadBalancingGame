@@ -1,41 +1,32 @@
-class Message {
-    public x: number;
-    public y: number;
-    public dx: number;
-    public dy: number;
+/// <reference path='GameObject.ts' />
+/// <reference path='Point.ts' />
+
+class Message implements GameObject {
+    private speed;
+
+    public position: Point;
     public status: 'req' | 'ack' | 'nack' | 'queued' | 'done';
     public life: number;
 
     constructor(public sender: MessageTransmitter, public receiver: MessageTransmitter) {
-        this.x = sender.x;
-        this.y = sender.y;
-        this.dx = 0;
-        this.dy = 0;
-        this.sender = sender;
-        this.receiver = receiver;
+        this.position = { ...sender.position };
         this.status = 'req';
         this.life = 0;
-        this.computeVelocity();
+
+        this.speed = VectorMath.direction(sender.position, receiver.position)
+            .multiply(Defaults.messageVelocity);
     }
 
-    computeVelocity() {
-        var xDiff = this.receiver.x - this.x,
-            yDiff = this.receiver.y - this.y,
-            angle = Math.atan2(yDiff, xDiff),
-            v = Defaults.messageVelocity / Defaults.frameRate;
-        this.dx = Math.cos(angle) * v;
-        this.dy = Math.sin(angle) * v;
-    };
-
-    move() {
-        this.x += this.dx;
-        this.y += this.dy;
-    };
+    update(elapsed: number) {
+        this.position = this.speed
+            .divide(1000 / elapsed)
+            .add(this.position);
+    }
 
     invertDirection() {
         const tmp = this.sender;
         this.sender = this.receiver;
         this.receiver = tmp;
-        this.computeVelocity();
+        this.speed = this.speed.invert();
     };
 }

@@ -1,6 +1,7 @@
 /// <reference path='../Services/MessageOrchestrator.ts' />
 /// <reference path='../Services/PopularityTracker.ts' />
 /// <reference path='MessageTransmitter.ts' />
+/// <reference path='Point.ts' />
 
 class Client implements MessageTransmitter {
     public life: number;
@@ -10,9 +11,7 @@ class Client implements MessageTransmitter {
     public ACKsToReceive: number;
     public NACKsToDie: number;
 
-    constructor(private orchestrator: MessageOrchestrator, public popularity: PopularityTracker, public x: number, public y: number, public messages: number) {
-        this.x = x;
-        this.y = y;
+    constructor(private orchestrator: MessageOrchestrator, public popularity: PopularityTracker, public position: Point, public messages: number) {
         this.life = 0;
         this.lastMessageTime = 0;
         this.messagesToSend = messages;
@@ -39,7 +38,7 @@ class Client implements MessageTransmitter {
                 n += 5;
             }
             this.orchestrator.registerAck(message);
-            this.popularity.updatePopularity(n, this.x, this.y);
+            this.popularity.updatePopularity(this, n);
         } else {
             this.NACKsToDie -= 1;
             n = -1;
@@ -48,7 +47,7 @@ class Client implements MessageTransmitter {
             } else {
                 n -= 5;
             }
-            this.popularity.updatePopularity(n, this.x, this.y);
+            this.popularity.updatePopularity(this, n);
         }
 
         message.status = 'done';

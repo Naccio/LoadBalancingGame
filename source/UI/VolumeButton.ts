@@ -1,61 +1,59 @@
+/// <reference path='../Graphics/Canvas.ts' />
+/// <reference path='../Model/Point.ts' />
 /// <reference path='../Utilities.ts' />
-/// <reference path='Button.ts' />
+/// <reference path='SettingButton.ts' />
 
-class VolumeButton implements Button {
-    public width: number;
-    public height: number;
-    public isOn = false;
+class VolumeButton extends SettingButton {
+    protected isOn = false;
 
-    constructor(public x: number, public y: number, size: number, public onClick: () => void) {
-        this.width = size;
-        this.height = size;
+    public constructor(position: Point, size: number, private target: HTMLAudioElement) {
+        super(position, size, 'Music');
     }
 
-    draw(hovered: boolean, context: CanvasRenderingContext2D) {
-        const x = this.x,
-            y = this.y,
+    draw(hovered: boolean, canvas: Canvas) {
+        const p = this.position,
             w = this.width,
             h = this.height,
-            color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent,
-            status = this.isOn ? 'On' : 'Off';
+            color = hovered ? Defaults.primaryColor : Defaults.primaryColorTransparent;
 
-        Utilities.drawRect({
-            x: x - w / 4 + 1,
-            y,
+        canvas.drawRect({
+            position: {
+                x: p.x - w / 4 + 1,
+                y: p.y
+            },
             width: w / 4 + 1,
             height: h / 2 - 1,
             color
-        }, context);
-        var path = new Path2D();
-        path.moveTo(x - 1, y - h / 4);
-        path.lineTo(x + w / 4, y - h / 2 + 1);
-        path.lineTo(x + w / 4, y + h / 2 - 1);
-        path.lineTo(x - 1, y + h / 4);
-        path.closePath();
-        context.fillStyle = color;
-        context.fill(path);
+        });
+        canvas.drawPolygon({
+            position: p,
+            points: [{
+                x: p.x - 1,
+                y: p.y - h / 4
+            }, {
+                x: p.x + w / 4,
+                y: p.y - h / 2 + 1
+            }, {
+                x: p.x + w / 4,
+                y: p.y + h / 2 - 1
+            }, {
+                x: p.x - 1,
+                y: p.y + h / 4
+            }],
+            color
+        });
 
-        if (!this.isOn) {
-            Utilities.drawLine({
-                x1: x - w / 2,
-                y1: y + h / 2,
-                x2: x + w / 2,
-                y2: y - h / 2,
-                color: Defaults.accentColor,
-                width: 2
-            }, context);
-        }
+        super.draw(hovered, canvas);
+    }
 
-        if (hovered) {
-            Utilities.drawText({
-                x,
-                y: y + w / 2 + 2,
-                text: 'Music: ' + status,
-                fontSize: 10,
-                align: 'center',
-                baseline: 'top',
-                color: Defaults.primaryColor
-            }, context);
+    public onClick() {
+        const music = this.target;
+
+        if (music.paused) {
+            music.play();
+        } else {
+            music.pause();
         }
+        this.isOn = !music.paused;
     }
 }

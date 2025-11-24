@@ -1,5 +1,6 @@
 /// <reference path='../../Defaults.ts' />
 /// <reference path='../../Model/Client.ts' />
+/// <reference path='../../Graphics/Canvas.ts' />
 /// <reference path='../../Services/ClientFactory.ts' />
 /// <reference path='../../Services/GameTracker.ts' />
 /// <reference path='../../Services/PopularityTracker.ts' />
@@ -10,7 +11,7 @@
 class ConnectMoreClients extends TutorialStep {
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private canvas: Canvas,
         private game: GameTracker,
         private popularityTracker: PopularityTracker,
         private clientFactory: ClientFactory
@@ -27,7 +28,7 @@ class ConnectMoreClients extends TutorialStep {
         this.spawnClients();
     }
 
-    run() {
+    update(elapsed: number) {
         const server = this.game.servers[0];
 
         if (server.queue.length > server.capacity / 2) {
@@ -40,7 +41,7 @@ class ConnectMoreClients extends TutorialStep {
                 'Connect the two clients to continue.'];
             this.spawnClients();
         }
-        this.game.update();
+        this.game.update(elapsed);
     }
 
     draw() {
@@ -53,8 +54,8 @@ class ConnectMoreClients extends TutorialStep {
     private spawnClients() {
         const w = this.canvas.width,
             h = this.canvas.height,
-            client1 = this.clientFactory.create(w / 4, h / 4, 10000),
-            client2 = this.clientFactory.create(w / 4, h * 3 / 4, 10000);
+            client1 = this.clientFactory.create({ x: w / 4, y: h / 4 }, 10000),
+            client2 = this.clientFactory.create({ x: w / 4, y: h * 3 / 4 }, 10000);
 
         client1.life = - 21;
         client2.life = - 21;
