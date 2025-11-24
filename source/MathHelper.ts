@@ -26,4 +26,8 @@ class MathHelper {
 
         return Math.round(number * multiplier) / multiplier;
     }
+
+    public static roundToEven(number: number) {
+        return Math.round(number / 2) * 2;
+    }
 }

@@ -490,16 +490,15 @@ class Utilities {
                 borderColor: options.borderColor
             });
         }
-        const speed = Defaults.serverSpeed, queueWidth = 5, queueHeight = size - 10, queueX = p.x + size / 2 - 7, queueY = p.y + 1, fillPercentage = (server.queue.length / server.capacity) * 100, gradientWidth = 5, gradientHeight = fillPercentage * queueHeight / 100, gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
+        const speed = Defaults.serverSpeed, queueWidth = 6, queueHeight = size - 10, queueX = p.x + size / 2 - 7, queueY = p.y, fullness = server.queue.length / server.capacity, gradientWidth = queueWidth, gradientHeight = MathHelper.roundToEven(fullness * queueHeight), gradientX = queueX, gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
         canvas.drawRect({
             position: {
                 x: queueX,
                 y: queueY
             },
-            width: queueWidth + 2,
-            height: queueHeight + 2,
-            color: options.queueColor,
-            borderColor: options.queueBorderColor
+            width: queueWidth,
+            height: queueHeight,
+            color: options.queueColor
         });
         const gradient = canvas.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
         gradient.addColorStop(0.5, Defaults.successColor);
@@ -512,6 +511,15 @@ class Utilities {
             width: gradientWidth,
             height: gradientHeight,
             color: gradient
+        });
+        canvas.drawRect({
+            position: {
+                x: queueX,
+                y: queueY
+            },
+            width: queueWidth,
+            height: queueHeight,
+            borderColor: options.queueBorderColor
         });
         for (i = server.speed; i > 0; i -= speed) {
             const starX = p.x - size / 2 + 7, starY = p.y + size / 2 - 4 - 5 * (i / speed);
@@ -717,6 +725,9 @@ class MathHelper {
     static round(number, decimalPlaces) {
         const multiplier = Math.pow(10, decimalPlaces);
         return Math.round(number * multiplier) / multiplier;
+    }
+    static roundToEven(number) {
+        return Math.round(number / 2) * 2;
     }
 }
 class VectorMath {

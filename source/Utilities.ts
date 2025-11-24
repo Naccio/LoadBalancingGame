@@ -50,13 +50,13 @@ class Utilities {
 
         //draw server's queue
         const speed = Defaults.serverSpeed,
-            queueWidth = 5,
+            queueWidth = 6,
             queueHeight = size - 10,
             queueX = p.x + size / 2 - 7,
-            queueY = p.y + 1,
-            fillPercentage = (server.queue.length / server.capacity) * 100,
-            gradientWidth = 5,
-            gradientHeight = fillPercentage * queueHeight / 100,
+            queueY = p.y,
+            fullness = server.queue.length / server.capacity,
+            gradientWidth = queueWidth,
+            gradientHeight = MathHelper.roundToEven(fullness * queueHeight),
             gradientX = queueX,
             gradientY = queueY + queueHeight / 2 - gradientHeight / 2;
 
@@ -65,10 +65,9 @@ class Utilities {
                 x: queueX,
                 y: queueY
             },
-            width: queueWidth + 2,
-            height: queueHeight + 2,
-            color: options.queueColor,
-            borderColor: options.queueBorderColor
+            width: queueWidth,
+            height: queueHeight,
+            color: options.queueColor
         });
 
         const gradient = canvas.createLinearGradient(gradientX, queueY + queueHeight / 2, gradientX, queueY - queueHeight / 2);
@@ -82,6 +81,16 @@ class Utilities {
             width: gradientWidth,
             height: gradientHeight,
             color: gradient
+        });
+
+        canvas.drawRect({
+            position: {
+                x: queueX,
+                y: queueY
+            },
+            width: queueWidth,
+            height: queueHeight,
+            borderColor: options.queueBorderColor
         });
 
         //draw server's speed
