@@ -40,7 +40,11 @@ declare class Clouds {
 }
 
 class Application {
+    private readonly idleThreshold = 250;
+
     private activeScene: Scene;
+    private lastUpdate: number;
+    private running: boolean;
 
     public logActive = false;
 
@@ -57,6 +61,8 @@ class Application {
             h = canvas.height;
 
         this.activeScene = scenes[0];
+        this.lastUpdate = 0;
+        this.running = false;
 
         clouds.setSkyColor(Defaults.backgroundColor);
         this.createCloud(w / 4, h / 4);
@@ -133,9 +139,27 @@ class Application {
     }
 
     public run() {
-        const elapsed = 1000 / Defaults.frameRate;
+        if (this.running) {
+            return;
+        }
 
-        setInterval(() => this.mainLoop(elapsed), elapsed);
+        this.running = true;
+        this.animationFrame();
+    }
+
+    private animate(time: number) {
+        const elapsed = time - this.lastUpdate;
+
+        if (this.lastUpdate !== undefined && elapsed < this.idleThreshold) {
+            this.mainLoop(elapsed);
+        }
+
+        this.lastUpdate = time;
+        this.animationFrame();
+    }
+
+    private animationFrame() {
+        requestAnimationFrame((t) => this.animate(t));
     }
 
     private mainLoop(elapsed: number) {

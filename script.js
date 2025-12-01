@@ -127,7 +127,6 @@ class Defaults {
     static dangerColorMuted = '#ff6347';
     static dangerColorMutedDark = '#cd5c5c';
     static defaultColor = '#000000';
-    static frameRate = 60;
     static gameLength = 5;
     static highlightColor = '#add8e6';
     static highlightWidth = 3;
@@ -3030,7 +3029,10 @@ class Application {
     canvas;
     fpsCounter;
     clouds;
+    idleThreshold = 250;
     activeScene;
+    lastUpdate;
+    running;
     logActive = false;
     constructor(scenes, game, ui, cursor, canvas, fpsCounter, clouds) {
         this.scenes = scenes;
@@ -3042,6 +3044,8 @@ class Application {
         this.clouds = clouds;
         const w = canvas.width, h = canvas.height;
         this.activeScene = scenes[0];
+        this.lastUpdate = 0;
+        this.running = false;
         clouds.setSkyColor(Defaults.backgroundColor);
         this.createCloud(w / 4, h / 4);
         this.createCloud(0 - w / 4, h / 3);
@@ -3105,8 +3109,22 @@ class Application {
         ], game, ui, cursor, canvas, fpsCounter, clouds);
     }
     run() {
-        const elapsed = 1000 / Defaults.frameRate;
-        setInterval(() => this.mainLoop(elapsed), elapsed);
+        if (this.running) {
+            return;
+        }
+        this.running = true;
+        this.animationFrame();
+    }
+    animate(time) {
+        const elapsed = time - this.lastUpdate;
+        if (this.lastUpdate !== undefined && elapsed < this.idleThreshold) {
+            this.mainLoop(elapsed);
+        }
+        this.lastUpdate = time;
+        this.animationFrame();
+    }
+    animationFrame() {
+        requestAnimationFrame((t) => this.animate(t));
     }
     mainLoop(elapsed) {
         if (this.activeScene.id !== this.game.currentGameMode) {

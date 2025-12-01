@@ -18,7 +18,6 @@ class Defaults {
     public static readonly dangerColorMuted = '#ff6347';
     public static readonly dangerColorMutedDark = '#cd5c5c';
     public static readonly defaultColor = '#000000';
-    public static readonly frameRate = 60; //frames per second
     public static readonly gameLength = 5; //minutes
     public static readonly highlightColor = '#add8e6';
     public static readonly highlightWidth = 3; // pixels
